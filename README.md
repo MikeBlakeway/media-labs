@@ -54,11 +54,43 @@ npm run dev
 
 - Implement the minimal `services/` runner and a ComfyUI test pipeline.
 
+## Root run scripts (dev & start)
+
+You can start the frontend and backend together from the repository root using Docker Compose.
+
+From the repo root:
+
+```bash
+# Build and start all services (frontend, backend, comfyui) in background
+docker compose up --build -d
+
+# Tail logs
+docker compose logs -f
+
+# Stop
+docker compose down
+```
+
+Alternatively, if you prefer using the local node/python toolchain, the root `package.json` exposes convenience scripts:
+
+```bash
+# Install both back-end and front-end deps
+npm run install:all
+
+# Start both in dev mode using docker-compose (recommended)
+npm run dev
+
+# Start production-mode servers
+npm run start
+```
+
 ## Contributing
 
 Keep changes small and non-destructive. After editing code or adding
 dependencies, run Codacy analysis as described in `AGENTS.md` and
 `.github/copilot-instructions.md`.
+
+Note: This repository now enforces a Docker Compose-first workflow for running the full stack locally. Individual `frontend:dev`, `backend:dev`, and `backend:start` scripts were removed from the root `package.json` to avoid drift — use the `dev` and `start` commands which call `docker compose`.
 
 ## License
 
