@@ -26,11 +26,7 @@ services:
       - COMFYUI_API_PATH=/api/pipeline
 
   comfyui:
-    build:
-      context: ./services/comfyui
-      args:
-        COMFYUI_REPO: https://github.com/comfyanonymous/ComfyUI.git
-        COMFYUI_REF: master
+    image: comfyui:local
     container_name: comfyui
     ports:
       - "8188:8188"

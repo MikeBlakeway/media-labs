@@ -8,37 +8,62 @@ on:
 
 jobs:
   backend-tests:
+<<<<<<< Updated upstream
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-      
-    - name: Build and start services
+
+    - name: Prune Docker to free space
       run: |
-        docker compose up -d --build comfyui backend
-        
+        # prune unused objects to free runner disk
+        docker system prune -af --volumes || true
+        docker builder prune -af || true
+        rm -rf ~/.cache/pip || true
+
+    - name: Login to GitHub Container Registry
+      if: secrets.GHCR_PAT
+      run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Build ComfyUI image (buildx with cache + push to GHCR)
+      uses: docker/build-push-action@v4
+      with:
+        context: ./services/comfyui
+        push: true
+        tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:comfyui-${{ github.sha }}
+        cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:comfyui-cache
+        cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:comfyui-cache,mode=max
+
+    - name: Pull built ComfyUI image for compose
+      run: |
+        docker pull ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:comfyui-${{ github.sha }} || true
+
+    - name: Build and start services (use prebuilt ComfyUI image)
+      run: |
+        docker compose up -d --no-build backend comfyui
+
     - name: Wait for services to be ready
       run: |
         echo "Waiting for backend to be ready..."
         timeout 120 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
         echo "Backend is ready"
-        
+
         echo "Waiting for ComfyUI to be ready..."
         timeout 180 bash -c 'until curl -f http://localhost:8188/; do sleep 3; done'
         echo "ComfyUI is ready"
-        
+
     - name: Run backend unit tests
       run: |
         docker compose exec -T backend sh -c "cd /app && pytest tests/ -v -m 'not smoke'"
-        
+
     - name: Run smoke tests
       run: |
         docker compose exec -T backend sh -c "cd /app && BACKEND_URL=http://localhost:8000 pytest tests/ -v -m smoke"
-        
+
     - name: Show service logs on failure
       if: failure()
       run: |
@@ -46,8 +71,83 @@ jobs:
         docker compose logs backend
         echo "=== ComfyUI logs ==="
         docker compose logs comfyui
-        
+
     - name: Cleanup
       if: always()
       run: |
         docker compose down -v
+=======
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Prune Docker to free space
+        run: |
+          # show disk usage before cleanup
+          df -h || true
+          # prune unused objects to free runner disk
+          docker system prune -af --volumes || true
+          # ensure builder cache is aggressively pruned
+          docker builder prune --all --force || true
+          # remove local caches that can consume space
+          rm -rf ~/.cache/pip || true
+          # show disk usage after cleanup
+          df -h || true
+
+      - name: Login to GitHub Container Registry
+        if: secrets.GHCR_PAT
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build ComfyUI image (buildx with cache + push to GHCR)
+        uses: docker/build-push-action@v4
+        with:
+          context: ./services/comfyui
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:comfyui-${{ github.sha }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:comfyui-cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:comfyui-cache,mode=max
+
+      - name: Pull built ComfyUI image for compose
+        run: |
+          docker pull ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:comfyui-${{ github.sha }} || true
+
+      - name: Build and start services (use prebuilt ComfyUI image)
+        run: |
+          docker compose up -d --no-build backend comfyui
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for backend to be ready..."
+          timeout 120 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+          echo "Backend is ready"
+
+          echo "Waiting for ComfyUI to be ready..."
+          timeout 180 bash -c 'until curl -f http://localhost:8188/; do sleep 3; done'
+          echo "ComfyUI is ready"
+
+      - name: Run backend unit tests
+        run: |
+          docker compose exec -T backend sh -c "cd /app && pytest tests/ -v -m 'not smoke'"
+
+      - name: Run smoke tests
+        run: |
+          docker compose exec -T backend sh -c "cd /app && BACKEND_URL=http://localhost:8000 pytest tests/ -v -m smoke"
+
+      - name: Show service logs on failure
+        if: failure()
+        run: |
+          echo "=== Backend logs ==="
+          docker compose logs backend
+          echo "=== ComfyUI logs ==="
+          docker compose logs comfyui
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down -v
+>>>>>>> Stashed changes

@@ -77,6 +77,7 @@ The workflow runs on:
 ## Smoke Test Details
 
 The smoke test:
+
 1. Checks if the backend `/health` endpoint is reachable
 2. Skips the test if the backend is not healthy
 3. Posts a minimal LoadImage → PreviewImage prompt to `/generate`
