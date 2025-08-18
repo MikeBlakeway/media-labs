@@ -1,0 +1,15 @@
+# Minimal docker-compose template for running a ComfyUI instance for local development.
+# Replace `image` with the official or preferred ComfyUI image you use.
+version: '3.8'
+services:
+  comfyui:
+    image: "comfyanonymous/comfyui:latest"
+    container_name: comfyui
+    ports:
+      - "8188:8188"
+    volumes:
+      - ./workflows:/workflows
+      - ./models:/models
+    restart: unless-stopped
+
+# After starting, set COMFYUI_URL=http://localhost:8188 for the backend.

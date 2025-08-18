@@ -3,9 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "frontend:dev": "npm --prefix frontend run dev",
-    "frontend:build": "npm --prefix frontend run build",
-    "frontend:start": "npm --prefix frontend run start",
-    "frontend:lint": "npm --prefix frontend run lint"
+  "frontend:build": "npm --prefix frontend run build",
+  "frontend:start": "npm --prefix frontend run start",
+  "frontend:lint": "npm --prefix frontend run lint",
+  "backend:install": "python -m pip install -r backend/requirements.txt",
+  "dev": "docker compose up --build",
+  "start": "docker compose up -d",
+    "install:all": "npm run backend:install && npm --prefix frontend install"
   }
+  
 }

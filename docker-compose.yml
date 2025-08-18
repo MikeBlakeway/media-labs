@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  frontend:
+    image: node:20
+    working_dir: /usr/src/app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+
+  backend:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    # The code is mounted at /app and the FastAPI package is `app`, so import that module directly.
+    command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    environment:
+      - COMFYUI_URL=http://comfyui:8188
+      - COMFYUI_API_PATH=/api/pipeline
+
+  comfyui:
+    build:
+      context: ./services/comfyui
+      args:
+        COMFYUI_REPO: https://github.com/comfyanonymous/ComfyUI.git
+        COMFYUI_REF: master
+    container_name: comfyui
+    ports:
+      - "8188:8188"
+    volumes:
+      - ./services/comfyui/workflows:/workflows
+      - ./services/comfyui/models:/models
+    restart: unless-stopped
