@@ -1,0 +1,21 @@
+engines:
+  markdownlint:
+    enabled: true
+    settings:
+      MD025: false
+      MD013: false
+      MD029:
+        style: ordered
+      MD032: true
+  pylint:
+    enabled: true
+    file: .pylintrc
+  bandit:
+    enabled: true
+    file: .bandit
+  eslint:
+    enabled: true
+    file: .eslintrc.json
+  trivy:
+    enabled: true
+    file: .trivyignore
