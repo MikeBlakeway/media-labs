@@ -1,0 +1,9 @@
+{
+  "MD013": false,
+  "MD025": false,
+  "MD029": {
+    "style": "ordered"
+  },
+  "MD032": true,
+  "default": true
+}

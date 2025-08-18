@@ -1,0 +1,8 @@
+[MASTER]
+ignore=venv,.venv,frontend,node_modules
+
+[MESSAGES CONTROL]
+disable=C0114,C0115,C0116  # module, class, function docstring warnings
+
+[FORMAT]
+max-line-length=120
