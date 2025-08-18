@@ -32,7 +32,7 @@ def test_smoke_post_minimal_prompt():
     health_url = f"{BACKEND_URL.rstrip('/')}/health"
     try:
         h = requests.get(health_url, timeout=3)
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         pytest.skip(f"Backend not reachable at {health_url}: {e}")
     if h.status_code != 200:
         pytest.skip(f"Backend health check failed ({h.status_code}) at {health_url}")
