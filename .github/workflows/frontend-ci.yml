@@ -1,0 +1,40 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+  pull_request:
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          # Ensure the npm cache step looks at the frontend lockfile instead of repo root
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+      - name: Lint
+        working-directory: frontend
+        run: |
+          npm run lint
+      - name: Build
+        working-directory: frontend
+        run: |
+          npm run build
+      - name: Run basic smoke test
+        run: |
+          echo "Build succeeded"
