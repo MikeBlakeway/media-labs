@@ -23,7 +23,9 @@ RUN if [ -f requirements.txt ]; then \
     else \
       # Install CPU-only PyTorch to avoid CUDA initialization errors in CPU-only environments
   pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
-  pip install --no-cache-dir fastapi uvicorn httpx; \
+      # Install CPU-only PyTorch to avoid CUDA initialization errors in CPU-only environments \
+      pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
+      pip install --no-cache-dir fastapi uvicorn httpx; \
     fi
 
 ENV COMFYUI_USE_CPU=1
