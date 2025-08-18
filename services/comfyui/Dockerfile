@@ -21,7 +21,7 @@ RUN git clone --depth 1 --branch ${COMFYUI_REF} ${COMFYUI_REPO} . \
 RUN if [ -f requirements.txt ]; then \
       pip install --no-cache-dir -r requirements.txt; \
     else \
-  # Install CPU-only PyTorch to avoid CUDA initialization errors in CPU-only environments
+      # Install CPU-only PyTorch to avoid CUDA initialization errors in CPU-only environments
   pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
   pip install --no-cache-dir fastapi uvicorn httpx; \
     fi
