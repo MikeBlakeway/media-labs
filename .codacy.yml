@@ -1,21 +1,103 @@
+---
+# Codacy configuration file
+# Docs on include_paths/exclude_paths and tool names:
+# https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+# https://docs.codacy.com/repositories-configure/codacy-configuration-file/#include-files
+
+# 1) Global path filtering
+exclude_paths:
+  - "**/node_modules/**"
+  - "**/.next/**"
+  - "**/.turbo/**"
+  - "**/.vercel/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.cache/**"
+  - "**/__pycache__/**"
+  - "**/.pytest_cache/**"
+  - "**/*.min.*"
+  - "**/*.generated.*"
+  - "**/*.lock"
+  - "storage/artifacts/**"
+  - ".venv/**"
+  - "venv/**"
+  - "**/migrations/**"
+
+# Only analyze our source & infra folders (exceptions to excludes above)
+include_paths:
+  - "apps/web/**"
+  - "services/api/**"
+  - "services/demucs/**"
+  - "services/rife/**"
+  - "services/faceswap/**"
+  - "infra/**"
+  - ".github/**"
+
+# 2) Category-level knobs (optional)
+duplication:
+  enabled: true
+  # Ignore tests & stories for duplication noise
+  exclude_paths:
+    - "apps/web/src/**/__tests__/**"
+    - "apps/web/src/**/?(*.)+(test|spec).[jt]s?(x)"
+    - "apps/web/src/**/*.stories.@(ts|tsx|js|jsx)"
+
+metrics:
+  # Keep metrics off for generated/test code
+  exclude_paths:
+    - "**/*.generated.*"
+    - "apps/web/src/**/__tests__/**"
+
+# 3) Tool-specific settings & path filters
+# NOTE: You enable/disable tools on the Codacy "Code patterns" page.
+# This file only tunes configuration and path filters per tool.
 engines:
+  eslint-8:
+    # Let ESLint use your repo’s own config; this just trims noise paths
+    exclude_paths:
+      - "apps/web/src/**/__tests__/**"
+      - "apps/web/src/**/?(*.)+(test|spec).[jt]s?(x)"
+      - "apps/web/src/**/*.stories.@(ts|tsx|js|jsx)"
+      - "apps/web/.next/**"
   markdownlint:
-    enabled: true
-    settings:
-      MD025: false
-      MD013: false
-      MD029:
-        style: ordered
-      MD032: true
-  pylint:
-    enabled: true
-    file: .pylintrc
+    exclude_paths:
+      - "CHANGELOG.md"   # allow long lines & anchors
+      - "storage/**"
   bandit:
-    enabled: true
-    file: .bandit
-  eslint:
-    enabled: true
-    file: .eslintrc.json
+    exclude_paths:
+      - "services/**/tests/**"
+      - "services/**/migrations/**"
+  prospector:
+    exclude_paths:
+      - "services/**/tests/**"
+      - "services/**/migrations/**"
+  pylintpython3:
+    exclude_paths:
+      - "services/**/tests/**"
+      - "services/**/migrations/**"
+  semgrep:
+    # Keep Semgrep focused on app code (less noise from tests/vendor)
+    exclude_paths:
+      - "**/node_modules/**"
+      - "apps/web/src/**/__tests__/**"
+      - "services/**/tests/**"
+  shellcheck:
+    # Ignore non-bash shells or vendored scripts
+    exclude_paths:
+      - "**/*.fish"
+      - "infra/**/vendor/**"
+  pmd:
+    # If you add Java modules later, tune include/exclude here
+    exclude_paths:
+      - "**/generated/**"
+  lizard:
+    # Complexity: ignore tests & generated to avoid skewed metrics
+    exclude_paths:
+      - "apps/web/src/**/__tests__/**"
+      - "**/*.generated.*"
   trivy:
-    enabled: true
-    file: .trivyignore
+    # Vulnerable dependency scanning: skip build outputs/artifacts
+    exclude_paths:
+      - "**/dist/**"
+      - "**/build/**"
+      - "storage/artifacts/**"

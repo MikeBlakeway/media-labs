@@ -5,5 +5,6 @@
     "style": "ordered"
   },
   "MD032": true,
+  "MD041": false,
   "default": true
 }
