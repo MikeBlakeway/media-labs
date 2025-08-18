@@ -312,6 +312,7 @@ docker compose logs -f backend
 
 **Current Setup:** Single ComfyUI instance
 **Future Options:**
+
 - Multiple ComfyUI workers
 - Load balancing
 - GPU acceleration
