@@ -1,0 +1,86 @@
+# .github/workflows/copilot-setup-steps.yml
+# This special workflow is executed BEFORE Copilot Coding Agent starts.
+# It must contain a single job named `copilot-setup-steps`.
+# Docs: https://docs.github.com/copilot/how-tos/agents/copilot-coding-agent/customizing-the-development-environment-for-copilot-coding-agent
+
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch: {}
+  # Note: Copilot triggers this implicitly; workflow_dispatch allows manual debugging
+
+jobs:
+  copilot-setup-steps:
+    # Consider upgrading runner size if builds are heavy (see docs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            apps/web/package-lock.json
+
+      - name: Enable corepack (pnpm/npm/yarn)
+        run: |
+          corepack enable || true
+
+      - name: Install web dependencies (apps/web)
+        working-directory: apps/web
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm i; fi
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path: |
+            services/api/requirements.txt
+
+      - name: Install API dependencies (services/api)
+        if: ${{ hashFiles('services/api/requirements.txt') != '' }}
+        working-directory: services/api
+        run: |
+          pip install -r requirements.txt
+        # Fallbacks if no requirements yet (useful early in the project)
+      - name: Install minimal API deps (fallback)
+        if: ${{ hashFiles('services/api/requirements.txt') == '' }}
+        run: |
+          pip install fastapi uvicorn[standard] httpx pydantic
+
+      - name: Install ffmpeg and git-lfs (media tooling)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg git-lfs
+          git lfs install
+
+      # Optional: install Redis CLI for debugging queue connectivity later
+      - name: Install redis-tools (optional)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y redis-tools
+
+      # Optional: cache Python torch wheels if added later (kept here as template)
+      - name: Prepare Torch wheel cache (optional)
+        if: false
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Print environment summary
+        run: |
+          node -v
+          npm -v
+          python -V
+          ffmpeg -version | head -n 1
+
+      - name: Done
+        run: echo "Copilot preinstall complete"
