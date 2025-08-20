@@ -1,6 +1,5 @@
 # .github/workflows/copilot-setup-steps.yml
-# This special workflow is executed BEFORE Copilot Coding Agent starts.
-# It must contain a single job named `copilot-setup-steps`.
+# Runs BEFORE Copilot Coding Agent starts (one job named `copilot-setup-steps`).
 # Docs: https://docs.github.com/copilot/how-tos/agents/copilot-coding-agent/customizing-the-development-environment-for-copilot-coding-agent
 
 name: Copilot Setup Steps
@@ -11,34 +10,35 @@ permissions:
 
 on:
   workflow_dispatch: {}
-  # Note: Copilot triggers this implicitly; workflow_dispatch allows manual debugging
+  # Copilot triggers this implicitly; workflow_dispatch allows manual debugging
 
 jobs:
   copilot-setup-steps:
-    # Consider upgrading runner size if builds are heavy (see docs)
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install root dependencies (including dev)
-        run: |
-          npm ci
-        working-directory: .
+        # If you want LFS blobs automatically, set: with: { lfs: true }
+        # with:
+        #   lfs: true
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
+          # Cache for the web app workspace (root may not have a lockfile yet)
           cache-dependency-path: |
             apps/web/package-lock.json
 
+      - name: Install root dependencies (including dev)
+        run: npm ci
+        working-directory: .
+
       - name: Enable corepack (pnpm/npm/yarn)
-        run: |
-          corepack enable || true
+        run: corepack enable || true
 
       - name: Install web dependencies (apps/web)
         working-directory: apps/web
@@ -56,19 +56,24 @@ jobs:
       - name: Install API dependencies (services/api)
         if: ${{ hashFiles('services/api/requirements.txt') != '' }}
         working-directory: services/api
-        run: |
-          pip install -r requirements.txt
-        # Fallbacks if no requirements yet (useful early in the project)
+        run: pip install -r requirements.txt
+
+      # Fallbacks if no requirements yet (useful early in the project)
       - name: Install minimal API deps (fallback)
         if: ${{ hashFiles('services/api/requirements.txt') == '' }}
-        run: |
-          pip install fastapi uvicorn[standard] httpx pydantic
+        run: pip install fastapi uvicorn[standard] httpx pydantic
 
       - name: Install ffmpeg and git-lfs (media tooling)
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg git-lfs
-          git lfs install
+          # Install LFS filters globally, but DO NOT write repo hooks (Husky owns hooks).
+          # Also skip smudge to avoid auto-downloading LFS blobs during setup.
+          git lfs install --skip-repo --skip-smudge
+
+      # If/when you actually need LFS objects during this run, uncomment:
+      # - name: Fetch LFS content (when needed)
+      #   run: git lfs pull
 
       # Optional: install Redis CLI for debugging queue connectivity later
       - name: Install redis-tools (optional)
@@ -83,6 +88,13 @@ jobs:
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Git/Husky/LFS diagnostics
+        run: |
+          git --version
+          git lfs version
+          echo "hooksPath=$(git config --get core.hooksPath || echo .git/hooks)"
+          test -f .husky/pre-push && echo "Husky pre-push present" || echo "No Husky pre-push hook"
 
       - name: Print environment summary
         run: |
