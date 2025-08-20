@@ -5,6 +5,10 @@
 
 name: Copilot Setup Steps
 
+permissions:
+  contents: read
+  deployments: write
+
 on:
   workflow_dispatch: {}
   # Note: Copilot triggers this implicitly; workflow_dispatch allows manual debugging
