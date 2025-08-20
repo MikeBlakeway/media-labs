@@ -1,1 +1,37 @@
+# Node
+node_modules/
+.next/
+.out/
+
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+
+# OS / Editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+
+# Artifacts / Models
+storage/artifacts/
+models/
+checkpoints/
+
+
+# Logs
+logs/
+*.log
+
+
+# Misc
+*.local
 .codacy/
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

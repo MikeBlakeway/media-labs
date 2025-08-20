@@ -1,0 +1,42 @@
+{
+  "name": "media-lab",
+  "private": true,
+  "packageManager": "npm@11.5.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "npm run -w apps/web dev",
+    "build": "npm run -w apps/web build",
+    "start": "npm run -w apps/web start",
+    "typecheck": "npm run -w apps/web typecheck",
+    "lint": "npm run -w apps/web lint && eslint .",
+    "format": "prettier -w .",
+    "format:check": "prettier -c .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "apps/web/src/**/*.{js,jsx,ts,tsx}": [
+      "eslint --config apps/web/eslint.config.mjs --fix",
+      "prettier --write"
+    ],
+    "**/*.{js,jsx,ts,tsx,json,md,css,scss,html}": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.14.0",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.9.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "typescript-eslint": "^8.7.0"
+  }
+}
