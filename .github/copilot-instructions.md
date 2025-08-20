@@ -1,50 +1,85 @@
 # Copilot Instructions for Media Lab
+# Copilot Instructions for Media Lab
 
-## Project Overview
+Purpose: a single-page, actionable guide to help AI coding agents be productive in this repository.
 
-* A modular **AI media lab** for text→image, image/video generation, audio separation, frame interpolation, face swapping, and video transformation.
-* Built with open‑source models under **research‑only/non‑commercial** licenses (e.g., Stable Diffusion XL, SVD, AnimateDiff, VideoCrafter, Demucs, InsightFace).
-* Deployable via **Docker** and scalable to **GPU-backed servers** (e.g. RunPod), with a Next.js frontend on **Vercel**.
+Quick summary (big picture)
+- Monorepo using npm workspaces: `apps/*` (frontend) and `services/*` (FastAPI + model workers).
+- Typical flow: UI (`apps/web`) → `services/api` (FastAPI orchestration) → model worker (e.g. `comfy`, `rife`, `demucs`) → artifacts in `storage/artifacts`.
 
-## Business Context
+Project overview (from README)
+- Experimental research-only media lab: T2I (SDXL), I2V (SVD), AnimateDiff, VideoCrafter, Demucs, RIFE, InsightFace.
+- Intended for prototyping and demos; model licenses may be research/non-commercial — surface this in the UI.
 
-* MVP is aimed at **prototyping, demos, and internal experimentation**; cost-efficiency is critical.
-* **Non-commercial license restrictions** require visible labelling and easy model swap for future commercialization.
-* The team expects a **lean operation**: spin up GPU only when needed, track usage, and monitor resource consumption.
+Essential developer workflows (concrete)
+- Local web dev: from repo root run:
 
-## Roles for Copilot
+```bash
+npm run dev
+```
 
-When drafting or editing code, Copilot should consider:
+- Build frontend from root:
 
-* **Architecture Designer**: maintain clear separation across services (`api`, `comfy`, `faceswap`, `demucs`, `rife`, `web`).
-* **DevOps / Infra Architect**: write Dockerfiles, compose files, CI/CD workflows that support both CPU-only local testing and GPU deployment.
-* **Product Engineer**: ensure job workflows (T2I, I2V, etc.) are robust, resumable, and user-triggered from the UI; include prompts, progress websockets, and download links.
-* **Compliance Auditor**: embed license notices, watermarking, and usage confirmations for research-only components.
-* **Observability Specialist**: add logs, metrics, cost tracking, job queueing, and rate-limiting features.
+```bash
+npm run build
+```
 
-## Common Tasks & Commands
+- Docker local (CPU):
 
-Examples of tasks where Copilot should generate context-aware solutions:
+```bash
+docker-compose up --build
+```
 
-* Create a FastAPI endpoint `/jobs` with create/status/list/cancel semantics using memory initially.
-* Stencil a ComfyUI workflow JSON for SDXL T2I (prompt, seed, steps) and for SVD I2V (image input, frame count, fps).
-* Write Dockerfiles: one base image for CPU local dev and one GPU-enabled for RunPod with models volume-mounted.
-* Draft a GitHub Actions workflow (`copilot-setup-steps.yml`) to pre-install Python dependencies and media tools like `ffmpeg`.
-* Add Redis-based job queue logic with retry/backoff and persistence to PostgreSQL.
-* Write a snippet to measure and log GPU job duration for cost tracking.
-* Annotate UI pages with license badges: `research-only`, `non-commercial`, etc.
+- Docker local (GPU):
 
-## Environment & Copilot Setup
+```bash
+docker-compose -f docker-compose.gpu.yml up
+```
 
-* Add `.github/workflows/copilot-setup-steps.yml` with a `copilot-setup-steps` job to pre-install dependencies (Python, Node, ffmpeg, Redis client).
-* Define environment variables in GitHub Environments:
+- Quick API run:
 
-  * `ENV=dev`, `RUNPOD_TOKEN`, `STORAGE_URL`, etc.
-* Add secrets for secure resource access.
+```bash
+cd services/api
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
 
-## Copilot Agent Permissions & Actions
+Repository specifics agents must know
+- Root `package.json` is the workspace manifest. Root scripts proxy into `apps/web` (see `scripts`).
+- `prepare` is intentionally guarded in `package.json` to avoid failing CI when `husky` isn't installed; do not assume git hooks are present during analysis.
+- CI preinstall job (`.github/workflows/copilot-setup-steps.yml`) intentionally installs root devDependencies (`npm ci`) early and runs `git lfs install --skip-repo --skip-smudge`. Respect this order when suggesting CI changes.
+- The repo contains `.husky/_/` wrapper hook scripts (git-lfs wrappers). Any changes that touch Husky or LFS should also update the workflow steps (see `git lfs update --force` pattern in workflow).
 
-* Use GitHub’s **MCP (Model Context Protocol)** to extend Copilot with tool access (e.g., job queue, caching, observability tools).
-* Configure via repository Settings under “Copilot → Coding Agent.”
-* Provide a **Copilot environment** named `copilot` in GitHub “Environments,” add secrets like `COPILOT_MCP_GITHUB_PERSONAL_ACCESS_TOKEN` for expanded context.
-* Ensure workflows for Copilot **fail gracefully**: setup steps should log warnings if they fail, not block the session.
+Integration patterns and examples
+- Frontend: `apps/web/src/app` (Next.js 15 app router). Use standard Next.js routing and call the API at `/api/*` or the orchestration endpoints in `services/api`.
+- API: `services/api` exposes job orchestration endpoints (look for `/jobs` routes). Jobs use a small JSON shape: { prompt, params, seed, steps } — follow this when adding endpoints or workers.
+- Workers: model services are small HTTP or WebSocket servers. ComfyUI uses WebSocket for progress updates; the API bridges those updates to the frontend.
+
+Conventions and constraints (what to avoid)
+- Do not change `core.hooksPath` or remove `.husky/_/` hooks without updating `.github/workflows/copilot-setup-steps.yml` — CI depends on this pattern.
+- Keep model weights and heavy artifacts out of git; use `storage/artifacts` or Git LFS. If code suggests downloading weights during CI, update the workflow to handle LFS and large downloads safely.
+- Mark research/non-commercial models clearly in the UI (see `README.md` wording) and add a visible badge when rendering model options.
+
+Where to look first (high-value files)
+- `package.json` (root) — workspace layout, guarded `prepare` script
+- `apps/web/` — Next.js app, `eslintrc`, `postcss.config.mjs`, `src/app` (pages and components)
+- `services/api/README.md` and `services/api/` source — job shapes and endpoints
+- `.github/workflows/copilot-setup-steps.yml` — how the agent environment is prepared for Copilot Coding Agent
+- `.husky/_/` — LFS wrapper scripts and their executable bits
+
+Common tasks Copilot may be asked to do (concrete examples)
+- Add a FastAPI `/jobs` endpoint implementing create/list/status/cancel using an in-memory store (follow existing job JSON shape).
+- Draft a ComfyUI workflow JSON for SDXL T2I and SVD I2V using the repo's parameter conventions.
+- Add a Dockerfile for a GPU worker (based on `infra/docker/`) and update `infra/compose/` with a GPU-enabled service.
+- Update CI: when adding root dev tools, add `npm ci` at the top of `copilot-setup-steps.yml`; when using LFS, ensure `git lfs install` and `git lfs update --force` are included.
+
+Environment & Copilot setup notes
+- The `copilot-setup-steps` workflow runs before the Copilot Coding Agent session. It installs Node, root devDeps, Python, `ffmpeg`, and `git-lfs` and intentionally skips smudge to avoid pulling LFS blobs during setup.
+- If the Coding Agent needs extended repo access, a GitHub environment named `copilot` and a PAT secret (e.g., `COPILOT_MCP_GITHUB_PERSONAL_ACCESS_TOKEN`) may be configured in repo settings.
+
+Copilot agent permissions & actions (operational)
+- Prefer read-only suggestions unless a PR/branch is requested. If making changes to hooks or CI, include tests or a manual `workflow_dispatch` test plan.
+- When proposing changes that add dependencies, note the impact on CI (longer install, Trivy/semgrep review) and update `.github/workflows/copilot-setup-steps.yml` accordingly.
+
+Final notes & feedback
+- This file intentionally focuses on discoverable, actionable patterns in the repo. If you want the original longer prose restored or additional examples (endpoints, example job JSON), tell me which areas to expand and I'll add them.
