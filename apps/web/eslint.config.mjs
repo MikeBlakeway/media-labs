@@ -5,6 +5,9 @@ const compat = new FlatCompat({
 })
 
 const eslintConfig = [
+  {
+    ignores: ['.next/**', 'cache/**', 'dist/**', 'build/**', 'out/**']
+  },
   ...compat.config({
     extends: ['next/core-web-vitals', 'prettier'],
     plugins: ['import', '@typescript-eslint'],
