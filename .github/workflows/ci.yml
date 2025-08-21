@@ -118,19 +118,15 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20]
-        python-version: ["3.11", "3.12"]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ matrix.node-version }}
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install root dependencies
@@ -150,10 +146,10 @@ jobs:
             echo "No tests configured for frontend, skipping..."
           fi
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
 
       - name: Install Python dependencies
