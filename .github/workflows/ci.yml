@@ -53,11 +53,21 @@ jobs:
 
       - name: Lint Python with ruff
         working-directory: services/api
-        run: ruff check .
+        run: |
+          if find . -name "*.py" | grep -q .; then
+            ruff check .
+          else
+            echo "No Python files found, skipping ruff check..."
+          fi
 
       - name: Format check Python with ruff
         working-directory: services/api
-        run: ruff format --check .
+        run: |
+          if find . -name "*.py" | grep -q .; then
+            ruff format --check .
+          else
+            echo "No Python files found, skipping ruff format check..."
+          fi
 
   type-check:
     name: Type Checking
@@ -98,7 +108,12 @@ jobs:
 
       - name: Python type check with mypy
         working-directory: services/api
-        run: mypy . --ignore-missing-imports
+        run: |
+          if find . -name "*.py" | grep -q .; then
+            mypy . --ignore-missing-imports
+          else
+            echo "No Python files found, skipping mypy type check..."
+          fi
 
   test:
     name: Run Tests
@@ -229,8 +244,8 @@ jobs:
         working-directory: services/api
         run: |
           pip install -r requirements.txt
-          pip install safety
+          pip install pip-audit
 
       - name: Run Python security audit
         working-directory: services/api
-        run: safety check
+        run: pip-audit -r requirements.txt
