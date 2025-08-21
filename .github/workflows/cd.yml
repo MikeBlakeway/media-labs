@@ -136,7 +136,19 @@ jobs:
             Commit: ${{ github.sha }}
           draft: false
           prerelease: false
-
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: '${{ github.ref_name }}',
+              name: `Release ${{ github.ref_name }}`,
+              body: `Automated release for ${{ github.ref_name }}\n\nDocker Image: ${{ needs.build-images.outputs.image-tag }}\nCommit: ${{ github.sha }}`,
+              draft: false,
+              prerelease: false
+            });
       - name: Update deployment status
         if: always()
         run: |

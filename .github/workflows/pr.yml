@@ -56,7 +56,7 @@ jobs:
           echo "PR Title: $PR_TITLE"
 
           # Check if title follows conventional commit format
-          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+ ]]; then
+          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?: .+ ]]; then
             echo "✅ PR title follows conventional commit format"
           else
             echo "❌ PR title should follow conventional commit format (feat/fix/docs/style/refactor/test/chore)"
@@ -200,7 +200,12 @@ jobs:
         run: |
           if [ -f "infra/docker/Dockerfile" ] || [ -f "Dockerfile" ]; then
             docker build -t media-lab:pr-${{ github.event.number }} .
-            echo "✅ Docker build successful"
+          if [ -f "infra/docker/Dockerfile" ]; then
+            docker build -f infra/docker/Dockerfile -t media-lab:pr-${{ github.event.number }} .
+            echo "✅ Docker build successful (infra/docker/Dockerfile)"
+          elif [ -f "Dockerfile" ]; then
+            docker build -f Dockerfile -t media-lab:pr-${{ github.event.number }} .
+            echo "✅ Docker build successful (Dockerfile)"
           else
             echo "No Dockerfile found, skipping Docker build test"
           fi
