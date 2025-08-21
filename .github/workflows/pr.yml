@@ -18,7 +18,7 @@ jobs:
       api: ${{ steps.changes.outputs.api }}
       docker: ${{ steps.changes.outputs.docker }}
       workflows: ${{ steps.changes.outputs.workflows }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
     name: Validate PR
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,7 +54,7 @@ jobs:
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
-          
+
           # Check if title follows conventional commit format
           if [[ "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+ ]]; then
             echo "✅ PR title follows conventional commit format"
@@ -80,7 +80,7 @@ jobs:
           # Check if this is a major version change or has breaking changes
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_BODY="${{ github.event.pull_request.body }}"
-          
+
           if [[ "$PR_TITLE" =~ BREAKING\ CHANGE ]] || [[ "$PR_BODY" =~ BREAKING\ CHANGE ]]; then
             echo "⚠️ This PR contains breaking changes"
             echo "Make sure to update documentation and version numbers appropriately"
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: github.event.pull_request.draft == false
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -103,7 +103,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install root dependencies
         if: needs.changes.outputs.frontend == 'true'
@@ -140,7 +140,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install Python dependencies
         if: needs.changes.outputs.api == 'true'
@@ -172,7 +172,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: github.event.pull_request.draft == false && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.docker == 'true')
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -182,7 +182,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies and build
         if: needs.changes.outputs.frontend == 'true'
@@ -210,7 +210,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     if: github.event.pull_request.draft == false
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -219,16 +219,16 @@ jobs:
         if: needs.changes.outputs.docker == 'true'
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
 
       - name: Upload Trivy scan results
         if: needs.changes.outputs.docker == 'true'
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
       - name: Scan for secrets
         uses: trufflesecurity/trufflehog@main
@@ -243,7 +243,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [validate-pr, lint-and-test, build-test, security-scan]
     if: always() && github.event.pull_request.draft == false
-    
+
     steps:
       - name: Comment PR results
         uses: actions/github-script@v7
@@ -255,17 +255,17 @@ jobs:
               buildTest: '${{ needs.build-test.result }}',
               security: '${{ needs.security-scan.result }}'
             };
-            
+
             let status = '✅ All checks passed!';
             let details = [];
-            
+
             if (results.validation === 'failure') {
               status = '❌ PR validation failed';
               details.push('- PR validation: ❌ Failed');
             } else {
               details.push('- PR validation: ✅ Passed');
             }
-            
+
             if (results.lintTest === 'failure') {
               status = '❌ Some checks failed';
               details.push('- Lint & Test: ❌ Failed');
@@ -274,7 +274,7 @@ jobs:
             } else {
               details.push('- Lint & Test: ⏸️ Skipped');
             }
-            
+
             if (results.buildTest === 'failure') {
               status = '❌ Some checks failed';
               details.push('- Build Test: ❌ Failed');
@@ -283,7 +283,7 @@ jobs:
             } else {
               details.push('- Build Test: ⏸️ Skipped');
             }
-            
+
             if (results.security === 'failure') {
               status = '⚠️ Security scan found issues';
               details.push('- Security Scan: ⚠️ Issues found');
@@ -292,27 +292,27 @@ jobs:
             } else {
               details.push('- Security Scan: ⏸️ Skipped');
             }
-            
+
             const comment = `## PR Check Results
-            
+
             ${status}
-            
+
             ### Details:
             ${details.join('\n')}
-            
+
             _This comment is automatically updated when new commits are pushed._`;
-            
+
             // Find existing comment and update it, or create new one
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
+
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && comment.body.includes('## PR Check Results')
             );
-            
+
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
