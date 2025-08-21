@@ -15,8 +15,8 @@
     "start": "npm run -w apps/web start",
     "typecheck": "npm run -w apps/web typecheck",
     "lint": "npm run -w apps/web lint && eslint .",
-    "format": "prettier -w .",
-    "format:check": "prettier -c .",
+    "format": "npx prettier -w .",
+    "format:check": "npx prettier -c .",
     "prepare": "command -v husky >/dev/null 2>&1 && husky || true"
   },
   "lint-staged": {
