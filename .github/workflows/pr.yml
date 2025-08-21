@@ -1,0 +1,330 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: 20
+  PYTHON_VERSION: 3.12
+
+jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      api: ${{ steps.changes.outputs.api }}
+      docker: ${{ steps.changes.outputs.docker }}
+      workflows: ${{ steps.changes.outputs.workflows }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'apps/web/**'
+              - 'package.json'
+              - 'package-lock.json'
+            api:
+              - 'services/api/**'
+            docker:
+              - 'infra/docker/**'
+              - 'Dockerfile'
+              - 'docker-compose*.yml'
+            workflows:
+              - '.github/workflows/**'
+
+  validate-pr:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate PR title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+          
+          # Check if title follows conventional commit format
+          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+ ]]; then
+            echo "✅ PR title follows conventional commit format"
+          else
+            echo "❌ PR title should follow conventional commit format (feat/fix/docs/style/refactor/test/chore)"
+            echo "Example: 'feat(api): add new endpoint for user management'"
+            exit 1
+          fi
+
+      - name: Check PR description
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          if [ -z "$PR_BODY" ] || [ ${#PR_BODY} -lt 20 ]; then
+            echo "❌ PR description is too short or missing"
+            echo "Please provide a meaningful description of your changes"
+            exit 1
+          else
+            echo "✅ PR description looks good"
+          fi
+
+      - name: Check for breaking changes
+        run: |
+          # Check if this is a major version change or has breaking changes
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+          
+          if [[ "$PR_TITLE" =~ BREAKING\ CHANGE ]] || [[ "$PR_BODY" =~ BREAKING\ CHANGE ]]; then
+            echo "⚠️ This PR contains breaking changes"
+            echo "Make sure to update documentation and version numbers appropriately"
+          fi
+
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        if: needs.changes.outputs.frontend == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install root dependencies
+        if: needs.changes.outputs.frontend == 'true'
+        run: npm ci
+
+      - name: Install web dependencies
+        if: needs.changes.outputs.frontend == 'true'
+        working-directory: apps/web
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm i; fi
+
+      - name: Lint frontend changes
+        if: needs.changes.outputs.frontend == 'true'
+        run: |
+          npm run lint
+          npm run format:check
+
+      - name: Type check frontend
+        if: needs.changes.outputs.frontend == 'true'
+        run: npm run typecheck
+
+      - name: Test frontend
+        if: needs.changes.outputs.frontend == 'true'
+        working-directory: apps/web
+        run: |
+          if [ -f "jest.config.js" ] || [ -f "jest.config.ts" ] || grep -q '"test"' package.json; then
+            npm test -- --coverage
+          else
+            echo "No tests configured for frontend"
+          fi
+
+      - name: Set up Python
+        if: needs.changes.outputs.api == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        if: needs.changes.outputs.api == 'true'
+        working-directory: services/api
+        run: |
+          pip install -r requirements.txt
+          pip install ruff mypy pytest pytest-asyncio
+
+      - name: Lint API changes
+        if: needs.changes.outputs.api == 'true'
+        working-directory: services/api
+        run: |
+          ruff check .
+          ruff format --check .
+          mypy . --ignore-missing-imports
+
+      - name: Test API
+        if: needs.changes.outputs.api == 'true'
+        working-directory: services/api
+        run: |
+          if [ -d "tests" ] || [ -f "test_*.py" ] || find . -name "*_test.py" | grep -q .; then
+            pytest --cov=. --cov-report=xml
+          else
+            echo "No tests found for API"
+          fi
+
+  build-test:
+    name: Build Test
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event.pull_request.draft == false && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.docker == 'true')
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        if: needs.changes.outputs.frontend == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        if: needs.changes.outputs.frontend == 'true'
+        run: |
+          npm ci
+          cd apps/web && ([ -f package-lock.json ] && npm ci || npm i)
+          cd ../.. && npm run build
+
+      - name: Set up Docker Buildx
+        if: needs.changes.outputs.docker == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Test Docker build
+        if: needs.changes.outputs.docker == 'true'
+        run: |
+          if [ -f "infra/docker/Dockerfile" ] || [ -f "Dockerfile" ]; then
+            docker build -t media-lab:pr-${{ github.event.number }} .
+            echo "✅ Docker build successful"
+          else
+            echo "No Dockerfile found, skipping Docker build test"
+          fi
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: changes
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        if: needs.changes.outputs.docker == 'true'
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        if: needs.changes.outputs.docker == 'true'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  comment-results:
+    name: Comment Results
+    runs-on: ubuntu-latest
+    needs: [validate-pr, lint-and-test, build-test, security-scan]
+    if: always() && github.event.pull_request.draft == false
+    
+    steps:
+      - name: Comment PR results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              validation: '${{ needs.validate-pr.result }}',
+              lintTest: '${{ needs.lint-and-test.result }}',
+              buildTest: '${{ needs.build-test.result }}',
+              security: '${{ needs.security-scan.result }}'
+            };
+            
+            let status = '✅ All checks passed!';
+            let details = [];
+            
+            if (results.validation === 'failure') {
+              status = '❌ PR validation failed';
+              details.push('- PR validation: ❌ Failed');
+            } else {
+              details.push('- PR validation: ✅ Passed');
+            }
+            
+            if (results.lintTest === 'failure') {
+              status = '❌ Some checks failed';
+              details.push('- Lint & Test: ❌ Failed');
+            } else if (results.lintTest === 'success') {
+              details.push('- Lint & Test: ✅ Passed');
+            } else {
+              details.push('- Lint & Test: ⏸️ Skipped');
+            }
+            
+            if (results.buildTest === 'failure') {
+              status = '❌ Some checks failed';
+              details.push('- Build Test: ❌ Failed');
+            } else if (results.buildTest === 'success') {
+              details.push('- Build Test: ✅ Passed');
+            } else {
+              details.push('- Build Test: ⏸️ Skipped');
+            }
+            
+            if (results.security === 'failure') {
+              status = '⚠️ Security scan found issues';
+              details.push('- Security Scan: ⚠️ Issues found');
+            } else if (results.security === 'success') {
+              details.push('- Security Scan: ✅ Passed');
+            } else {
+              details.push('- Security Scan: ⏸️ Skipped');
+            }
+            
+            const comment = `## PR Check Results
+            
+            ${status}
+            
+            ### Details:
+            ${details.join('\n')}
+            
+            _This comment is automatically updated when new commits are pushed._`;
+            
+            // Find existing comment and update it, or create new one
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes('## PR Check Results')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
