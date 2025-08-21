@@ -18,6 +18,12 @@ const eslintConfig = [
     },
     rules: {
       'import/no-unresolved': 'error',
+      // Next.js rule expecting a `pages/` dir can be noisy for App Router projects.
+      // Disable it here because this project uses the `app/` router and custom root.
+      // The Next ESLint plugin registers rules under the `@next/next` plugin id,
+      // so disable both variants to be safe across plugin versions.
+      'next/no-html-link-for-pages': 'off',
+      '@next/next/no-html-link-for-pages': 'off',
       'import/order': [
         'error',
         {
