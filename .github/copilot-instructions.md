@@ -1,54 +1,241 @@
-# Copilot Instructions — Media Lab (concise)
+# GitHub Copilot Instructions — Media Lab
 
-Purpose: a short, practical guide to help AI coding agents make safe, minimal, and correct changes in this monorepo.
+**ALWAYS follow these instructions first and fallback to additional search and context gathering only if the information here is incomplete or found to be in error.**
 
-### Quick summary
+This is an experimental AI-powered media lab for generating and transforming images, video, and audio using open-source models. The repository is a monorepo using npm workspaces with a Next.js frontend and FastAPI backend.
 
-- Monorepo using npm workspaces: `apps/*` (frontend) and `services/*` (backend/workers).
-- Frontend is in `apps/web` (Next.js 15, React 19, app router in `apps/web/src/app`).
-- API orchestration lives in `services/api` (FastAPI). Model workers are separate services (HTTP or WebSocket).
+## Working Effectively
 
-### Top-level developer workflows
+### Bootstrap and Dependencies
 
-- Local frontend dev (from repo root): `npm run dev` (proxies to `apps/web`).
-- Build frontend: `npm run build`.
-- Start web production server: `npm run start`.
-- Quick API run: `cd services/api && pip install -r requirements.txt && uvicorn main:app --reload`.
-- Docker (CPU): `docker-compose up --build`; GPU variant: `docker-compose -f docker-compose.gpu.yml up`.
+Install all dependencies first:
 
-### Important repo conventions
+```bash
+cd /home/runner/work/media-lab/media-lab
+npm install                              # Root dependencies (15 seconds)
+cd apps/web && npm install              # Web dependencies (1 second)
+cd ../../services/api && pip install -r requirements.txt  # API dependencies (9 seconds)
+```
 
-- Root `package.json` is the workspace manifest; root scripts proxy into `apps/web`.
-- The `prepare` script is intentionally guarded (checks for `husky`) — don't assume git hooks are present in analysis runs.
-- Keep model weights and large artifacts out of Git; use `storage/artifacts` or Git LFS. CI and workflows must be updated if adding weight downloads.
+### Environment Setup
 
-### Where to look first (high-value files)
+Copy environment files:
 
-- `package.json` (root) — workspace layout and scripts.
-- `apps/web/` — Next.js app, `eslint.config.mjs`, `postcss.config.mjs`, `src/app` (routes + components).
-- `services/api/` — orchestration endpoints and job shapes (see README in that folder).
-- `.github/workflows/copilot-setup-steps.yml` — how the agent/dev environment is prepared for CI and the Copilot agent.
-- `.husky/_/` — wrapper scripts related to Git LFS and hooks.
+```bash
+cp .env.example .env
+# Web app .env is not needed yet (no .env.example exists)
+```
 
-### Common, high-value tasks (concrete)
+Root `.env` controls API settings and artifact storage. Default values work for local development.
 
-- Add a FastAPI `/jobs` endpoint implementing create/list/status/cancel (use the existing job JSON shape: { prompt, params, seed, steps }).
-- Add or update a model worker service: follow existing worker patterns (HTTP or WS, small REST endpoints for job control, and artifact uploads to `storage/artifacts`).
-- Draft ComfyUI / workflow JSONs for T2I or I2V using the repo's parameter conventions.
-- Add a GPU Dockerfile / compose service: copy patterns from existing `infra/` files and update `docker-compose*.yml`.
+### Build Commands
 
-### Safety, CI and dependency rules
+Build the web application:
 
-- When you add dependencies (npm, pip, etc.) update the appropriate lockfile and note CI impact (longer installs). The repo uses Git LFS; ensure workflows handle LFS safely.
-- The repo has a guarded Husky setup; do not modify Husky hooks or `core.hooksPath` without also updating `.github/workflows/copilot-setup-steps.yml`.
-- If you modify dependencies or run `npm install` / `pip install`, run repository security scans (this project integrates Codacy/Trivy in CI). After edits that add packages, run the same scans locally or in CI and fix high/critical findings before continuing.
+```bash
+npm run build                           # Build from root (27 seconds)
+# OR from apps/web directory:
+cd apps/web && npm run build           # Build from web dir (20 seconds)
+```
 
-### Style and testing expectations
+**NEVER CANCEL builds** - they complete in under 30 seconds. Set timeout to 60+ seconds minimum.
 
-- Prefer minimal, well-scoped changes and include tests when you change behaviour (unit + small integration). Frontend uses Next.js testing patterns; API is FastAPI — add small pytest cases for new endpoints.
-- Keep PRs small and document any infra/CI changes clearly in the PR description.
+### Run Applications
 
-### Final notes
+**Development server:**
 
-- Prefer read-only suggestions unless the user explicitly asks for edits or a PR. When making edits, keep them minimal, run lint/typecheck (`npm run lint`, `npm run typecheck`), and confirm the frontend builds.
-- If you need Codacy/MCP server analysis and the CLI/tool isn't available in the environment, ask the repo owner or run the project CI; refer to `.github/instructions/codacy.instructions.md` for required follow-ups.
+```bash
+npm run dev                             # Start from root (2 seconds startup)
+# App available at http://localhost:3000
+```
+
+**Production server:**
+
+```bash
+npm run build && npm run start         # Build first, then start production
+# Must run build before start or it will fail
+```
+
+**API server (NOT IMPLEMENTED YET):**
+
+```bash
+cd services/api
+# This will fail - no main.py or app files exist yet
+uvicorn main:app --reload --port 8000   # DOES NOT WORK - API not implemented
+```
+
+### Quality Assurance Commands
+
+**Linting and formatting:**
+
+```bash
+npm run lint                            # Lint web app + root (6 seconds)
+npm run typecheck                       # TypeScript checking (3 seconds)
+npm run format                          # Format all files (2 seconds)
+npm run format:check                    # Check formatting (2 seconds)
+```
+
+**Testing:**
+
+```bash
+cd apps/web && npm run test            # Jest tests (no tests exist yet)
+```
+
+**NEVER CANCEL linting or testing** - all complete in under 10 seconds.
+
+## Repository Structure
+
+### Key Directories
+
+```
+/home/runner/work/media-lab/media-lab/
+├── apps/web/              # Next.js 15 frontend (React 19)
+├── services/api/          # FastAPI backend (PLACEHOLDER ONLY)
+├── .github/               # GitHub workflows and templates
+├── docs/                  # Documentation
+└── package.json           # Root workspace configuration
+```
+
+### Important Files
+
+- `package.json` (root) — Workspace manifest and proxy scripts
+- `apps/web/package.json` — Web app dependencies and scripts
+- `services/api/requirements.txt` — Python dependencies (implementation missing)
+- `.github/workflows/copilot-setup-steps.yml` — Pre-install dependencies for Copilot
+- `docs/how-to-develop.md` — Detailed development guide
+
+## Validation Requirements
+
+### Manual Testing Scenarios
+
+**ALWAYS test the web application after making changes:**
+
+1. Start dev server: `npm run dev`
+2. Open http://localhost:3000 in browser
+3. Verify the Next.js welcome page loads correctly
+4. Check console for any errors
+
+**For production builds:**
+
+1. Run `npm run build`
+2. Run `npm run start`
+3. Verify production app serves correctly
+
+### Pre-commit Validation
+
+**ALWAYS run before committing:**
+
+```bash
+npm run lint                            # Must pass
+npm run typecheck                       # Must pass
+npm run format:check                    # Must pass
+npm run build                           # Must succeed
+```
+
+## Current Limitations
+
+### What Works
+
+- ✅ Frontend build, development, and production serving
+- ✅ Linting, typechecking, and formatting
+- ✅ npm workspace scripts from root directory
+- ✅ Environment file setup
+- ✅ GitHub workflows and Copilot pre-install
+
+### What Doesn't Work
+
+- ❌ **API service** - only requirements.txt exists, no Python implementation files
+- ❌ **Docker environments** - referenced in docs but not implemented
+- ❌ **Job management endpoints** - API not built yet
+- ❌ **ComfyUI integration** - not implemented
+- ❌ **Tests** - Jest configured but no test files exist
+
+### Known Issues
+
+- Running `npm run start` from root fails if build artifacts are missing
+- API documentation references `uvicorn main:app` but `main.py` doesn't exist
+- Docker Compose commands mentioned in docs will fail (no docker-compose.yml)
+
+## Development Workflow
+
+### For Frontend Changes
+
+1. Make changes to files in `apps/web/src/`
+2. Test with `npm run dev`
+3. Run quality checks: `npm run lint && npm run typecheck`
+4. Build to ensure no errors: `npm run build`
+5. Test production build: `npm run start`
+
+### For API Changes (When Implemented)
+
+1. Create Python files in `services/api/`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Test with: `uvicorn main:app --reload` (once main.py exists)
+4. Add tests in `services/api/tests/`
+
+### Common Commands Reference
+
+| Command             | Directory | Time | Description              |
+| ------------------- | --------- | ---- | ------------------------ |
+| `npm install`       | root      | 15s  | Install all dependencies |
+| `npm run build`     | root      | 27s  | Build web application    |
+| `npm run dev`       | root      | 2s   | Start development server |
+| `npm run lint`      | root      | 6s   | Lint code                |
+| `npm run typecheck` | root      | 3s   | TypeScript checking      |
+| `npm run format`    | root      | 2s   | Format all files         |
+
+## Timeout Guidelines
+
+**NEVER CANCEL builds or long-running commands**
+
+- **Dependency installation:** Set 10+ minute timeout (actual: under 30 seconds)
+- **Builds:** Set 5+ minute timeout (actual: under 30 seconds)
+- **Linting/testing:** Set 2+ minute timeout (actual: under 10 seconds)
+- **Development server startup:** Set 1+ minute timeout (actual: under 5 seconds)
+
+## Technology Stack
+
+### Frontend (apps/web)
+
+- **Framework:** Next.js 15 with App Router
+- **React:** Version 19
+- **TypeScript:** Full type checking enabled
+- **Styling:** TailwindCSS v4
+- **Linting:** ESLint + Prettier
+- **Testing:** Jest (configured, no tests yet)
+
+### Backend (services/api)
+
+- **Framework:** FastAPI (planned)
+- **Python:** Version 3.12+
+- **Server:** uvicorn with auto-reload
+- **Status:** PLACEHOLDER ONLY - no implementation files exist
+
+### Development Tools
+
+- **Workspace:** npm workspaces for monorepo management
+- **Git Hooks:** Husky + lint-staged for pre-commit checks
+- **CI/CD:** GitHub Actions with Copilot pre-install workflow
+- **Package Manager:** npm 11.5.2+, Node.js 20+
+
+## Troubleshooting
+
+### Build Failures
+
+- **"No build cache found"** - Normal warning, can be ignored
+- **"Could not find production build"** - Run `npm run build` first
+- **"Module not found"** - Run `npm install` to install dependencies
+
+### Development Server Issues
+
+- **Port 3000 in use** - Stop existing processes or change port in next.config.ts
+- **Import errors** - Check TypeScript compilation with `npm run typecheck`
+- **CSS issues** - TailwindCSS v4 syntax may differ from older versions
+
+### API Service Issues
+
+- **"No module named 'main'"** - API implementation doesn't exist yet
+- **Docker commands fail** - Docker setup not implemented despite documentation references
+- **uvicorn command fails** - No FastAPI app exists yet
+
+Remember: This project is in early development. Focus on frontend development and prepare for API implementation.
