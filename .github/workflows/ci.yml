@@ -160,6 +160,7 @@ jobs:
         if: needs.build.outputs.frontend_built == 'true'
         uses: actions/download-artifact@v4
         with:
+          # Intentionally omit `run-id` so the artifact is downloaded from the current workflow run
           name: frontend-build
           path: apps/web/.next
 
@@ -256,11 +257,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-next-
 
+      - name: Verify frontend upload contents (diagnostic)
+        run: |
+          echo "Listing apps/web and .next for diagnostics"
+          ls -la apps/web || true
+          if [ -d "apps/web/.next" ] && [ "$(ls -A apps/web/.next)" ]; then
+            echo ".next exists and is not empty"
+            du -sh apps/web/.next || true
+            ls -la apps/web/.next | head -n 200
+          else
+            echo "ERROR: apps/web/.next is missing or empty; build may have failed or produced output elsewhere"
+            exit 1
+          fi
+
       - name: Upload frontend build artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
           path: apps/web/.next
+          include-hidden-files: true
 
       - name: Check frontend build artifact
         id: check-frontend
@@ -271,8 +286,18 @@ jobs:
             echo "frontend_built=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx (inline)
+        run: |
+          echo "Checking for docker buildx..."
+          if docker buildx version >/dev/null 2>&1; then
+            echo "docker buildx is already available"
+          else
+            echo "Installing docker buildx plugin"
+            mkdir -p ~/.docker/cli-plugins
+            curl -fsSL "https://github.com/docker/buildx/releases/latest/download/buildx-$(uname -s)-$(uname -m)" -o ~/.docker/cli-plugins/docker-buildx
+            chmod +x ~/.docker/cli-plugins/docker-buildx
+          fi
+          docker buildx create --use || true
 
       - name: Build Docker images
         run: |

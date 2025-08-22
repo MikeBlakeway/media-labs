@@ -79,8 +79,10 @@ python -m pip install -r requirements.txt
 ### Node (Web)
 
 - Next.js 15
-- React 18
+- React 19
 - TypeScript 5
+
+Node: this repo targets Node 20+. Use Node >=20 for local development and Codespaces.
 
 Install from `apps/web/package.json`:
 

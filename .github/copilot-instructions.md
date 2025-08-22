@@ -1,97 +1,54 @@
-# Copilot Instructions for Media Lab
+# Copilot Instructions — Media Lab (concise)
 
-# Copilot Instructions for Media Lab
+Purpose: a short, practical guide to help AI coding agents make safe, minimal, and correct changes in this monorepo.
 
-Purpose: a single-page, actionable guide to help AI coding agents be productive in this repository.
+### Quick summary
 
-Quick summary (big picture)
+- Monorepo using npm workspaces: `apps/*` (frontend) and `services/*` (backend/workers).
+- Frontend is in `apps/web` (Next.js 15, React 19, app router in `apps/web/src/app`).
+- API orchestration lives in `services/api` (FastAPI). Model workers are separate services (HTTP or WebSocket).
 
-- Monorepo using npm workspaces: `apps/*` (frontend) and `services/*` (FastAPI + model workers).
-- Typical flow: UI (`apps/web`) → `services/api` (FastAPI orchestration) → model worker (e.g. `comfy`, `rife`, `demucs`) → artifacts in `storage/artifacts`.
+### Top-level developer workflows
 
-Project overview (from README)
+- Local frontend dev (from repo root): `npm run dev` (proxies to `apps/web`).
+- Build frontend: `npm run build`.
+- Start web production server: `npm run start`.
+- Quick API run: `cd services/api && pip install -r requirements.txt && uvicorn main:app --reload`.
+- Docker (CPU): `docker-compose up --build`; GPU variant: `docker-compose -f docker-compose.gpu.yml up`.
 
-- Experimental research-only media lab: T2I (SDXL), I2V (SVD), AnimateDiff, VideoCrafter, Demucs, RIFE, InsightFace.
-- Intended for prototyping and demos; model licenses may be research/non-commercial — surface this in the UI.
+### Important repo conventions
 
-Essential developer workflows (concrete)
+- Root `package.json` is the workspace manifest; root scripts proxy into `apps/web`.
+- The `prepare` script is intentionally guarded (checks for `husky`) — don't assume git hooks are present in analysis runs.
+- Keep model weights and large artifacts out of Git; use `storage/artifacts` or Git LFS. CI and workflows must be updated if adding weight downloads.
 
-- Local web dev: from repo root run:
+### Where to look first (high-value files)
 
-```bash
-npm run dev
-```
+- `package.json` (root) — workspace layout and scripts.
+- `apps/web/` — Next.js app, `eslint.config.mjs`, `postcss.config.mjs`, `src/app` (routes + components).
+- `services/api/` — orchestration endpoints and job shapes (see README in that folder).
+- `.github/workflows/copilot-setup-steps.yml` — how the agent/dev environment is prepared for CI and the Copilot agent.
+- `.husky/_/` — wrapper scripts related to Git LFS and hooks.
 
-- Build frontend from root:
+### Common, high-value tasks (concrete)
 
-```bash
-npm run build
-```
+- Add a FastAPI `/jobs` endpoint implementing create/list/status/cancel (use the existing job JSON shape: { prompt, params, seed, steps }).
+- Add or update a model worker service: follow existing worker patterns (HTTP or WS, small REST endpoints for job control, and artifact uploads to `storage/artifacts`).
+- Draft ComfyUI / workflow JSONs for T2I or I2V using the repo's parameter conventions.
+- Add a GPU Dockerfile / compose service: copy patterns from existing `infra/` files and update `docker-compose*.yml`.
 
-- Docker local (CPU):
+### Safety, CI and dependency rules
 
-```bash
-docker-compose up --build
-```
+- When you add dependencies (npm, pip, etc.) update the appropriate lockfile and note CI impact (longer installs). The repo uses Git LFS; ensure workflows handle LFS safely.
+- The repo has a guarded Husky setup; do not modify Husky hooks or `core.hooksPath` without also updating `.github/workflows/copilot-setup-steps.yml`.
+- If you modify dependencies or run `npm install` / `pip install`, run repository security scans (this project integrates Codacy/Trivy in CI). After edits that add packages, run the same scans locally or in CI and fix high/critical findings before continuing.
 
-- Docker local (GPU):
+### Style and testing expectations
 
-```bash
-docker-compose -f docker-compose.gpu.yml up
-```
+- Prefer minimal, well-scoped changes and include tests when you change behaviour (unit + small integration). Frontend uses Next.js testing patterns; API is FastAPI — add small pytest cases for new endpoints.
+- Keep PRs small and document any infra/CI changes clearly in the PR description.
 
-- Quick API run:
+### Final notes
 
-```bash
-cd services/api
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-Repository specifics agents must know
-
-- Root `package.json` is the workspace manifest. Root scripts proxy into `apps/web` (see `scripts`).
-- `prepare` is intentionally guarded in `package.json` to avoid failing CI when `husky` isn't installed; do not assume git hooks are present during analysis.
-- CI preinstall job (`.github/workflows/copilot-setup-steps.yml`) intentionally installs root devDependencies (`npm ci`) early and runs `git lfs install --skip-repo --skip-smudge`. Respect this order when suggesting CI changes.
-- The repo contains `.husky/_/` wrapper hook scripts (git-lfs wrappers). Any changes that touch Husky or LFS should also update the workflow steps (see `git lfs update --force` pattern in workflow).
-
-Integration patterns and examples
-
-- Frontend: `apps/web/src/app` (Next.js 15 app router). Use standard Next.js routing and call the API at `/api/*` or the orchestration endpoints in `services/api`.
-- API: `services/api` exposes job orchestration endpoints (look for `/jobs` routes). Jobs use a small JSON shape: { prompt, params, seed, steps } — follow this when adding endpoints or workers.
-- Workers: model services are small HTTP or WebSocket servers. ComfyUI uses WebSocket for progress updates; the API bridges those updates to the frontend.
-
-Conventions and constraints (what to avoid)
-
-- Do not change `core.hooksPath` or remove `.husky/_/` hooks without updating `.github/workflows/copilot-setup-steps.yml` — CI depends on this pattern.
-- Keep model weights and heavy artifacts out of git; use `storage/artifacts` or Git LFS. If code suggests downloading weights during CI, update the workflow to handle LFS and large downloads safely.
-- Mark research/non-commercial models clearly in the UI (see `README.md` wording) and add a visible badge when rendering model options.
-
-Where to look first (high-value files)
-
-- `package.json` (root) — workspace layout, guarded `prepare` script
-- `apps/web/` — Next.js app, `eslintrc`, `postcss.config.mjs`, `src/app` (pages and components)
-- `services/api/README.md` and `services/api/` source — job shapes and endpoints
-- `.github/workflows/copilot-setup-steps.yml` — how the agent environment is prepared for Copilot Coding Agent
-- `.husky/_/` — LFS wrapper scripts and their executable bits
-
-Common tasks Copilot may be asked to do (concrete examples)
-
-- Add a FastAPI `/jobs` endpoint implementing create/list/status/cancel using an in-memory store (follow existing job JSON shape).
-- Draft a ComfyUI workflow JSON for SDXL T2I and SVD I2V using the repo's parameter conventions.
-- Add a Dockerfile for a GPU worker (based on `infra/docker/`) and update `infra/compose/` with a GPU-enabled service.
-- Update CI: when adding root dev tools, add `npm ci` at the top of `copilot-setup-steps.yml`; when using LFS, ensure `git lfs install` and `git lfs update --force` are included.
-
-Environment & Copilot setup notes
-
-- The `copilot-setup-steps` workflow runs before the Copilot Coding Agent session. It installs Node, root devDeps, Python, `ffmpeg`, and `git-lfs` and intentionally skips smudge to avoid pulling LFS blobs during setup.
-- If the Coding Agent needs extended repo access, a GitHub environment named `copilot` and a PAT secret (e.g., `COPILOT_MCP_GITHUB_PERSONAL_ACCESS_TOKEN`) may be configured in repo settings.
-
-Copilot agent permissions & actions (operational)
-
-- Prefer read-only suggestions unless a PR/branch is requested. If making changes to hooks or CI, include tests or a manual `workflow_dispatch` test plan.
-- When proposing changes that add dependencies, note the impact on CI (longer install, Trivy/semgrep review) and update `.github/workflows/copilot-setup-steps.yml` accordingly.
-
-Final notes & feedback
-
-- This file intentionally focuses on discoverable, actionable patterns in the repo. If you want the original longer prose restored or additional examples (endpoints, example job JSON), tell me which areas to expand and I'll add them.
+- Prefer read-only suggestions unless the user explicitly asks for edits or a PR. When making edits, keep them minimal, run lint/typecheck (`npm run lint`, `npm run typecheck`), and confirm the frontend builds.
+- If you need Codacy/MCP server analysis and the CLI/tool isn't available in the environment, ask the repo owner or run the project CI; refer to `.github/instructions/codacy.instructions.md` for required follow-ups.

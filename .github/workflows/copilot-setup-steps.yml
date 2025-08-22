@@ -33,8 +33,14 @@ jobs:
           cache-dependency-path: |
             apps/web/package-lock.json
 
-      - name: Install root dependencies (including dev)
+      - name: Install root dependencies (using lockfile)
+        if: ${{ hashFiles('package-lock.json') != '' }}
         run: npm ci
+        working-directory: .
+
+      - name: Install root dependencies (no lockfile)
+        if: ${{ hashFiles('package-lock.json') == '' }}
+        run: npm i --no-audit --no-fund
         working-directory: .
 
       - name: Enable corepack (pnpm/npm/yarn)
