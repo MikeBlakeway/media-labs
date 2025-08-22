@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # API orchestration service
+  api:
+    build:
+      context: ../../services/api
+      dockerfile: ../../infra/docker/api.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=dev
+      - API_BASE_URL=http://localhost:8000
+      - ARTIFACTS_DIR=/app/storage/artifacts
+      - URL_SIGNING_SECRET=dev-secret-change-me
+    volumes:
+      - ../../storage/artifacts:/app/storage/artifacts
+      - ../../services/api:/app:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - media-lab
+
+  # ComfyUI service (CPU mode)
+  comfyui:
+    build:
+      context: .
+      dockerfile: ../docker/comfyui.Dockerfile
+    ports:
+      - "8188:8188"
+    environment:
+      - CUDA_VISIBLE_DEVICES=""  # Disable GPU for CPU mode
+    volumes:
+      - ../../storage/models:/app/models
+      - ../../storage/artifacts:/app/outputs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8188/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - media-lab
+
+  # Demucs audio separation service
+  demucs:
+    build:
+      context: .
+      dockerfile: ../docker/demucs.Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ../../storage/artifacts:/app/outputs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - media-lab
+
+  # RIFE frame interpolation service (CPU mode)
+  rife:
+    build:
+      context: .
+      dockerfile: ../docker/rife.Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - CUDA_VISIBLE_DEVICES=""  # Disable GPU for CPU mode
+    volumes:
+      - ../../storage/models:/app/models
+      - ../../storage/artifacts:/app/outputs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - media-lab
+
+  # FaceSwap service (CPU mode)
+  faceswap:
+    build:
+      context: .
+      dockerfile: ../docker/faceswap.Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - CUDA_VISIBLE_DEVICES=""  # Disable GPU for CPU mode
+    volumes:
+      - ../../storage/models:/app/models
+      - ../../storage/artifacts:/app/outputs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - media-lab
+
+networks:
+  media-lab:
+    driver: bridge
+
+volumes:
+  models:
+    driver: local
+  artifacts:
+    driver: local
