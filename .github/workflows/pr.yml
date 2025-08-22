@@ -108,6 +108,19 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      - name: Install build toolchain (system + Rust)
+        if: needs.changes.outputs.frontend == 'true'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y python3 python3-dev build-essential make g++ curl ca-certificates pkg-config libssl-dev
+
+          # Install rustup non-interactively
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          # Load cargo into PATH for the remainder of this step and export for later steps
+          source $HOME/.cargo/env || true
+          rustup default stable || true
+          echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
+
       - name: Install build toolchain
         if: needs.changes.outputs.frontend == 'true'
         run: |
