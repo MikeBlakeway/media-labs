@@ -90,8 +90,8 @@ jobs:
   lint-and-test:
     name: Lint and Test
     runs-on: ubuntu-latest
-    needs: changes
-    if: github.event.pull_request.draft == false
+    needs: [changes, build-test]
+    if: github.event.pull_request.draft == false && (needs.changes.outputs.frontend != 'true' || needs.build-test.result == 'success')
 
     steps:
       - name: Checkout
@@ -141,31 +141,6 @@ jobs:
           else
             echo "No tests configured for frontend"
           fi
-
-      - name: Download frontend build artifact
-        if: needs.changes.outputs.frontend == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: apps/web/.next
-
-      - name: Cache frontend build (.next)
-        if: needs.changes.outputs.frontend == 'true'
-        uses: actions/cache@v4
-        with:
-          path: apps/web/.next
-          key: ${{ runner.os }}-next-${{ hashFiles('apps/web/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-next-
-
-      - name: Cache root node_modules
-        if: needs.changes.outputs.frontend == 'true'
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-root-node-
 
       - name: Set up Python
         if: needs.changes.outputs.api == 'true'
@@ -251,6 +226,25 @@ jobs:
           key: ${{ runner.os }}-next-${{ hashFiles('apps/web/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-next-
+
+      - name: Run frontend tests (workspace)
+        if: needs.changes.outputs.frontend == 'true'
+        working-directory: apps/web
+        run: |
+          if npm run | grep -q " test"; then
+            npm test -- --coverage || true
+          else
+            echo "No tests configured for frontend"
+          fi
+
+      - name: Cache root node_modules
+        if: needs.changes.outputs.frontend == 'true'
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-root-node-
 
       - name: Upload frontend build artifact
         if: needs.changes.outputs.frontend == 'true'

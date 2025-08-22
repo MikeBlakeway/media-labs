@@ -30,21 +30,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download frontend build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: apps/web/.next
-
-      - name: Restore frontend build cache (.next)
-        uses: actions/cache@v4
-        with:
-          path: apps/web/.next
-          key: ${{ runner.os }}-next-${{ hashFiles('apps/web/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-next-
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
