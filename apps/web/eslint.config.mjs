@@ -12,11 +12,11 @@ const eslintConfig = [
   ...compat.extends('next/core-web-vitals', 'next/typescript', 'prettier'),
 
   // Plugins
-  ...compat.plugins("import", "@typescript-eslint"),
+  ...compat.plugins('import', '@typescript-eslint'),
 
   // Project-specific overrides and rules converted from the JSON rule set
   {
-    ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts'],
+    ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts']
   },
 
   {
@@ -32,8 +32,8 @@ const eslintConfig = [
         'warn',
         {
           groups: [['builtin', 'external'], 'internal', ['parent', 'sibling', 'index'], 'object', 'type'],
-          'newlines-between': 'always',
-        },
+          'newlines-between': 'always'
+        }
       ],
 
       // React / hooks
@@ -43,9 +43,9 @@ const eslintConfig = [
       'react-hooks/exhaustive-deps': 'warn',
 
       // TypeScript specific
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-    },
-  },
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
+    }
+  }
 ]
 
 export default eslintConfig

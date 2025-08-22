@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Fast Prettier check before push to avoid CI format failures
+npm run -s format:check || {
+  echo "Pre-push: formatting check failed. Run 'npm run format' to auto-fix, then push again."
+  exit 1
+}

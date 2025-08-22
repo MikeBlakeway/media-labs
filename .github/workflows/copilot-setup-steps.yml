@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
+          cache: 'npm'
           # Cache for the web app workspace (root may not have a lockfile yet)
           cache-dependency-path: |
             apps/web/package-lock.json
@@ -48,8 +48,8 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-          cache: "pip"
+          python-version: '3.12'
+          cache: 'pip'
           cache-dependency-path: |
             services/api/requirements.txt
 

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Run formatting, lint, and typecheck on staged files
+npx --no-install lint-staged
+
+# Also run workspace typecheck to fail fast
+npm run -s typecheck || exit 1
