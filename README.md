@@ -48,9 +48,10 @@ UI → API → ComfyUI workflow (or another microservice) → artifacts saved to
 
 ### Prerequisites
 
-- Docker & docker-compose
-- Python 3.10+ (for local dev API work)
-- Node.js 20+ (for Next.js frontend)
+- **Docker & docker-compose** (required)
+- **Python 3.12+** (for local API development)
+- **Node.js 20+** (for Next.js frontend development)
+- **NVIDIA Docker** (for GPU workloads - RunPod, Vast.ai, local GPU setups)
 
 ### Clone & Install
 
@@ -59,13 +60,71 @@ git clone git@github.com:MikeBlakeway/media-lab.git
 cd media-lab
 ```
 
-### Local Dev (CPU-only)
+### Docker Environments
+
+#### CPU-Only Development (Local)
+
+Start all services in CPU-only mode for local development:
 
 ```bash
+# Start all backend services (API, ComfyUI, Demucs)
 docker-compose up --build
+
+# In a separate terminal, start the frontend
+cd apps/web
+npm install
+npm run dev
 ```
 
-> For GPU workloads (SDXL, SVD, AnimateDiff, etc.), use `docker-compose -f docker-compose.gpu.yml up` on a GPU machine (RunPod, Vast.ai, local 3090/4090, etc.).
+Services will be available at:
+
+- **API:** http://localhost:8000 (health: `/health`, docs: `/docs`)
+- **ComfyUI:** http://localhost:8188
+- **Demucs:** http://localhost:8001 (audio separation)
+- **Web UI:** http://localhost:3000
+
+#### GPU-Enabled Production (RunPod, Vast.ai, etc.)
+
+For GPU workloads (SDXL, SVD, AnimateDiff, frame interpolation, face swap):
+
+```bash
+# Ensure NVIDIA Docker is installed and configured
+docker-compose -f docker-compose.gpu.yml up --build
+```
+
+GPU services include:
+
+- **ComfyUI** with CUDA 12.1 support
+- **RIFE** frame interpolation service (port 8002)
+- **FaceSwap** with InsightFace (port 8003)
+
+#### Health Checks
+
+All services include health checks. Monitor with:
+
+```bash
+# Check all service health
+docker-compose ps
+
+# Check specific service logs
+docker-compose logs api
+docker-compose logs comfyui
+```
+
+#### Storage
+
+The system uses local storage volumes:
+
+- `storage/models/` - AI models and weights
+- `storage/artifacts/` - Generated outputs
+- `storage/uploads/` - Input files
+
+#### Troubleshooting
+
+- **Port conflicts:** Stop existing processes on ports 3000, 8000, 8001, 8002, 8003, 8188
+- **Docker build fails:** Rebuild without cache: `docker-compose build --no-cache`
+- **GPU not detected:** Ensure NVIDIA Docker runtime is properly configured
+- **ComfyUI startup slow:** First run downloads models; subsequent starts are faster
 
 ---
 

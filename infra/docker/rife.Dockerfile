@@ -1,5 +1,5 @@
 # RIFE frame interpolation service
-FROM nvidia/cuda:12.1-runtime-ubuntu22.04 as base
+FROM nvidia/cuda:12.1-runtime-ubuntu22.04 AS base
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive \

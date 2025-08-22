@@ -1,5 +1,3 @@
-version: '3.8'
-
 # GPU-enabled production environment
 # This file orchestrates all Media Lab services with GPU support for RunPod, Vast.ai, etc.
 
@@ -18,7 +16,6 @@ services:
       - URL_SIGNING_SECRET=production-secret-change-me
     volumes:
       - ./storage/artifacts:/app/storage/artifacts
-      - ./services/api:/app:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

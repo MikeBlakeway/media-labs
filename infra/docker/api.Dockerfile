@@ -1,5 +1,5 @@
 # Multi-stage build for API service
-FROM python:3.12-slim as base
+FROM python:3.12-slim AS base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -26,6 +26,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
+
+# Create storage directories
+RUN mkdir -p /app/storage/artifacts /app/storage/models /app/storage/uploads
 
 # Change ownership to app user
 RUN chown -R appuser:appuser /app
