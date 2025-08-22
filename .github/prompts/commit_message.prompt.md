@@ -41,7 +41,7 @@ supports modern formats (AVIF/WebP). Uses native loading="lazy"
 and the project's Image wrapper to normalize srcsets.
 
 ### Files changed:
-	- `apps/web/src/components/ResponsiveImage.tsx`
+ - `apps/web/src/components/ResponsiveImage.tsx`
 	- `apps/web/src/components/index.ts`
 
 ## How to test
