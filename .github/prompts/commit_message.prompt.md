@@ -5,7 +5,7 @@ tools: ['githubRepo', 'codebase']
 description: 'Generate a Conventional Commit style commit message and a safe PR body for this repository.'
 ---
 
-## Goal
+# Commit Message Prompt
 
 Your task is to generate a single, well-formed conventional-commit style commit message plus a matching PR body that will pass the repository "Check PR Description" validation.
 
@@ -34,15 +34,13 @@ Return two sections exactly, separated by a single blank line. Do NOT include an
 ```
 feat(web): add responsive image component
 
+## Description
+
 Add a new ResponsiveImage component that lazy-loads images and
 supports modern formats (AVIF/WebP). Uses native loading="lazy"
 and the project's Image wrapper to normalize srcsets.
 
-## PR Body
-
-Short summary matching commit title.
-
-- Files changed:
+### Files changed:
 	- `apps/web/src/components/ResponsiveImage.tsx`
 	- `apps/web/src/components/index.ts`
 

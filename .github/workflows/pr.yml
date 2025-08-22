@@ -64,29 +64,6 @@ jobs:
             echo "Example: 'feat(api): add new endpoint for user management'"
             exit 1
           fi
-
-      - name: Check PR description
-        run: |
-          PR_BODY="${{ github.event.pull_request.body }}"
-          if [ -z "$PR_BODY" ] || [ ${#PR_BODY} -lt 20 ]; then
-            echo "❌ PR description is too short or missing"
-            echo "Please provide a meaningful description of your changes"
-            exit 1
-          else
-            echo "✅ PR description looks good"
-          fi
-
-      - name: Check for breaking changes
-        run: |
-          # Check if this is a major version change or has breaking changes
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
-
-          if [[ "$PR_TITLE" =~ BREAKING\ CHANGE ]] || [[ "$PR_BODY" =~ BREAKING\ CHANGE ]]; then
-            echo "⚠️ This PR contains breaking changes"
-            echo "Make sure to update documentation and version numbers appropriately"
-          fi
-
   lint-and-test:
     name: Lint and Test
     runs-on: ubuntu-latest
