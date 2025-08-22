@@ -26,6 +26,7 @@ jobs:
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
       image-digest: ${{ steps.build.outputs.digest }}
+      frontend_uploaded: ${{ steps.check-frontend.outputs.frontend_uploaded }}
 
     steps:
       - name: Checkout
@@ -68,6 +69,15 @@ jobs:
         with:
           name: frontend-build
           path: apps/web/.next
+
+      - name: Check frontend upload
+        id: check-frontend
+        run: |
+          if [ -d "apps/web/.next" ]; then
+            echo "frontend_uploaded=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend_uploaded=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -119,6 +129,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download frontend build artifact
+        if: needs.build-images.outputs.frontend_uploaded == 'true'
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
@@ -164,6 +175,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download frontend build artifact
+        if: needs.build-images.outputs.frontend_uploaded == 'true'
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
