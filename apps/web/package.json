@@ -26,7 +26,7 @@
     "dev": "next dev",
     "disable-telemetry": "next telemetry disable",
     "lint": "eslint",
-    "postinstall": "npm run disable-telemetry && npx next --turbo postinstall && npm run rebuild-native-modules",
+    "postinstall": "npm run disable-telemetry && npm run rebuild-native-modules",
     "rebuild-native-modules": "npm rebuild lightningcss @tailwindcss/oxide || true",
     "start": "next start",
     "typecheck": "tsc --noEmit"

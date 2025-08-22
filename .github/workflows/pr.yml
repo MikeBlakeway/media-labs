@@ -8,6 +8,7 @@ on:
 env:
   NODE_VERSION: 20
   PYTHON_VERSION: 3.12
+  NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
   changes:
@@ -196,9 +197,8 @@ jobs:
           cd apps/web
           rm -rf node_modules package-lock.json || true
           npm install --force
-          # run next's postinstall to fetch any binaries and rebuild native modules
-          npm run postinstall || true
-          npm rebuild lightningcss @tailwindcss/oxide || true
+          # rebuild native modules using the app's script (avoids calling next's postinstall directly)
+          npm run rebuild-native-modules || true
 
           # back to repo root and run build
           cd ../..
