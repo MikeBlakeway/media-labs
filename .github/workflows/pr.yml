@@ -189,11 +189,20 @@ jobs:
       - name: Install dependencies and build
         if: needs.changes.outputs.frontend == 'true'
         run: |
-          npm ci
-          # ensure native bindings for lightningcss are rebuilt for the runner platform
-          cd apps/web && ([ -f package-lock.json ] && npm ci || npm i)
-          cd apps/web && npm rebuild lightningcss @tailwindcss/oxide || true
-          cd ../.. && npm run build
+          # Clean install with force to avoid cached native binaries
+          npm ci --force
+
+          # Ensure app dependencies are installed fresh and native modules rebuilt
+          cd apps/web
+          rm -rf node_modules package-lock.json || true
+          npm install --force
+          # run next's postinstall to fetch any binaries and rebuild native modules
+          npm run postinstall || true
+          npm rebuild lightningcss @tailwindcss/oxide || true
+
+          # back to repo root and run build
+          cd ../..
+          npm run build
 
       - name: Set up Docker Buildx
         if: needs.changes.outputs.docker == 'true'
