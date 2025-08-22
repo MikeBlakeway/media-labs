@@ -3,13 +3,13 @@ name: CD Pipeline
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       environment:
-        description: "Deployment environment"
+        description: 'Deployment environment'
         required: true
-        default: "staging"
+        default: 'staging'
         type: choice
         options:
           - staging
@@ -26,10 +26,58 @@ jobs:
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
       image-digest: ${{ steps.build.outputs.digest }}
+      frontend_uploaded: ${{ steps.check-frontend.outputs.frontend_uploaded }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: |
+          if [ -d "apps/web" ]; then
+            npm run -w apps/web build
+          else
+            echo "No frontend found, skipping build"
+          fi
+
+      - name: Cache frontend build (.next)
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next
+          key: ${{ runner.os }}-next-${{ hashFiles('apps/web/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-next-
+
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: apps/web/.next
+
+      - name: Check frontend upload
+        id: check-frontend
+        run: |
+          if [ -d "apps/web/.next" ]; then
+            echo "frontend_uploaded=true" >> $GITHUB_OUTPUT
+          else
+            echo "frontend_uploaded=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -80,6 +128,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download frontend build artifact
+        if: needs.build-images.outputs.frontend_uploaded == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: apps/web/.next
+
+      - name: Restore frontend build cache (.next)
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next
+          key: ${{ runner.os }}-next-${{ hashFiles('apps/web/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-next-
+
       - name: Deploy to staging
         run: |
           echo "Deploying ${{ needs.build-images.outputs.image-tag }} to staging"
@@ -111,6 +174,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Download frontend build artifact
+        if: needs.build-images.outputs.frontend_uploaded == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: apps/web/.next
+
+      - name: Restore frontend build cache (.next)
+        uses: actions/cache@v4
+        with:
+          path: apps/web/.next
+          key: ${{ runner.os }}-next-${{ hashFiles('apps/web/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-next-
+
       - name: Deploy to production
         run: |
           echo "Deploying ${{ needs.build-images.outputs.image-tag }} to production"
@@ -136,19 +214,6 @@ jobs:
             Commit: ${{ github.sha }}
           draft: false
           prerelease: false
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const release = await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: '${{ github.ref_name }}',
-              name: `Release ${{ github.ref_name }}`,
-              body: `Automated release for ${{ github.ref_name }}\n\nDocker Image: ${{ needs.build-images.outputs.image-tag }}\nCommit: ${{ github.sha }}`,
-              draft: false,
-              prerelease: false
-            });
       - name: Update deployment status
         if: always()
         run: |

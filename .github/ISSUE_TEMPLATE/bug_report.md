@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Something is broken
-labels: ["type:bug"]
+labels: ['type:bug']
 ---
 
 ## Steps to Reproduce
