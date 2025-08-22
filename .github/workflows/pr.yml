@@ -51,12 +51,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
 
-          # Check if title follows conventional commit format
-          if [[ "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?: .+ ]]; then
+          # Check if title follows conventional commit format using grep (POSIX compatible)
+          if echo "$PR_TITLE" | grep -Eq '^(feat|fix|docs|style|refactor|test|chore)(\([^)]+\))?: .+'; then
             echo "✅ PR title follows conventional commit format"
           else
             echo "❌ PR title should follow conventional commit format (feat/fix/docs/style/refactor/test/chore)"
@@ -65,8 +66,9 @@ jobs:
           fi
 
       - name: Check PR description
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          PR_BODY="${{ github.event.pull_request.body }}"
           if [ -z "$PR_BODY" ] || [ ${#PR_BODY} -lt 20 ]; then
             echo "❌ PR description is too short or missing"
             echo "Please provide a meaningful description of your changes"
@@ -76,12 +78,12 @@ jobs:
           fi
 
       - name: Check for breaking changes
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          # Check if this is a major version change or has breaking changes
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_BODY="${{ github.event.pull_request.body }}"
-
-          if [[ "$PR_TITLE" =~ BREAKING\ CHANGE ]] || [[ "$PR_BODY" =~ BREAKING\ CHANGE ]]; then
+          # Use grep to detect explicit 'BREAKING CHANGE' markers in title or body
+          if echo "$PR_TITLE" | grep -q 'BREAKING CHANGE' || echo "$PR_BODY" | grep -q 'BREAKING CHANGE'; then
             echo "⚠️ This PR contains breaking changes"
             echo "Make sure to update documentation and version numbers appropriately"
           fi
@@ -188,7 +190,9 @@ jobs:
         if: needs.changes.outputs.frontend == 'true'
         run: |
           npm ci
+          # ensure native bindings for lightningcss are rebuilt for the runner platform
           cd apps/web && ([ -f package-lock.json ] && npm ci || npm i)
+          cd apps/web && npm rebuild lightningcss @tailwindcss/oxide || true
           cd ../.. && npm run build
 
       - name: Set up Docker Buildx
@@ -314,7 +318,7 @@ jobs:
               issue_number: context.issue.number,
             });
 
-            const botComment = comments.find(comment => 
+            const botComment = comments.find(comment =>
               comment.user.type === 'Bot' && comment.body.includes('## PR Check Results')
             );
 
