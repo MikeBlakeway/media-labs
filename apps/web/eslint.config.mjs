@@ -1,46 +1,51 @@
 import { FlatCompat } from '@eslint/eslintrc'
+import { dirname } from 'path'
+import { fileURLToPath } from 'url'
 
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname
-})
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+const compat = new FlatCompat({ baseDirectory: __dirname })
 
 const eslintConfig = [
+  // Extend Next.js recommended configs (includes React + TypeScript support)
+  ...compat.extends('next/core-web-vitals', 'next/typescript', 'prettier'),
+
+  // Plugins
+  ...compat.plugins("import", "@typescript-eslint"),
+
+  // Project-specific overrides and rules converted from the JSON rule set
   {
-    ignores: ['.next/**', 'cache/**', 'dist/**', 'build/**', 'out/**']
+    ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts'],
   },
-  ...compat.config({
-    extends: ['next/core-web-vitals', 'prettier'],
-    plugins: ['import', '@typescript-eslint'],
-    settings: {
-      next: {
-        rootDir: 'apps/web/'
-      }
-    },
+
+  {
     rules: {
+      // Example conversions from typical JSON ESLint rules
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-console': 'off',
+      'prefer-const': 'error',
+
+      // Import plugin rules
       'import/no-unresolved': 'error',
       'import/order': [
-        'error',
+        'warn',
         {
-          groups: [
-            'builtin', // Built-in imports (come from NodeJS native) go first
-            'external', // <- External imports
-            'internal', // <- Absolute imports
-            ['sibling', 'parent'], // <- Relative imports, the sibling and parent types they can be mingled together
-            'index',
-            'object',
-            'type'
-          ],
+          groups: [['builtin', 'external'], 'internal', ['parent', 'sibling', 'index'], 'object', 'type'],
           'newlines-between': 'always',
-          alphabetize: {
-            /* sort in ascending order. Options: ["ignore", "asc", "desc"] */
-            order: 'asc',
-            /* ignore case. Options: [true, false] */
-            caseInsensitive: true
-          }
-        }
-      ]
-    }
-  })
+        },
+      ],
+
+      // React / hooks
+      'react/jsx-uses-react': 'off',
+      'react/react-in-jsx-scope': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+
+      // TypeScript specific
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    },
+  },
 ]
 
 export default eslintConfig
