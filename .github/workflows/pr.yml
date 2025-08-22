@@ -108,18 +108,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
-      - name: Install build toolchain (system + Rust)
-        if: needs.changes.outputs.frontend == 'true'
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y python3 python3-dev build-essential make g++ curl ca-certificates pkg-config libssl-dev
-
-          # Install rustup non-interactively
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          # Load cargo into PATH for the remainder of this step and export for later steps
-          source $HOME/.cargo/env || true
-          rustup default stable || true
-          echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
+      # Rust/toolchain installation removed - lightningcss rebuilt removed in later step
 
       - name: Install build toolchain
         if: needs.changes.outputs.frontend == 'true'
@@ -217,11 +206,7 @@ jobs:
           rm -rf node_modules package-lock.json || true
           npm install --force
 
-          # ALWAYS build lightningcss from source (slow but reliable) to produce the correct .node binary
-          npm rebuild lightningcss --build-from-source || true
-
-          # debug: list the node module native binaries for troubleshooting
-          ls -la node_modules/lightningcss/node || true
+          # removed lightningcss rebuild (dependency removed)
 
           # run build from the package
           npm run build
