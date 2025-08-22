@@ -275,6 +275,7 @@ jobs:
         with:
           name: frontend-build
           path: apps/web/.next
+          include-hidden-files: true
 
       - name: Check frontend build artifact
         id: check-frontend

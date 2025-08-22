@@ -82,6 +82,7 @@ jobs:
         with:
           name: frontend-build
           path: apps/web/.next
+          include-hidden-files: true
 
       - name: Check frontend upload
         id: check-frontend
