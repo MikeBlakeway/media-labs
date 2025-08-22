@@ -111,7 +111,7 @@ cd apps/web && npm run test            # Jest tests (no tests exist yet)
 **ALWAYS test the web application after making changes:**
 
 1. Start dev server: `npm run dev`
-2. Open http://localhost:3000 in browser
+2. Open <http://localhost:3000> in browser
 3. Verify the Next.js welcome page loads correctly
 4. Check console for any errors
 
