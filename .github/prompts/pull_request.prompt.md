@@ -46,7 +46,7 @@ Resolves: #123 <!-- optional -->
 
 ---
 
-### Notes for contributors:
+### Notes for contributors
 
 - Keep the PR body at least 20 characters long so the repository check passes.
 - Do not put filenames on their own lines; use a bullet list or inline code instead.
