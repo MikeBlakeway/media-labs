@@ -150,6 +150,7 @@ jobs:
         if: needs.build-images.outputs.frontend_uploaded == 'true'
         uses: actions/download-artifact@v4
         with:
+          # Intentionally omit `run-id` so the artifact is downloaded from the same workflow run (needs.build-images)
           name: frontend-build
           path: apps/web/.next
 
@@ -196,6 +197,7 @@ jobs:
         if: needs.build-images.outputs.frontend_uploaded == 'true'
         uses: actions/download-artifact@v4
         with:
+          # Intentionally omit `run-id` so the artifact is downloaded from the same workflow run (needs.build-images)
           name: frontend-build
           path: apps/web/.next
 

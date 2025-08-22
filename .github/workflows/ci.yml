@@ -160,6 +160,7 @@ jobs:
         if: needs.build.outputs.frontend_built == 'true'
         uses: actions/download-artifact@v4
         with:
+          # Intentionally omit `run-id` so the artifact is downloaded from the current workflow run
           name: frontend-build
           path: apps/web/.next
 
