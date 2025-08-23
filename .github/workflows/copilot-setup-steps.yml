@@ -109,5 +109,8 @@ jobs:
           python -V
           ffmpeg -version | head -n 1
 
+      - name: Format Copilot instructions file
+        run: npx prettier --write .github/copilot-instructions.md
+
       - name: Done
         run: echo "Copilot preinstall complete"
