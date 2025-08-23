@@ -78,10 +78,10 @@ npm run dev
 
 Services will be available at:
 
-- **API:** http://localhost:8000 (health: `/health`, docs: `/docs`)
-- **ComfyUI:** http://localhost:8188
-- **Demucs:** http://localhost:8001 (audio separation)
-- **Web UI:** http://localhost:3000
+- **API:** <http://localhost:8000> (health: `/health`, docs: `/docs`)
+- **ComfyUI:** <http://localhost:8188>
+- **Demucs:** <http://localhost:8001> (audio separation)
+- **Web UI:** <http://localhost:3000>
 
 #### GPU-Enabled Production (RunPod, Vast.ai, etc.)
 
