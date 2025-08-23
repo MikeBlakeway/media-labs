@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir \
 RUN mkdir -p /app/uploads /app/outputs
 
 # Create simple FastAPI service
-RUN echo 'from fastapi import FastAPI\n\
+RUN printf 'from fastapi import FastAPI\napp = FastAPI(title="Demucs Service")\n\n@app.get("/")\nasync def root():\n    return {"service": "demucs", "status": "running"}\n\n@app.get("/health")\nasync def health():\n    return {"status": "healthy", "service": "demucs"}\n' > /app/main.py
 app = FastAPI(title="Demucs Service")\n\
 \n\
 @app.get("/")\n\
