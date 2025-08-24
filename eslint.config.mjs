@@ -7,6 +7,7 @@ export default [
       '**/build/**',
       '**/.next/**',
       '**/coverage/**',
+      'apps/**', // Apps have their own configs
     ],
     languageOptions: {
       ecmaVersion: 2022,
@@ -24,44 +25,14 @@ export default [
         exports: 'readonly',
       },
     },
-    plugins: {
-      // make plugin names available to flat config
-      import: import('eslint-plugin-import'),
-      '@typescript-eslint': import('@typescript-eslint/eslint-plugin'),
-    },
     rules: {
       // Basic rules for any JS/TS files in root
       'no-unused-vars': 'warn',
       'no-console': 'off',
       'prefer-const': 'error',
-      // import ordering for cross-repo consistency
-      'import/order': [
-        'warn',
-        {
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            'parent',
-            'sibling',
-            'index',
-          ],
-        },
-      ],
     },
   },
 
   // UI app overrides — enable React/Next rules for the UI only
-  {
-    files: ['apps/ui/**/*.{ts,tsx,js,jsx}'],
-    plugins: {
-      react: import('eslint-plugin-react'),
-    },
-    languageOptions: {
-      ecmaFeatures: { jsx: true },
-    },
-    rules: {
-      // allow JSX-specific rules to be enabled at package level
-    },
-  },
+  // apps/ui has its own ESLint config (eslint-config-next). Keep UI-specific rules in the package.
 ];

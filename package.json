@@ -29,18 +29,20 @@
     "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "eslint": "^9",
-    "prettier": "^2.5.0",
-    "eslint-config-next": "15.5.0",
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
     "@eslint/eslintrc": "^3",
+    "@typescript-eslint/eslint-plugin": "6.21.0",
+    "@typescript-eslint/parser": "6.21.0",
+    "eslint": "8.57.1",
+    "eslint-config-next": "15.5.0",
     "eslint-plugin-import": "^2.31.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "turbo": "^1.9.0",
+    "eslint-plugin-react": "^7.37.5",
     "husky": "^9.0.0",
     "lint-staged": "^16.1.5",
-    "@commitlint/config-conventional": "^17.0.0",
-    "@commitlint/cli": "^17.0.0"
+    "prettier": "^2.5.0",
+    "turbo": "^1.9.0",
+    "typescript": "^5"
   },
   "overrides": {
     "glob": "8.2.1",
@@ -48,12 +50,10 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
-      "pnpm -w -s eslint --fix --",
-      "git add"
+      "pnpm -w -s eslint --fix --no-ignore --"
     ],
     "*.{json,md,css,scss,mdx}": [
-      "pnpm -w -s prettier --write",
-      "git add"
+      "pnpm -w -s prettier --write"
     ]
   }
 }
