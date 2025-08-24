@@ -1,0 +1,27 @@
+{
+  "name": "media-labs-sdk",
+  "version": "1.0.0",
+  "description": "SDK for Media Labs image-to-video web application",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "keywords": [
+    "media",
+    "labs",
+    "sdk",
+    "image-to-video"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "@types/jest": "^29.0.0"
+  }
+}

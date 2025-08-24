@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+model Job {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  status        JobStatus @default(QUEUED)
+  params        Json
+  podId         String?
+  progressPct   Int?
+  outputKey     String?
+  outputUrl     String?
+  failureReason String?
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELED
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Run lint-staged on staged files via pnpm, then run workspace tests
+pnpm -w -s lint-staged || exit 1
+pnpm -w -s test || exit 1

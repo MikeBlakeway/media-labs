@@ -1,0 +1,59 @@
+## Node / package manager
+node_modules/
+/.pnp/
+/.pnp.js
+pnpm-lock.yaml
+
+## pnpm store (optional - large)
+.pnpm-store/
+
+## Turborepo
+.turbo/
+
+## Next.js
+.next/
+out/
+
+## Build outputs
+dist/
+build/
+
+## Prisma local DB and artifacts
+/apps/api/prisma/dev.db
+/apps/api/prisma/dev.db-journal
+/prisma/dev.db
+/prisma/dev.db-journal
+
+## Environment files
+.env
+.env.development
+.env.test
+.env.production
+.env.development.local
+.env.test.local
+.env.production.local
+
+## Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+## Test output
+coverage/
+
+## Misc
+.cache/
+.local/
+/.cache/
+node_modules

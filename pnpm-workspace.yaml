@@ -1,0 +1,14 @@
+packages:
+  - apps/ui
+  - apps/api
+  - apps/worker
+  - packages/shared
+  - packages/sdk
+
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@tailwindcss/oxide'
+  - prisma
+  - sharp
+  - unrs-resolver
