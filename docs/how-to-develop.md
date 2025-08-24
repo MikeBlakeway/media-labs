@@ -40,6 +40,39 @@ pnpm run dev
 
 Open the frontend at <http://localhost:3000> and the API at <http://localhost:4000> (defaults).
 
+## Makefile & Scripts
+
+The repository includes a `Makefile` and `scripts/dev.sh` for convenient development workflows:
+
+### Using the Makefile
+
+```bash
+make setup      # Complete setup including env files and Prisma
+make dev        # Start all development servers
+make dev-ui     # Start only UI development server  
+make dev-api    # Start only API development server
+make build      # Build all packages
+make test       # Run tests across workspace
+make lint       # Run linting across workspace
+make clean      # Clean build artifacts
+make docker     # Start with Docker Compose
+make help       # Show all available commands
+```
+
+### Using the Development Script
+
+```bash
+./scripts/dev.sh setup    # Complete setup
+./scripts/dev.sh dev      # Start development servers
+./scripts/dev.sh build    # Build all packages
+./scripts/dev.sh test     # Run tests
+./scripts/dev.sh lint     # Run linting
+./scripts/dev.sh clean    # Clean artifacts
+./scripts/dev.sh help     # Show help
+```
+
+Both the Makefile and script automatically handle Corepack and pnpm@10.15.0 activation.
+
 ## Prerequisites
 
 - Node.js 20+ (the CI/workflows target Node 20)
@@ -128,29 +161,57 @@ docker-compose up --build
 
 Docker is helpful for pods (ComfyUI, fake GPU). The UI is often run locally for faster iteration.
 
-## GitHub Codespaces
+## Devcontainer & GitHub Codespaces
 
-Codespaces provides a reproducible development container. To use it:
+The repository includes a complete devcontainer configuration for a reproducible development environment.
+
+### Using Devcontainers (VS Code)
+
+1. **Prerequisites**: Install VS Code with the "Remote - Containers" extension.
+2. **Open in Container**: Open the repository in VS Code and click "Reopen in Container" when prompted.
+3. **Automatic Setup**: The devcontainer will automatically:
+   - Set up Node 20 with Corepack and pnpm@10.15.0
+   - Install dependencies
+   - Configure VS Code with recommended extensions and settings
+   - Start optional services (Redis, MinIO, PostgreSQL)
+
+4. **Start Development**: Once the container is ready, run:
+
+```bash
+make setup    # Complete setup with env files and Prisma
+make dev      # Start all development servers
+```
+
+### Using GitHub Codespaces
 
 1. Create a Codespace for the repository (GitHub UI -> Code -> Codespaces -> New codespace).
-1. Wait for the container to build and dependencies to install (if a devcontainer/Codespaces config is present).
-1. In the Codespace terminal run the same Corepack/pnpm setup if Corepack isn't pre-configured:
+2. Wait for the container to build and dependencies to install.
+3. The devcontainer will handle the Corepack/pnpm setup automatically.
+4. Run the setup and development commands:
 
 ```bash
-corepack enable
-corepack prepare pnpm@10.15.0 --activate
-pnpm install
+make setup    # Complete setup with env files and Prisma
+make dev      # Start all development servers
 ```
 
-1. Copy env files and start dev server:
+### Devcontainer Services
 
-```bash
-cp .env.example .env
-cp apps/api/.env.example apps/api/.env
-pnpm run dev
-```
+The devcontainer includes optional services for local development:
 
-Codespaces usually has forwarded ports; use the VS Code port preview or the forwarded URLs to open the UI and API.
+- **Redis** (port 6379): For caching and session storage
+- **MinIO** (ports 9000, 9001): S3-compatible local storage
+- **PostgreSQL** (port 5432): Alternative to SQLite for development
+
+Access MinIO console at `http://localhost:9001` (minioadmin/minioadmin123).
+
+### macOS-Specific Notes
+
+- **Docker Desktop**: Ensure Docker Desktop is installed and running
+- **Apple Silicon**: For M1/M2 Macs, ensure Docker Desktop has Apple Silicon support enabled
+- **Native Builds**: If you encounter native build issues, run `pnpm approve-builds`
+- **Node.js**: Alternatively install Node.js 20+ locally with `brew install node`
+
+Codespaces and devcontainers provide forwarded ports; use the VS Code port preview or the forwarded URLs to access the UI (3000) and API (4000).
 
 ## Debugging
 
