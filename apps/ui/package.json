@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,md,mdx,css,yaml,yml}\"",
-    "lint": "eslint",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "typecheck": "tsc --noEmit",
     "start": "next start",
     "test": "jest --passWithNoTests",

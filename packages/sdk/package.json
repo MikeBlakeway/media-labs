@@ -5,6 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
+    "lint": "eslint . --ext .ts,.js",
     "test": "jest"
   },
   "keywords": [
