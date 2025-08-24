@@ -5,8 +5,9 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
+    "test": "echo \"No tests specified\" && exit 0",
     "lint": "eslint . --ext .ts,.js",
-    "test": "echo \"No tests specified\" && exit 0"
+    "lint:fix": "eslint . --ext .ts,.js --fix"
   },
   "keywords": [
     "media",
