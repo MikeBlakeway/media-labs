@@ -1,11 +1,11 @@
-import { FlatCompat } from '@eslint/eslintrc'
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const compat = new FlatCompat({ baseDirectory: __dirname })
+const compat = new FlatCompat({ baseDirectory: __dirname });
 
 const eslintConfig = [
   // Extend Next.js recommended configs (includes React + TypeScript support)
@@ -16,7 +16,13 @@ const eslintConfig = [
 
   // Project-specific overrides and rules converted from the JSON rule set
   {
-    ignores: ['node_modules/**', '.next/**', 'out/**', 'build/**', 'next-env.d.ts']
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'out/**',
+      'build/**',
+      'next-env.d.ts',
+    ],
   },
 
   {
@@ -31,9 +37,15 @@ const eslintConfig = [
       'import/order': [
         'warn',
         {
-          groups: [['builtin', 'external'], 'internal', ['parent', 'sibling', 'index'], 'object', 'type'],
-          'newlines-between': 'always'
-        }
+          groups: [
+            ['builtin', 'external'],
+            'internal',
+            ['parent', 'sibling', 'index'],
+            'object',
+            'type',
+          ],
+          'newlines-between': 'always',
+        },
       ],
 
       // React / hooks
@@ -43,9 +55,12 @@ const eslintConfig = [
       'react-hooks/exhaustive-deps': 'warn',
 
       // TypeScript specific
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
-    }
-  }
-]
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_' },
+      ],
+    },
+  },
+];
 
-export default eslintConfig
+export default eslintConfig;
