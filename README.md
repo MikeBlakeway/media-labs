@@ -68,6 +68,37 @@ pnpm run dev
 
 1. Visit the frontend at <http://localhost:3000> and the API at <http://localhost:4000> (defaults).
 
+## Quick Development Scripts
+
+For convenience, use the included Makefile or development script:
+
+```bash
+# Complete setup (env files, dependencies, Prisma)
+make setup
+
+# Start all development servers
+make dev
+
+# Build all packages
+make build
+
+# Or use the development script
+./scripts/dev.sh setup
+./scripts/dev.sh dev
+```
+
+Both automatically handle Corepack and pnpm@10.15.0 activation.
+
+## Devcontainer & GitHub Codespaces
+
+The repository includes a complete devcontainer configuration for reproducible development:
+
+- **VS Code**: Use "Remote - Containers" extension and "Reopen in Container"
+- **GitHub Codespaces**: Create a new codespace from the repository
+- **Included Services**: Redis, MinIO (S3-compatible), PostgreSQL for local development
+
+See [.devcontainer/README.md](.devcontainer/README.md) for detailed setup instructions.
+
 ## pnpm & Corepack
 
 This repository uses pnpm workspaces and pins the pnpm version via the `packageManager` field in the root `package.json` (pnpm@10.15.0).

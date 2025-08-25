@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "rules": {
+    "doc_check": {
+      "triggers": [
+        "check the most recent documentation",
+        "fetch latest docs",
+        "show current API docs",
+        "what changed in the docs",
+        "fetch latest docs for {library}",
+        "check the docs for {library}"
+      ],
+      "action": "context7_docs",
+      "params": {
+        "topic": "latest",
+        "summary_bullets": 5
+      },
+      "notes": "Agent should resolve the Context7-compatible library ID for the target, call the Context7 docs retriever, then summarize (3-6 bullets) and include source links. If ambiguous, ask a clarifying question before calling the docs tools. This file is advisory; agent implementations must consult it to enable programmatic routing."
+    }
+  }
+}
