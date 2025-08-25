@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 
 const router = Router();
 
 // Health check endpoint
-router.get('/_health', (req, res) => {
+router.get('/_health', (req: Request, res: Response) => {
   res.status(200).json({ ok: true });
 });
 
