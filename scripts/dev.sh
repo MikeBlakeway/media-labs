@@ -155,9 +155,15 @@ run_smoke() {
 clean_all() {
     log_info "Cleaning build artifacts and node_modules..."
     rm -rf .turbo
-    pnpm -w -r run clean || true
-    find . -name "node_modules" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
-    find . -name "dist" -type d -prune -exec rm -rf {} \; 2>/dev/null || true
+    if ! pnpm -w -r run clean; then
+        log_warning "Some packages failed to run 'clean'. Please check package scripts."
+    fi
+    if ! find . -name "node_modules" -type d -prune -exec rm -rf {} \; 2>/dev/null; then
+        log_warning "Failed to remove some node_modules directories."
+    fi
+    if ! find . -name "dist" -type d -prune -exec rm -rf {} \; 2>/dev/null; then
+        log_warning "Failed to remove some dist directories."
+    fi
     log_success "Cleanup complete"
 }
 
