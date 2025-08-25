@@ -10,6 +10,10 @@ This repository is a pnpm/Turborepo monorepo for a small media-labs project that
 - Keep changes compatible with the monorepo: use `pnpm` workspace filters and `turbo` when orchestrating multi-package tasks.
 - Prefer non-destructive edits (don't refactor large areas) unless the change is explicitly requested.
 
+## Routing for documentation checks
+
+When a user asks to "check the most recent documentation", "fetch latest docs", "show current API docs", or similar, prefer the Context7 (MCP) documentation flow: resolve the Context7-compatible library ID for the target, fetch the latest documentation using the Context7 docs retriever, and provide a concise summary (3–6 bullets) with links to the relevant sections and suggested follow-ups. If the target library or repo is ambiguous, ask a clarifying question before calling the docs tools.
+
 ## Bootstrap and dependencies (trusted sequence)
 
 Always prefer Corepack to activate the pinned pnpm version. Example sequence (run from repo root):
