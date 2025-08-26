@@ -3,8 +3,5 @@
   "testEnvironment": "node",
   "roots": ["<rootDir>/src", "<rootDir>/test"],
   "testMatch": ["**/__tests__/**/*.(ts|js)", "**/*.(test|spec).(ts|js)"],
-  "collectCoverageFrom": [
-    "src/**/*.(ts|js)",
-    "!src/**/*.d.ts"
-  ]
+  "collectCoverageFrom": ["src/**/*.(ts|js)", "!src/**/*.d.ts"]
 }

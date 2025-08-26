@@ -1,12 +1,12 @@
-import express from 'express';
-import { router } from './routes';
+import express from 'express'
+import { router } from './routes'
 
-const app = express();
+const app = express()
 
 // Middleware
-app.use(express.json());
+app.use(express.json())
 
 // Routes
-app.use(router);
+app.use(router)
 
-export { app };
+export { app }

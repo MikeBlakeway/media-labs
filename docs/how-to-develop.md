@@ -49,7 +49,7 @@ The repository includes a `Makefile` and `scripts/dev.sh` for convenient develop
 ```bash
 make setup      # Complete setup including env files and Prisma
 make dev        # Start all development servers
-make dev-ui     # Start only UI development server  
+make dev-ui     # Start only UI development server
 make dev-api    # Start only API development server
 make build      # Build all packages
 make test       # Run tests across workspace
@@ -170,6 +170,7 @@ The repository includes a complete devcontainer configuration for a reproducible
 1. **Prerequisites**: Install VS Code with the "Remote - Containers" extension.
 2. **Open in Container**: Open the repository in VS Code and click "Reopen in Container" when prompted.
 3. **Automatic Setup**: The devcontainer will automatically:
+
    - Set up Node 20 with Corepack and pnpm@10.15.0
    - Install dependencies
    - Configure VS Code with recommended extensions and settings
