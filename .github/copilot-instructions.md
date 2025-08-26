@@ -23,6 +23,8 @@ pnpm -v
 pnpm install
 ```
 
+**TIMING:** Install takes ~30 seconds. NEVER CANCEL - Set timeout to 60+ seconds for safety.
+
 Notes:
 
 - The repo uses a workspace layout. Installing from the root will install all workspace packages.
@@ -47,12 +49,14 @@ Only put non-secret example values in repo files. For real secrets use GitHub Se
 pnpm run dev
 ```
 
+**TIMING:** Dev servers start in ~10 seconds. NEVER CANCEL - Set timeout to 60+ seconds.
+
 - Run a single package:
 
 ```bash
-pnpm --filter ./apps/ui dev
-pnpm --filter ./apps/api dev
-pnpm --filter ./apps/worker dev
+pnpm --filter ./apps/ui dev      # Next.js UI on localhost:3000
+pnpm --filter ./apps/api dev     # Express API on localhost:4000  
+pnpm --filter ./apps/worker dev  # Background worker
 ```
 
 - Build workspace:
@@ -60,6 +64,8 @@ pnpm --filter ./apps/worker dev
 ```bash
 pnpm run build
 ```
+
+**TIMING:** Full build takes ~30 seconds. NEVER CANCEL - Set timeout to 120+ seconds.
 
 ## Prisma notes
 
@@ -71,6 +77,8 @@ Generate Prisma client after schema changes or installs:
 ```bash
 pnpm --filter ./apps/api run prisma:generate
 ```
+
+**TIMING:** Prisma generation takes ~3 seconds. NEVER CANCEL - Set timeout to 30+ seconds.
 
 Run local migrations (if using SQLite locally):
 
@@ -97,12 +105,40 @@ Before opening a PR run these locally and include results in the PR description 
 
 ```bash
 pnpm install
-pnpm run lint
-pnpm run test
-pnpm run build
+pnpm run lint    # ~5 seconds - NEVER CANCEL, timeout 60+ seconds
+pnpm run test    # ~5 seconds - NEVER CANCEL, timeout 60+ seconds  
+pnpm run build   # ~30 seconds - NEVER CANCEL, timeout 120+ seconds
 ```
 
 - If you changed Prisma schema, run `pnpm --filter ./apps/api run prisma:generate` and include generated client diffs if any.
+
+## Validation scenarios
+
+**ALWAYS test actual functionality after making changes:**
+
+1. **API functionality test:**
+```bash
+# Start API dev server
+pnpm --filter ./apps/api dev
+# In another terminal, test the health endpoint
+curl http://localhost:4000/_health
+# Should return: {"ok":true}
+```
+
+2. **UI functionality test:**
+```bash
+# Start UI dev server  
+pnpm --filter ./apps/ui dev
+# Test the frontend responds
+curl -I http://localhost:3000
+# Should return: HTTP/1.1 200 OK
+```
+
+3. **Full build validation:**
+```bash
+pnpm run build
+# Verify no build errors and all packages compile successfully
+```
 
 ## Recommended PR workflow
 
@@ -197,16 +233,24 @@ For stronger enforcement, add `commitlint` + `husky` in the repo and configure a
 
 ## Known limitations & troubleshooting
 
+- **Docker limitations:** `docker-compose.yml` exists but main apps (ui/api/worker) lack Dockerfiles. Use `pnpm run dev` for local development instead.
 - API implementation may be minimal; check `apps/api` for schema and server code before assuming endpoints exist.
 - If `pnpm install` reports native build scripts, run `pnpm approve-builds` interactively or pre-approve in CI.
 - If Prisma complains about missing datasource: ensure `apps/api/prisma/schema.prisma` exists and `apps/api/.env` defines `DATABASE_URL`.
 - If Turborepo cache causes stale builds, run `rm -rf .turbo && pnpm run build` locally.
+- **Turbo dev output:** `pnpm run dev` may primarily show worker output due to Turborepo grouping. Individual dev servers work fine.
 
 ## Timing & timeouts (guidance for runners)
 
-- Dependency install: allow 10+ minutes (network + native builds)
-- Build: allow 5+ minutes per workspace (depends on package size)
-- Tests/lint: allow 2+ minutes
+**CRITICAL: Always use these timeout values to prevent premature cancellation:**
+
+- **Dependency install:** 60+ seconds (tested: ~30 seconds actual)
+- **Build:** 120+ seconds (tested: ~30 seconds actual)  
+- **Tests/lint:** 60+ seconds (tested: ~5 seconds actual)
+- **Prisma generation:** 30+ seconds (tested: ~3 seconds actual)
+- **Dev server startup:** 60+ seconds (tested: ~10 seconds actual)
+
+**NEVER CANCEL operations before these timeouts!** The tested times are much faster than the safety margins.
 
 ## When to ask for more context
 
