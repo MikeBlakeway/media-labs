@@ -4,9 +4,7 @@
   "service": "app",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-  "mounts": [
-    "source=media-labs-node-modules,target=/workspace/node_modules,type=volume"
-  ],
+  "mounts": ["source=media-labs-node-modules,target=/workspace/node_modules,type=volume"],
   "forwardPorts": [3000, 4000, 8188, 8190],
   "portsAttributes": {
     "3000": {

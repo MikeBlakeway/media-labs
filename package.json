@@ -15,7 +15,7 @@
     "build": "pnpm -w -r run build",
     "start:ui": "pnpm --filter ./apps/ui run start",
     "lint": "pnpm -w -r run lint",
-    "format": "pnpm -w -r run format",
+    "format": "pnpm --filter \"./apps/*\" --filter \"./packages/*\" -r run format",
     "test": "pnpm -w -r test || true",
     "turbo:link": "pnpm dlx turbo link",
     "turbo:clean": "rm -rf .turbo && pnpm -w -r run clean || true",

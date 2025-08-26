@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "lint": "eslint . --ext .ts,.js"
+    "lint": "eslint . --ext .ts,.js",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "dependencies": {
     "@prisma/client": "^6.14.0"
@@ -15,6 +16,7 @@
   "devDependencies": {
     "prisma": "^6.14.0",
     "typescript": "^5",
+    "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
     "@types/node": "^20"
   },

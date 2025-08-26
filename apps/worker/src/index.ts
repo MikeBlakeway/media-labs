@@ -1,11 +1,11 @@
-import { startWorker } from './runners/workerRunner';
+import { startWorker } from './runners/workerRunner'
 
 const main = async () => {
-    console.log('Starting Media Labs Worker...');
-    await startWorker();
-};
+  console.log('Starting Media Labs Worker...')
+  await startWorker()
+}
 
 main().catch(err => {
-    console.error('Error starting worker:', err);
-    process.exit(1);
-});
+  console.error('Error starting worker:', err)
+  process.exit(1)
+})
