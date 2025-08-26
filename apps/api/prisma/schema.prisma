@@ -16,13 +16,23 @@ model User {
 model Job {
   id            String   @id @default(cuid())
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   status        JobStatus @default(QUEUED)
+  lane          JobLane  @default(VIDEO)
   params        Json
+  inputs        Json?    // Array of input file descriptors
+  sampleRate    Int?     // For audio jobs - sample rate (default 44100)
+  channels      Int?     // For audio jobs - number of channels
+  processing    Json?    // Processing configuration (mode, presets, etc.)
+  metadata      Json?    // Additional metadata
   podId         String?
   progressPct   Int?
   outputKey     String?
   outputUrl     String?
+  resultPaths   Json?    // Array of result file paths/URLs
   failureReason String?
+  retries       Int      @default(0)
+  attempts      Int      @default(0)
 }
 
 enum JobStatus {
@@ -31,4 +41,9 @@ enum JobStatus {
   COMPLETED
   FAILED
   CANCELED
+}
+
+enum JobLane {
+  VIDEO
+  AUDIO
 }
