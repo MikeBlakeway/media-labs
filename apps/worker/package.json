@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "lint": "eslint \"**/*.{ts,js}\"",
+    "lint": "eslint --no-ignore --no-warn-ignored src/index.ts src/runners/workerRunner.ts",
     "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "dependencies": {
@@ -18,7 +18,10 @@
     "typescript": "^5",
     "prettier": "^2.8.8",
     "ts-node": "^10.9.1",
-    "@types/node": "^20"
+    "@types/node": "^20",
+    "@typescript-eslint/eslint-plugin": "6.21.0",
+    "@typescript-eslint/parser": "6.21.0",
+    "eslint": "8.57.1"
   },
   "engines": {
     "node": ">=20.0.0"
