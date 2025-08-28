@@ -4,7 +4,7 @@ import { z } from 'zod'
 export const RunPodConfigSchema = z.object({
   apiKey: z.string().min(1, 'RunPod API key is required'),
   endpointId: z.string().min(1, 'RunPod endpoint ID is required'),
-  region: z.string().min(1, 'RunPod region is required').optional(),
+  region: z.string().min(1, 'RunPod region is required'),
 })
 
 // RunPod configuration type
