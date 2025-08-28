@@ -23,7 +23,7 @@ const connectionRegistry = new Map<string, SSEConnection[]>()
 
 // Helper function to generate unique client ID
 const generateClientId = (): string => {
-  return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  return `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
 }
 
 // Helper function to send SSE message to a specific connection
