@@ -1,0 +1,30 @@
+{
+  "name": "WAN2.1 First Last Frame to Video 720p F16",
+  "description": "Generate video from first and last frame images using WAN2.1 model at 720p resolution with 16 frames",
+  "version": "1.0.0",
+  "model": "wan2.1",
+  "resolution": {
+    "width": 1280,
+    "height": 720
+  },
+  "frames": 16,
+  "fps": 8,
+  "settings": {
+    "interpolation_method": "wan2.1",
+    "quality": "high",
+    "temporal_consistency": true,
+    "motion_smoothing": 0.8
+  },
+  "input_requirements": {
+    "images": 2,
+    "image_names": ["start_image.png", "end_image.png"],
+    "supported_formats": ["png", "jpg", "jpeg"],
+    "max_resolution": "1920x1080",
+    "min_resolution": "256x256"
+  },
+  "output": {
+    "format": "mp4",
+    "codec": "h264",
+    "quality": "high"
+  }
+}
