@@ -55,7 +55,7 @@ pnpm run dev
 
 ```bash
 pnpm --filter ./apps/ui dev      # Next.js UI on localhost:3000
-pnpm --filter ./apps/api dev     # Express API on localhost:4000  
+pnpm --filter ./apps/api dev     # Express API on localhost:4000
 pnpm --filter ./apps/worker dev  # Background worker
 ```
 
@@ -106,7 +106,7 @@ Before opening a PR run these locally and include results in the PR description 
 ```bash
 pnpm install
 pnpm run lint    # ~5 seconds - NEVER CANCEL, timeout 60+ seconds
-pnpm run test    # ~5 seconds - NEVER CANCEL, timeout 60+ seconds  
+pnpm run test    # ~5 seconds - NEVER CANCEL, timeout 60+ seconds
 pnpm run build   # ~30 seconds - NEVER CANCEL, timeout 120+ seconds
 ```
 
@@ -117,6 +117,7 @@ pnpm run build   # ~30 seconds - NEVER CANCEL, timeout 120+ seconds
 **ALWAYS test actual functionality after making changes:**
 
 1. **API functionality test:**
+
 ```bash
 # Start API dev server
 pnpm --filter ./apps/api dev
@@ -126,8 +127,9 @@ curl http://localhost:4000/_health
 ```
 
 2. **UI functionality test:**
+
 ```bash
-# Start UI dev server  
+# Start UI dev server
 pnpm --filter ./apps/ui dev
 # Test the frontend responds
 curl -I http://localhost:3000
@@ -135,6 +137,7 @@ curl -I http://localhost:3000
 ```
 
 3. **Full build validation:**
+
 ```bash
 pnpm run build
 # Verify no build errors and all packages compile successfully
@@ -245,7 +248,7 @@ For stronger enforcement, add `commitlint` + `husky` in the repo and configure a
 **CRITICAL: Always use these timeout values to prevent premature cancellation:**
 
 - **Dependency install:** 60+ seconds (tested: ~30 seconds actual)
-- **Build:** 120+ seconds (tested: ~30 seconds actual)  
+- **Build:** 120+ seconds (tested: ~30 seconds actual)
 - **Tests/lint:** 60+ seconds (tested: ~5 seconds actual)
 - **Prisma generation:** 30+ seconds (tested: ~3 seconds actual)
 - **Dev server startup:** 60+ seconds (tested: ~10 seconds actual)
@@ -258,5 +261,38 @@ For stronger enforcement, add `commitlint` + `husky` in the repo and configure a
 - If CI fails on platform-specific native modules (sharp/prisma engines), request the OS/runner logs.
 
 ---
+
+## Documentation index — required reading for Copilot
+
+Before beginning any development work, Copilot MUST read and follow the repository documentation listed below. Insist that the human requester confirms which document is the source-of-truth if there is any ambiguity. If a document contains explicit instructions (coding conventions, PR process, environment setup, or migration steps), follow those instructions before making code changes.
+
+Required documents (read fully, in roughly this order):
+
+- `README.md` (project root) — high-level project overview and quick start
+- `docs/how-to-develop.md` — developer onboarding and local dev guidance
+- `docs/requirements.md` — project requirements and acceptance criteria
+- `docs/epics.md` — product epics and feature context
+- `docs/api-audio-jobs.md` — API design and audio job schema details
+- `docs/api-audio-jobs-testing.md` — integration test notes and manual test steps
+- `docs/flf2v-bootstrap.md` — additional setup or bootstrap instructions
+
+Package-level and contextual READMEs and guides (review as relevant to the task):
+
+- `apps/api/README.md`
+- `apps/ui/README.md`
+- `apps/worker/README.md`
+- `.devcontainer/README.md`
+- `pods/comfyui-video/README.md`
+- `pods/fake-gpu/README.md`
+
+Related automation and contribution guidance (review when changing workflows, CI, or PRs):
+
+- `.github/ISSUE_TEMPLATE/` (bug_report.md, feature_request.md, pull_request_template.md)
+- `.github/prompts/commit_message.prompt.md`
+- `.github/prompts/pull_request.prompt.md`
+- `.github/instructions/context7.instructions.md`
+- `.github/copilot-model-rules.json`
+
+Update the index when new documentation is added. If you (Copilot) detect that a required document is missing or out-of-date for the requested task, stop and request clarification from the human before proceeding.
 
 End of Copilot instructions.
