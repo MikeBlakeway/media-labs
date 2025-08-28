@@ -141,6 +141,16 @@ curl -I http://localhost:3000
 ```bash
 pnpm run build
 # Verify no build errors and all packages compile successfully
+
+## Terminal usage for long-running processes
+
+When running continuous or long-lived processes (dev servers, watchers, or background services), always open a separate terminal for each long-running command.
+
+- Start servers or watch processes in their own terminals (for example, one terminal for `pnpm --filter ./apps/ui dev`, another for `pnpm --filter ./apps/api dev`).
+- Do not reuse a terminal running a continuous process to run follow-up commands like commits, tests, or other interactive steps — the terminal may be blocked or non-interactive.
+- When automating via scripts, if a command starts a server in the foreground, explicitly spawn it in the background or use a separate terminal session.
+
+This avoids situations where Copilot (or contributors) attempts to run further commands in a terminal that's already occupied by a running process.
 ```
 
 ## Recommended PR workflow
@@ -292,7 +302,37 @@ Related automation and contribution guidance (review when changing workflows, CI
 - `.github/prompts/pull_request.prompt.md`
 - `.github/instructions/context7.instructions.md`
 - `.github/copilot-model-rules.json`
+- `.github/instructions/commit-message.instructions.md`
 
 Update the index when new documentation is added. If you (Copilot) detect that a required document is missing or out-of-date for the requested task, stop and request clarification from the human before proceeding.
 
 End of Copilot instructions.
+
+## Keeping these Copilot instructions in sync
+
+The `/.github/copilot-instructions.md` file is the single source-of-truth for how Copilot should behave in this repository. Maintainers and Copilot must follow these rules:
+
+- Whenever new documentation is added to the repository (for example a new file under `docs/`, a package README, or a new `.github/instructions/*` file), update `/.github/copilot-instructions.md` to include the new document in the Documentation index before treating the documentation-related task as complete.
+- Copilot MUST verify that `/.github/copilot-instructions.md` references any newly added docs and, if it does not, pause and ask the human to either (a) confirm the new doc should be added to the index, or (b) provide the canonical source-of-truth to reference.
+- When a document in the Documentation index contains specific procedural instructions (for setup, migrations, coding conventions, or CI), Copilot must follow those procedures exactly for tasks that affect the areas covered by those documents.
+
+If you are unsure whether a document should be indexed, ask the human for clarification before proceeding.
+
+## No automatic commits or pushes
+
+Copilot MUST NEVER stage, commit, or push changes to the repository unless the human explicitly and unambiguously requests that action in the chat. In addition, Copilot MUST NOT offer to run `git commit`, `git push`, or similar commands, and MUST NOT present options that would automatically execute those commands without explicit confirmation.
+
+Hard rules (enforced):
+
+- Do not stage or commit changes automatically. Do not run any git command that changes repository state without an explicit, separate human instruction to do so.
+- Do not offer or suggest running `git commit` / `git push` as part of a normal reply or as an automated follow-up action. If the user asks for a commit message, only provide a suggested message (and, optionally, the exact git commands to run) — do not run them.
+- If the user requests a commit, present the proposed commit message and the exact shell commands that will be run (for example, `git add <files>`; `git commit -m "..."`; `git push origin <branch>`). Then wait for an explicit confirmation to execute those commands.
+- When generating patches or file edits, provide the patch/diff and wait for explicit user approval before staging or committing anything.
+- If the user asks Copilot to run background asynchronous agents that may create PRs (for example using the `#github-pull-request_copilot-coding-agent` hashtag), Copilot may proceed only under that explicit instruction and within the agent's documented scoping rules.
+
+Behavior expectations:
+
+- If a local operation would open a long-running process (server, watcher), do not simultaneously attempt to commit or run any other interactive commands in the same terminal — open a new terminal instead.
+- If Copilot arrives in a state where files are edited but not committed, present a concise summary of the changes and wait for the user's explicit instruction to stage/commit/push.
+
+These restrictions prevent accidental repository state changes and ensure maintainers retain control over commits and pushes.
