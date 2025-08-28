@@ -139,7 +139,7 @@ describe('Audio Job Integration Tests', () => {
       expect(queuedJobsResponse.body.jobs).toHaveLength(0)
     })
 
-    it('should handle multiple jobs and pagination', async () => {
+    const createJobs = async (count: number) => Promise.all([...Array(count)].map((_, i) => request(app).post('/api/audio/jobs').send({ inputs: [{ name: `test-${i}.mp3` }] })));
       // Create multiple jobs
       const jobPromises = []
       for (let i = 0; i < 15; i++) {

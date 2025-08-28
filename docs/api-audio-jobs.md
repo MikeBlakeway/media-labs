@@ -262,6 +262,7 @@ curl "http://localhost:3000/api/audio/jobs/clxx1234567890abcdef"
 ## Supported Audio Formats
 
 The API accepts any content type starting with `audio/`, including:
+
 - `audio/mpeg` (MP3)
 - `audio/wav` (WAV)
 - `audio/flac` (FLAC)
