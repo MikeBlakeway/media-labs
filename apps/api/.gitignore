@@ -1,0 +1,17 @@
+# Local sqlite DBs created by prisma/migrate or local runs
+dev.db
+dev.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# Local environment files
+.env
+.env.local
+
+# Local node_modules and build output (package-level)
+node_modules/
+dist/
+build/
+
+# Editor
+.vscode/

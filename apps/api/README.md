@@ -72,21 +72,41 @@ Default local port: `http://localhost:4000`.
 
 ## API Endpoints
 
-### Job Management
+### Health Check
+
+- **Health Check**
+  - `GET /_health`
+  - Description: Returns API health status.
+
+### Audio Job Management
+
+- **Create Audio Job**
+  - `POST /api/audio/jobs`
+  - Description: Submits a new audio processing job (separation, enhancement, transcoding).
+
+- **List Audio Jobs**
+  - `GET /api/audio/jobs`
+  - Description: Retrieves a paginated list of audio jobs with optional status filtering.
+
+- **Get Audio Job Details**
+  - `GET /api/audio/jobs/:id`
+  - Description: Retrieves detailed information about a specific audio job.
+
+For detailed API documentation, see [docs/api-audio-jobs.md](../../docs/api-audio-jobs.md).
+
+### Job Management (Legacy/Video)
 
 - **Create Job**
-
   - `POST /api/jobs`
-  - Description: Submits a new job for processing.
+  - Description: Submits a new video processing job.
 
 - **Get Job Status**
   - `GET /api/jobs/:id`
-  - Description: Retrieves the status of a specific job.
+  - Description: Retrieves the status of a specific video job.
 
 ### LoRA Management
 
 - **List LoRAs**
-
   - `GET /api/loras`
   - Description: Retrieves a list of available LoRAs.
 
