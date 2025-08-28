@@ -84,7 +84,7 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
       // Upload file to storage using presigned URL
       const uploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
-        body: file.buffer as BodyInit,
+        body: file.buffer,
         headers: {
           'Content-Type': file.mimetype,
           'Content-Length': file.size.toString()
