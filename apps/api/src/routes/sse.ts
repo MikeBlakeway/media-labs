@@ -154,11 +154,6 @@ router.get('/api/jobs/stream', async (req: Request, res: Response) => {
       }
     }
     
-    req.on('close', cleanup)
-    req.on('aborted', cleanup)
-    res.on('close', cleanup)
-    res.on('error', cleanup)
-    
     // Keep connection alive with periodic heartbeat
     const heartbeatInterval = setInterval(() => {
       if (!sendSSEMessage(connection, { type: 'heartbeat' })) {
@@ -167,7 +162,7 @@ router.get('/api/jobs/stream', async (req: Request, res: Response) => {
       }
     }, 30000) // 30 seconds
     
-    // Clean up interval on disconnect
+    // Clean up interval and connection on disconnect
     const cleanupWithInterval = () => {
       clearInterval(heartbeatInterval)
       cleanup()
