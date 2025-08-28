@@ -19,7 +19,9 @@
     "test": "pnpm -w -r test || true",
     "turbo:link": "pnpm dlx turbo link",
     "turbo:clean": "rm -rf .turbo && pnpm -w -r run clean || true",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "bootstrap:flf2v": "node scripts/github-bootstrap-flf2v.js",
+    "validate:flf2v": "node scripts/validate-flf2v-bootstrap.js"
   },
   "prepare": "husky install",
   "dependencies": {
@@ -32,6 +34,7 @@
     "@commitlint/cli": "^17.0.0",
     "@commitlint/config-conventional": "^17.0.0",
     "@eslint/eslintrc": "^3",
+    "@octokit/rest": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
     "eslint": "8.57.1",
@@ -43,10 +46,6 @@
     "prettier": "^2.5.0",
     "turbo": "^1.9.0",
     "typescript": "^5"
-  },
-  "overrides": {
-    "glob": "8.2.1",
-    "rimraf": "3.0.2"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
