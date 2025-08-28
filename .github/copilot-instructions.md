@@ -55,7 +55,7 @@ pnpm run dev
 
 ```bash
 pnpm --filter ./apps/ui dev      # Next.js UI on localhost:3000
-pnpm --filter ./apps/api dev     # Express API on localhost:4000  
+pnpm --filter ./apps/api dev     # Express API on localhost:4000
 pnpm --filter ./apps/worker dev  # Background worker
 ```
 
@@ -106,7 +106,7 @@ Before opening a PR run these locally and include results in the PR description 
 ```bash
 pnpm install
 pnpm run lint    # ~5 seconds - NEVER CANCEL, timeout 60+ seconds
-pnpm run test    # ~5 seconds - NEVER CANCEL, timeout 60+ seconds  
+pnpm run test    # ~5 seconds - NEVER CANCEL, timeout 60+ seconds
 pnpm run build   # ~30 seconds - NEVER CANCEL, timeout 120+ seconds
 ```
 
@@ -117,6 +117,7 @@ pnpm run build   # ~30 seconds - NEVER CANCEL, timeout 120+ seconds
 **ALWAYS test actual functionality after making changes:**
 
 1. **API functionality test:**
+
 ```bash
 # Start API dev server
 pnpm --filter ./apps/api dev
@@ -126,8 +127,9 @@ curl http://localhost:4000/_health
 ```
 
 2. **UI functionality test:**
+
 ```bash
-# Start UI dev server  
+# Start UI dev server
 pnpm --filter ./apps/ui dev
 # Test the frontend responds
 curl -I http://localhost:3000
@@ -135,9 +137,20 @@ curl -I http://localhost:3000
 ```
 
 3. **Full build validation:**
+
 ```bash
 pnpm run build
 # Verify no build errors and all packages compile successfully
+
+## Terminal usage for long-running processes
+
+When running continuous or long-lived processes (dev servers, watchers, or background services), always open a separate terminal for each long-running command.
+
+- Start servers or watch processes in their own terminals (for example, one terminal for `pnpm --filter ./apps/ui dev`, another for `pnpm --filter ./apps/api dev`).
+- Do not reuse a terminal running a continuous process to run follow-up commands like commits, tests, or other interactive steps — the terminal may be blocked or non-interactive.
+- When automating via scripts, if a command starts a server in the foreground, explicitly spawn it in the background or use a separate terminal session.
+
+This avoids situations where Copilot (or contributors) attempts to run further commands in a terminal that's already occupied by a running process.
 ```
 
 ## Recommended PR workflow
@@ -245,7 +258,7 @@ For stronger enforcement, add `commitlint` + `husky` in the repo and configure a
 **CRITICAL: Always use these timeout values to prevent premature cancellation:**
 
 - **Dependency install:** 60+ seconds (tested: ~30 seconds actual)
-- **Build:** 120+ seconds (tested: ~30 seconds actual)  
+- **Build:** 120+ seconds (tested: ~30 seconds actual)
 - **Tests/lint:** 60+ seconds (tested: ~5 seconds actual)
 - **Prisma generation:** 30+ seconds (tested: ~3 seconds actual)
 - **Dev server startup:** 60+ seconds (tested: ~10 seconds actual)
@@ -259,4 +272,67 @@ For stronger enforcement, add `commitlint` + `husky` in the repo and configure a
 
 ---
 
+## Documentation index — required reading for Copilot
+
+Before beginning any development work, Copilot MUST read and follow the repository documentation listed below. Insist that the human requester confirms which document is the source-of-truth if there is any ambiguity. If a document contains explicit instructions (coding conventions, PR process, environment setup, or migration steps), follow those instructions before making code changes.
+
+Required documents (read fully, in roughly this order):
+
+- `README.md` (project root) — high-level project overview and quick start
+- `docs/how-to-develop.md` — developer onboarding and local dev guidance
+- `docs/requirements.md` — project requirements and acceptance criteria
+- `docs/epics.md` — product epics and feature context
+- `docs/api-audio-jobs.md` — API design and audio job schema details
+- `docs/api-audio-jobs-testing.md` — integration test notes and manual test steps
+- `docs/flf2v-bootstrap.md` — additional setup or bootstrap instructions
+
+Package-level and contextual READMEs and guides (review as relevant to the task):
+
+- `apps/api/README.md`
+- `apps/ui/README.md`
+- `apps/worker/README.md`
+- `.devcontainer/README.md`
+- `pods/comfyui-video/README.md`
+- `pods/fake-gpu/README.md`
+
+Related automation and contribution guidance (review when changing workflows, CI, or PRs):
+
+- `.github/ISSUE_TEMPLATE/` (bug_report.md, feature_request.md, pull_request_template.md)
+- `.github/prompts/commit_message.prompt.md`
+- `.github/prompts/pull_request.prompt.md`
+- `.github/instructions/context7.instructions.md`
+- `.github/copilot-model-rules.json`
+- `.github/instructions/commit-message.instructions.md`
+
+Update the index when new documentation is added. If you (Copilot) detect that a required document is missing or out-of-date for the requested task, stop and request clarification from the human before proceeding.
+
 End of Copilot instructions.
+
+## Keeping these Copilot instructions in sync
+
+The `/.github/copilot-instructions.md` file is the single source-of-truth for how Copilot should behave in this repository. Maintainers and Copilot must follow these rules:
+
+- Whenever new documentation is added to the repository (for example a new file under `docs/`, a package README, or a new `.github/instructions/*` file), update `/.github/copilot-instructions.md` to include the new document in the Documentation index before treating the documentation-related task as complete.
+- Copilot MUST verify that `/.github/copilot-instructions.md` references any newly added docs and, if it does not, pause and ask the human to either (a) confirm the new doc should be added to the index, or (b) provide the canonical source-of-truth to reference.
+- When a document in the Documentation index contains specific procedural instructions (for setup, migrations, coding conventions, or CI), Copilot must follow those procedures exactly for tasks that affect the areas covered by those documents.
+
+If you are unsure whether a document should be indexed, ask the human for clarification before proceeding.
+
+## No automatic commits or pushes
+
+Copilot MUST NEVER stage, commit, or push changes to the repository unless the human explicitly and unambiguously requests that action in the chat. In addition, Copilot MUST NOT offer to run `git commit`, `git push`, or similar commands, and MUST NOT present options that would automatically execute those commands without explicit confirmation.
+
+Hard rules (enforced):
+
+- Do not stage or commit changes automatically. Do not run any git command that changes repository state without an explicit, separate human instruction to do so.
+- Do not offer or suggest running `git commit` / `git push` as part of a normal reply or as an automated follow-up action. If the user asks for a commit message, only provide a suggested message (and, optionally, the exact git commands to run) — do not run them.
+- If the user requests a commit, present the proposed commit message and the exact shell commands that will be run (for example, `git add <files>`; `git commit -m "..."`; `git push origin <branch>`). Then wait for an explicit confirmation to execute those commands.
+- When generating patches or file edits, provide the patch/diff and wait for explicit user approval before staging or committing anything.
+- If the user asks Copilot to run background asynchronous agents that may create PRs (for example using the `#github-pull-request_copilot-coding-agent` hashtag), Copilot may proceed only under that explicit instruction and within the agent's documented scoping rules.
+
+Behavior expectations:
+
+- If a local operation would open a long-running process (server, watcher), do not simultaneously attempt to commit or run any other interactive commands in the same terminal — open a new terminal instead.
+- If Copilot arrives in a state where files are edited but not committed, present a concise summary of the changes and wait for the user's explicit instruction to stage/commit/push.
+
+These restrictions prevent accidental repository state changes and ensure maintainers retain control over commits and pushes.
