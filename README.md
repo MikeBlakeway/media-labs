@@ -157,6 +157,25 @@ rm -rf .turbo && pnpm run build
 
 If you prefer a self-hosted remote cache, consult the Turborepo docs for `remoteCache.apiUrl` and `turbo link --api` for custom endpoints.
 
+## FLF2V Integration Bootstrap
+
+The repository includes automated GitHub project planning tools for the FLF2V (First-Last-Frame-to-Video) cloud mode implementation:
+
+```bash
+# Validate bootstrap data structure
+pnpm run validate:flf2v
+
+# Execute bootstrap automation (requires GITHUB_TOKEN)
+GITHUB_TOKEN=<token> pnpm run bootstrap:flf2v
+```
+
+This auto-generates:
+- **12 GitHub labels** for organization and tracking
+- **5 milestones** with due dates for phased implementation
+- **15 detailed issues** with tasks and acceptance criteria
+
+See [docs/flf2v-bootstrap.md](docs/flf2v-bootstrap.md) for complete documentation.
+
 ## Contributing
 
 Contributions are welcome! Please submit a pull request or open an issue for any enhancements or bug fixes.

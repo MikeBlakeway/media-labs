@@ -26,6 +26,21 @@ The FLF2V integration planning bootstrap automatically creates:
    pnpm install
    ```
 
+### Validation (Optional but Recommended)
+
+```bash
+# Validate the bootstrap data structure
+pnpm run validate:flf2v
+```
+
+Expected output:
+```
+✅ Validation results:
+  ✅ Labels: 12/12 ✓
+  ✅ Milestones: 5/5 ✓
+  ✅ Issues: 15/15 ✓
+```
+
 ### Running the Bootstrap
 
 ```bash
@@ -169,6 +184,19 @@ After running the script, verify the results:
 2. **Milestones**: Visit [GitHub Milestones](https://github.com/MikeBlakeway/media-labs/milestones)
 3. **Issues**: Visit [GitHub Issues](https://github.com/MikeBlakeway/media-labs/issues)
 4. **Meta Issue**: Check [Issue #216](https://github.com/MikeBlakeway/media-labs/issues/216) for the summary comment
+
+## Alternative: Manual Creation
+
+If the automated script cannot be run, labels and milestones can be created manually:
+
+### Manual Label Creation
+Visit [Create Label](https://github.com/MikeBlakeway/media-labs/labels/new) and create each label with the colors specified above.
+
+### Manual Milestone Creation  
+Visit [Create Milestone](https://github.com/MikeBlakeway/media-labs/milestones/new) and create each milestone with the due dates specified above.
+
+### Semi-Automated Issues
+The script can be modified to create only issues if labels and milestones exist manually.
 
 ## Script Details
 

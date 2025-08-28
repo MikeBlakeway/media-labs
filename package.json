@@ -20,7 +20,8 @@
     "turbo:link": "pnpm dlx turbo link",
     "turbo:clean": "rm -rf .turbo && pnpm -w -r run clean || true",
     "lint-staged": "lint-staged",
-    "bootstrap:flf2v": "node scripts/github-bootstrap-flf2v.js"
+    "bootstrap:flf2v": "node scripts/github-bootstrap-flf2v.js",
+    "validate:flf2v": "node scripts/validate-flf2v-bootstrap.js"
   },
   "prepare": "husky install",
   "dependencies": {
