@@ -45,7 +45,7 @@ Creates a new audio processing job.
 #### Example Request
 
 ```bash
-curl -X POST http://localhost:3000/api/audio/jobs \
+curl -X POST http://localhost:4000/api/audio/jobs \
   -H "Content-Type: application/json" \
   -d '{
     "inputs": [
@@ -169,7 +169,7 @@ Retrieves detailed information about a specific audio job.
 #### Example Request
 
 ```bash
-curl "http://localhost:3000/api/audio/jobs/clxx1234567890abcdef"
+curl "http://localhost:4000/api/audio/jobs/clxx1234567890abcdef"
 ```
 
 #### Response (200 OK)

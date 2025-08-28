@@ -139,30 +139,31 @@ describe('Audio Job Integration Tests', () => {
       expect(queuedJobsResponse.body.jobs).toHaveLength(0)
     })
 
-    const createJobs = async (count: number) => Promise.all([...Array(count)].map((_, i) => request(app).post('/api/audio/jobs').send({ inputs: [{ name: `test-${i}.mp3` }] })));
-      // Create multiple jobs
-      const jobPromises = []
-      for (let i = 0; i < 15; i++) {
-        jobPromises.push(
+    const createJobs = async (jobs: Array<{ inputs: Array<{ name: string, path: string, contentType: string, size: number }>, processing: { mode: string } }>) =>
+      Promise.all(
+        jobs.map(job =>
           request(app)
             .post('/api/audio/jobs')
-            .send({
-              inputs: [
-                {
-                  name: `test-${i}.mp3`,
-                  path: `/uploads/test-${i}.mp3`,
-                  contentType: 'audio/mpeg',
-                  size: 1024000 + i * 1000
-                }
-              ],
-              processing: {
-                mode: i % 2 === 0 ? 'separate' : 'enhance'
-              }
-            })
+            .send(job)
         )
-      }
+      );
 
-      await Promise.all(jobPromises)
+    // Create multiple jobs
+    const jobsToCreate = Array.from({ length: 15 }, (_, i) => ({
+      inputs: [
+        {
+          name: `test-${i}.mp3`,
+          path: `/uploads/test-${i}.mp3`,
+          contentType: 'audio/mpeg',
+          size: 1024000 + i * 1000
+        }
+      ],
+      processing: {
+        mode: i % 2 === 0 ? 'separate' : 'enhance'
+      }
+    }));
+
+    await createJobs(jobsToCreate);
 
       // Test pagination
       const page1Response = await request(app)
