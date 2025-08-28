@@ -520,8 +520,7 @@ async function main() {
           title: issue.title,
           body: issue.body,
           labels: issue.labels,
-          milestone: milestoneNumber,
-          assignees: ['Copilot']
+          milestone: milestoneNumber
         });
         
         console.log(`  ✅ Created issue #${response.data.number}: ${issue.title}`);
@@ -567,7 +566,7 @@ ${Object.entries(
 - **Issues**: ${createdIssues.length} created and assigned to milestones
 - **Total Scope**: Comprehensive FLF2V cloud mode implementation
 
-All issues have been assigned to @github-copilot and include detailed task breakdowns with acceptance criteria. The planning is now ready for implementation across the **media-labs** monorepo.
+All issues have been created and assigned to milestones with detailed task breakdowns and acceptance criteria. The planning is now ready for implementation across the **media-labs** monorepo.
 
 🚀 **Next Steps**: Development teams can now pick up issues from the milestones and begin implementation of the FLF2V cloud mode integration!`;
 

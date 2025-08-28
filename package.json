@@ -47,10 +47,6 @@
     "turbo": "^1.9.0",
     "typescript": "^5"
   },
-  "overrides": {
-    "glob": "8.2.1",
-    "rimraf": "3.0.2"
-  },
   "lint-staged": {
     "*.{js,ts,tsx}": [
       "pnpm -w -s eslint --fix --no-ignore --"
