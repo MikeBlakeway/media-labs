@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { healthRouter } from './health'
 import { audioJobRouter } from './audio-jobs'
 import { videoJobRouter } from './video-jobs'
+import { sseRouter } from './sse'
 
 const router = Router()
 
@@ -13,5 +14,8 @@ router.use(audioJobRouter)
 
 // Mount video job routes
 router.use(videoJobRouter)
+
+// Mount SSE routes
+router.use(sseRouter)
 
 export { router }

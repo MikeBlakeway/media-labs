@@ -148,22 +148,23 @@ describe('Audio Job Integration Tests', () => {
         )
       );
 
-    // Create multiple jobs
-    const jobsToCreate = Array.from({ length: 15 }, (_, i) => ({
-      inputs: [
-        {
-          name: `test-${i}.mp3`,
-          path: `/uploads/test-${i}.mp3`,
-          contentType: 'audio/mpeg',
-          size: 1024000 + i * 1000
+    it('should handle pagination correctly', async () => {
+      // Create multiple jobs
+      const jobsToCreate = Array.from({ length: 15 }, (_, i) => ({
+        inputs: [
+          {
+            name: `test-${i}.mp3`,
+            path: `/uploads/test-${i}.mp3`,
+            contentType: 'audio/mpeg',
+            size: 1024000 + i * 1000
+          }
+        ],
+        processing: {
+          mode: i % 2 === 0 ? 'separate' : 'enhance'
         }
-      ],
-      processing: {
-        mode: i % 2 === 0 ? 'separate' : 'enhance'
-      }
-    }));
+      }));
 
-    await createJobs(jobsToCreate);
+      await createJobs(jobsToCreate);
 
       // Test pagination
       const page1Response = await request(app)
@@ -249,3 +250,4 @@ describe('Audio Job Integration Tests', () => {
       }
     })
   })
+})
