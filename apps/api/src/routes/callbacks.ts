@@ -10,6 +10,7 @@ const prisma = new PrismaClient()
 interface RunPodCallbackPayload {
   id: string                    // RunPod job ID
   status: 'COMPLETED' | 'FAILED' | 'IN_PROGRESS' | 'IN_QUEUE' | 'CANCELLED'
+  progress?: number             // Progress percentage (0-100) for IN_PROGRESS status
   output?: {
     output_url?: string         // URL to the generated video/output
     error?: string              // Error message if failed

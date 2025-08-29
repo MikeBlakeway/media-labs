@@ -7,7 +7,6 @@
 
 const { PrismaClient } = require('@prisma/client')
 // For manual testing, we'll skip HMAC generation to avoid config complexity
-// const { generateCallbackHmac } = require('../src/lib/crypto')
 
 async function testWebhookEndpoint() {
   console.log('🧪 Testing webhook callback endpoint...')
