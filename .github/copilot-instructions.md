@@ -331,38 +331,72 @@ This ensures code maintainability, catches type errors at compile time, and impr
 
 ## Documentation index — required reading for Copilot
 
-Before beginning any development work, Copilot MUST read and follow the repository documentation listed below. Insist that the human requester confirms which document is the source-of-truth if there is any ambiguity. If a document contains explicit instructions (coding conventions, PR process, environment setup, or migration steps), follow those instructions before making code changes.
+**CRITICAL**: Before beginning any development work, Copilot MUST read and follow ALL relevant repository documentation listed below. This is a mandatory requirement. If documentation is incomplete or ambiguous, stop and request clarification from the human before proceeding.
 
-Required documents (read fully, in roughly this order):
+### Core Project Documentation (MUST READ in order)
 
 - `README.md` (project root) — high-level project overview and quick start
-- `docs/how-to-develop.md` — developer onboarding and local dev guidance
+- `docs/how-to-develop.md` — developer onboarding and local dev guidance  
 - `docs/requirements.md` — project requirements and acceptance criteria
 - `docs/epics.md` — product epics and feature context
+
+### API and Integration Documentation
+
 - `docs/api-audio-jobs.md` — API design and audio job schema details
 - `docs/api-webhook-endpoints.md` — webhook API endpoints, integration guide and troubleshooting
 - `docs/api-audio-jobs-testing.md` — integration test notes and manual test steps
-- `docs/flf2v-bootstrap.md` — additional setup or bootstrap instructions
+- `docs/job-model-flf2v-integration.md` — Job model enhancements for FLF2V video generation
+- `docs/flf2v-migration-guide.md` — Developer guide for migrating to FLF2V dedicated fields
 
-Package-level and contextual READMEs and guides (review as relevant to the task):
+### Setup and Bootstrap Documentation
 
-- `apps/api/README.md`
-- `apps/ui/README.md`
-- `apps/worker/README.md`
-- `.devcontainer/README.md`
-- `pods/comfyui-video/README.md`
-- `pods/fake-gpu/README.md`
+- `docs/flf2v-bootstrap.md` — FLF2V setup automation and bootstrap instructions
 
-Related automation and contribution guidance (review when changing workflows, CI, or PRs):
+### Application-Specific Documentation
 
-- `.github/ISSUE_TEMPLATE/` (bug_report.md, feature_request.md, pull_request_template.md)
-- `.github/prompts/commit_message.prompt.md`
-- `.github/prompts/pull_request.prompt.md`
-- `.github/instructions/context7.instructions.md`
-- `.github/copilot-model-rules.json`
-- `.github/instructions/commit-message.instructions.md`
+- `apps/api/README.md` — API application setup, routes, and architecture
+- `apps/ui/README.md` — UI application setup, components, and styling
+- `apps/worker/README.md` — Worker application setup and job processing
+- `.devcontainer/README.md` — Development container setup and usage
 
-Update the index when new documentation is added. If you (Copilot) detect that a required document is missing or out-of-date for the requested task, stop and request clarification from the human before proceeding.
+### Infrastructure and Services Documentation
+
+- `pods/comfyui-video/README.md` — ComfyUI video service configuration and usage
+- `pods/fake-gpu/README.md` — Fake GPU service for local development
+
+### Workflow and Contribution Documentation
+
+- `.github/ISSUE_TEMPLATE/bug_report.md` — Bug report template and requirements
+- `.github/ISSUE_TEMPLATE/feature_request.md` — Feature request template and requirements  
+- `.github/ISSUE_TEMPLATE/pull_request_template.md` — Pull request template and requirements
+- `.github/prompts/commit_message.prompt.md` — Conventional commit message generation
+- `.github/prompts/pull_request.prompt.md` — Pull request description generation
+- `.github/instructions/context7.instructions.md` — Context7 documentation routing instructions
+- `.github/instructions/commit-message.instructions.md` — Commit message standards and workflow
+- `.github/copilot-model-rules.json` — Copilot behavior rules and constraints
+
+### Documentation Requirements for All Work
+
+**Every development task MUST include documentation updates:**
+
+1. **Read Before Starting**: Review ALL relevant documentation before making any code changes
+2. **Update During Development**: Modify existing documentation when functionality changes
+3. **Create New Documentation**: Add new documentation for new features or significant changes
+4. **Update This Index**: Add new documentation files to this index before considering work "Done"
+5. **Validate Documentation**: Ensure documentation is accurate and up-to-date before completing tasks
+
+**"Done" Definition**: No development work can be considered complete until:
+- [ ] All relevant existing documentation has been reviewed and updated as needed
+- [ ] New documentation has been created for new features/changes
+- [ ] This documentation index has been updated if new docs were added
+- [ ] Documentation follows the same quality standards as code (accurate, clear, maintainable)
+
+### Documentation Update Rules
+
+- When adding new documentation files to `docs/`, `apps/*/README.md`, `pods/*/README.md`, or `.github/`, update this index
+- If a document contains explicit instructions (coding conventions, PR process, setup steps), follow those instructions exactly
+- If documentation conflicts, stop and request clarification on which is the source-of-truth
+- Keep documentation in sync with code changes - documentation drift is a bug
 
 End of Copilot instructions.
 
@@ -394,3 +428,52 @@ Behavior expectations:
 - If Copilot arrives in a state where files are edited but not committed, present a concise summary of the changes and wait for the user's explicit instruction to stage/commit/push.
 
 These restrictions prevent accidental repository state changes and ensure maintainers retain control over commits and pushes.
+
+## Documentation-First Development Policy
+
+**MANDATORY**: All development work in this repository MUST include documentation updates as part of the "Definition of Done". This is not optional.
+
+### Pre-Development Requirements
+
+Before starting any coding task:
+
+1. **READ ALL RELEVANT DOCUMENTATION**: Review the complete documentation index above
+2. **UNDERSTAND CURRENT STATE**: Identify what documentation exists for the area you're working on  
+3. **PLAN DOCUMENTATION UPDATES**: Determine what documentation will need updates or creation
+4. **VERIFY DOCUMENTATION ACCURACY**: Ensure existing docs accurately reflect current implementation
+
+### During Development
+
+As you implement changes:
+
+1. **UPDATE EXISTING DOCS**: Modify documentation that becomes outdated by your changes
+2. **CREATE NEW DOCUMENTATION**: Add new docs for new features, APIs, or significant functionality
+3. **MAINTAIN ACCURACY**: Ensure all documentation remains accurate as code evolves
+4. **FOLLOW DOCUMENTATION STANDARDS**: Match the style and quality of existing documentation
+
+### Definition of Done Requirements
+
+No development task is complete until ALL of the following are satisfied:
+
+- [ ] **Code changes implemented** and tested
+- [ ] **All relevant existing documentation reviewed** and updated as needed
+- [ ] **New documentation created** for new features or significant changes  
+- [ ] **Documentation index updated** if new documentation files were added
+- [ ] **Documentation accuracy verified** - no contradictions or outdated information
+- [ ] **Documentation follows project conventions** and quality standards
+
+### Documentation Standards
+
+- **Accuracy**: Documentation must accurately reflect the current implementation
+- **Completeness**: Cover all user-facing functionality and developer workflows  
+- **Clarity**: Use clear, concise language with good examples
+- **Maintainability**: Structure docs to be easily updated as code changes
+- **Discoverability**: Ensure docs are properly indexed and cross-referenced
+
+### Enforcement
+
+- **Copilot MUST refuse** to mark work as "Done" if documentation requirements are not met
+- **PRs MUST include** documentation updates for any functional changes
+- **No exceptions**: Even small bug fixes may require documentation updates
+
+This policy ensures the repository maintains high-quality, up-to-date documentation that serves both current developers and future contributors.

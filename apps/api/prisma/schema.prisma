@@ -33,6 +33,18 @@ model Job {
   failureReason String?
   retries       Int      @default(0)
   attempts      Int      @default(0)
+  // Video-specific fields for FLF2V integration
+  frames        Int?     // Number of frames for video generation
+  fps           Int?     // Frames per second for video output
+  width         Int?     // Video width in pixels
+  height        Int?     // Video height in pixels
+  error         String?  // Alternative error field as specified in requirements
+
+  // Indexes for performance optimization
+  @@index([status])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([status, createdAt])
 }
 
 enum JobStatus {
