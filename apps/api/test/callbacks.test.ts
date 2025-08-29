@@ -70,7 +70,9 @@ describe('Callback Webhook API', () => {
   describe('POST /api/callbacks/gpu/:jobId', () => {
     const validPayload = {
       id: 'runpod-job-123',
-      status: 'COMPLETED',
+      status: 'COMPLETED' as const,
+      delayTime: 2188,
+      executionTime: 2297,
       output: {
         output_url: 'https://storage.example.com/videos/test-job.mp4'
       }
@@ -169,7 +171,8 @@ describe('Callback Webhook API', () => {
       mockVerifyCallbackHmac.mockReturnValue(true)
       const failedPayload = {
         id: 'runpod-job-123',
-        status: 'FAILED',
+        status: 'FAILED' as const,
+        delayTime: 1500,
         output: {
           error: 'GPU processing failed'
         }
@@ -211,8 +214,8 @@ describe('Callback Webhook API', () => {
       mockVerifyCallbackHmac.mockReturnValue(true)
       const progressPayload = {
         id: 'runpod-job-123',
-        status: 'IN_PROGRESS',
-        progress: 75
+        status: 'IN_PROGRESS' as const,
+        delayTime: 2624
       }
       
       // Act
@@ -225,12 +228,12 @@ describe('Callback Webhook API', () => {
       expect(response.status).toBe(200)
       expect(response.body.status).toBe('RUNNING')
 
-      // Verify job progress was updated
+      // Verify job status was updated (no progress percentage for IN_PROGRESS)
       const updatedJob = await prisma.job.findUnique({
         where: { id: testJobId }
       })
       expect(updatedJob?.status).toBe('RUNNING')
-      expect(updatedJob?.progressPct).toBe(75)
+      // No progress percentage expectation since RunPod doesn't send this
     })
 
     it('should return 404 for non-existent job', async () => {
@@ -279,6 +282,95 @@ describe('Callback Webhook API', () => {
 
       // Verify no SSE broadcast
       expect(mockBroadcastToJob).not.toHaveBeenCalled()
+    })
+
+    it('should handle timed out job callback', async () => {
+      // Arrange
+      mockVerifyCallbackHmac.mockReturnValue(true)
+      const timedOutPayload = {
+        id: 'runpod-job-123',
+        status: 'TIMED_OUT' as const,
+        delayTime: 5000
+      }
+      
+      // Act
+      const response = await request(app)
+        .post(`/api/callbacks/gpu/${testJobId}`)
+        .query({ hmac: 'valid-hmac' })
+        .send(timedOutPayload)
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(response.body.status).toBe('FAILED')
+
+      // Verify SSE broadcast includes failure reason
+      expect(mockBroadcastToJob).toHaveBeenCalledWith(testJobId, {
+        type: 'job_status_update',
+        data: {
+          jobId: testJobId,
+          status: 'FAILED',
+          progressPct: null,
+          outputUrl: null,
+          updatedAt: expect.any(String),
+          failureReason: 'Job timed out'
+        }
+      })
+
+      // Verify job was marked as failed due to timeout
+      const updatedJob = await prisma.job.findUnique({
+        where: { id: testJobId }
+      })
+      expect(updatedJob?.status).toBe('FAILED')
+      expect(updatedJob?.failureReason).toBe('Job timed out')
+    })
+
+    it('should handle ComfyUI v5.0+ output format', async () => {
+      // Arrange
+      mockVerifyCallbackHmac.mockReturnValue(true)
+      const comfyUIPayload = {
+        id: 'runpod-job-123',
+        status: 'COMPLETED' as const,
+        delayTime: 2188,
+        executionTime: 4567,
+        output: {
+          images: [
+            {
+              filename: 'ComfyUI_00001_.png',
+              type: 's3_url' as const,
+              data: 'https://storage.example.com/videos/comfy-output.mp4'
+            }
+          ]
+        }
+      }
+      
+      // Act
+      const response = await request(app)
+        .post(`/api/callbacks/gpu/${testJobId}`)
+        .query({ hmac: 'valid-hmac' })
+        .send(comfyUIPayload)
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(response.body.status).toBe('COMPLETED')
+
+      // Verify SSE broadcast includes ComfyUI output URL
+      expect(mockBroadcastToJob).toHaveBeenCalledWith(testJobId, {
+        type: 'job_status_update',
+        data: {
+          jobId: testJobId,
+          status: 'COMPLETED',
+          progressPct: 100,
+          outputUrl: 'https://storage.example.com/videos/comfy-output.mp4',
+          updatedAt: expect.any(String)
+        }
+      })
+
+      // Verify job was updated with ComfyUI output URL
+      const updatedJob = await prisma.job.findUnique({
+        where: { id: testJobId }
+      })
+      expect(updatedJob?.status).toBe('COMPLETED')
+      expect(updatedJob?.outputUrl).toBe('https://storage.example.com/videos/comfy-output.mp4')
     })
 
     it('should handle unknown status gracefully', async () => {

@@ -6,17 +6,31 @@ import { broadcastToJob } from './sse'
 const router = Router()
 const prisma = new PrismaClient()
 
-// Types for RunPod callback payload based on common webhook patterns
+// Types for RunPod callback payload based on official documentation
+// Body equals GET /status/{job_id} response format
 interface RunPodCallbackPayload {
   id: string                    // RunPod job ID
-  status: 'COMPLETED' | 'FAILED' | 'IN_PROGRESS' | 'IN_QUEUE' | 'CANCELLED'
-  progress?: number             // Progress percentage (0-100) for IN_PROGRESS status
+  status: 'IN_QUEUE' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'TIMED_OUT'
+  delayTime?: number           // Delay time in milliseconds
+  executionTime?: number       // Execution time in milliseconds  
+  input?: any                  // Original input (present in webhook, not webhookV2)
+  workerId?: string           // Worker ID (occasionally present)
   output?: {
-    output_url?: string         // URL to the generated video/output
-    error?: string              // Error message if failed
+    // ComfyUI v5.0.0+ format
+    images?: Array<{
+      filename: string
+      type: 'base64' | 's3_url'
+      data: string
+    }>
+    errors?: string[]
+    // Legacy/generic formats
+    output_url?: string        // Direct output URL
+    message?: string          // Base64 data or message
+    status?: string           // Worker-defined status
+    error?: string            // Error message if failed
+    [key: string]: any        // Worker-defined output shape
   }
-  executionTime?: number        // Execution time in milliseconds
-  [key: string]: any           // Allow for additional fields
+  [key: string]: any          // Allow for additional fields
 }
 
 // POST /api/callbacks/gpu/:jobId - Secure webhook endpoint for RunPod job completion callbacks
@@ -28,7 +42,9 @@ router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => 
   console.log(`📞 Received callback for job ${jobId}`, {
     hmac: hmac ? `${hmac.substring(0, 8)}...` : 'missing',
     status: payload.status,
-    runPodJobId: payload.id
+    runPodJobId: payload.id,
+    delayTime: payload.delayTime,
+    executionTime: payload.executionTime
   })
 
   try {
@@ -85,10 +101,26 @@ router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => 
         updateData.progressPct = 100
         progressPct = 100
         
-        // Extract output URL if available
-        if (payload.output?.output_url) {
-          updateData.outputUrl = payload.output.output_url
-          outputUrl = payload.output.output_url
+        // Extract output URL from various possible formats
+        if (payload.output) {
+          // ComfyUI v5.0.0+ format with images array
+          if (payload.output.images && payload.output.images.length > 0) {
+            const firstImage = payload.output.images[0]
+            if (firstImage.type === 's3_url') {
+              updateData.outputUrl = firstImage.data
+              outputUrl = firstImage.data
+            }
+          }
+          // Legacy/direct output_url format
+          else if (payload.output.output_url) {
+            updateData.outputUrl = payload.output.output_url
+            outputUrl = payload.output.output_url
+          }
+          // Base64 message format (older tutorials)
+          else if (payload.output.message && payload.output.message.startsWith('data:')) {
+            // For base64 data, we might want to handle differently
+            console.log(`📄 Job ${jobId} completed with base64 output`)
+          }
         }
         
         console.log(`✅ Job ${jobId} completed successfully`)
@@ -96,17 +128,25 @@ router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => 
 
       case 'FAILED':
         updateData.status = 'FAILED'
-        updateData.failureReason = payload.output?.error || 'Job failed during processing'
-        console.log(`❌ Job ${jobId} failed:`, payload.output?.error)
+        
+        // Extract error from various possible formats
+        let errorMessage = 'Job failed during processing'
+        if (payload.output) {
+          if (payload.output.errors && payload.output.errors.length > 0) {
+            errorMessage = payload.output.errors.join('; ')
+          } else if (payload.output.error) {
+            errorMessage = payload.output.error
+          }
+        }
+        updateData.failureReason = errorMessage
+        
+        console.log(`❌ Job ${jobId} failed:`, errorMessage)
         break
 
       case 'IN_PROGRESS':
         updateData.status = 'RUNNING'
-        // Extract progress if available in payload
-        if (payload.progress !== undefined) {
-          updateData.progressPct = Math.max(0, Math.min(100, payload.progress))
-          progressPct = updateData.progressPct
-        }
+        // Note: RunPod doesn't send explicit progress percentage
+        // Progress is inferred from status transitions
         console.log(`🔄 Job ${jobId} in progress`)
         break
 
@@ -118,6 +158,12 @@ router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => 
       case 'CANCELLED':
         updateData.status = 'CANCELED'
         console.log(`🛑 Job ${jobId} cancelled`)
+        break
+
+      case 'TIMED_OUT':
+        updateData.status = 'FAILED'
+        updateData.failureReason = 'Job timed out'
+        console.log(`⏰ Job ${jobId} timed out`)
         break
 
       default:
