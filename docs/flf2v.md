@@ -432,7 +432,7 @@ async function createTestJob() {
     }
   });
   console.log('Created test job:', job.id);
-  await prisma.\$disconnect();
+  await prisma.$disconnect();
 }
 createTestJob().catch(console.error);
 "
@@ -751,7 +751,8 @@ pnpm --filter ./apps/api run dev
    pnpm --filter ./apps/api run dev
    
    # Database logs
-   tail -f apps/api/prisma/dev.db.log
+   # Inspect SQLite database schema
+   sqlite3 apps/api/prisma/dev.db .schema
    ```
 
 2. **Test endpoints individually:**
@@ -764,7 +765,7 @@ pnpm --filter ./apps/api run dev
 3. **Validate configuration:**
    ```bash
    # Run configuration validation
-   node scripts/validate-flf2v-bootstrap.js
+   # (No validation script available)
    ```
 
 ## Development Modes
