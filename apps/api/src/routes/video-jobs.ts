@@ -15,6 +15,7 @@ import { submitToRunPod, RunPodImage } from '../lib/runpod'
 import { presignPut } from '../lib/storage'
 import { generateCallbackUrl } from '../lib/crypto'
 import { loadAppConfig } from '../config/storage'
+import { broadcastToJob } from './sse'
 
 const prisma = new PrismaClient()
 const router = Router()
@@ -60,8 +61,133 @@ function validateFiles(files: Express.Multer.File[]): void {
   }
 }
 
-// Upload images to storage and get presigned URLs
+// Simulate local fake processing for VIDEO_RUN_MODE=local_fake
+async function processLocalFakeJob(jobId: string): Promise<void> {
+  console.log(`🎭 Starting local fake processing for job ${jobId}`)
+  
+  // Step 1: Mark job as RUNNING immediately
+  await prisma.job.update({
+    where: { id: jobId },
+    data: {
+      status: 'RUNNING',
+      progressPct: 10
+    }
+  })
+  
+  // Broadcast initial status update
+  broadcastToJob(jobId, {
+    type: 'job_status_update',
+    data: {
+      jobId,
+      status: 'RUNNING',
+      progressPct: 10,
+      outputUrl: null,
+      updatedAt: new Date().toISOString()
+    }
+  })
+  
+  // Step 2: Simulate processing delay (30-60 seconds for realistic timing)
+  const processingDelay = Math.floor(Math.random() * 30000) + 30000 // 30-60 seconds
+  console.log(`🕐 Job ${jobId} will complete in ${processingDelay}ms`)
+  
+  setTimeout(async () => {
+    try {
+      // Step 3: Generate a placeholder MP4 URL (simulated output)
+      const outputUrl = `https://placeholder.video/placeholder-${jobId}.mp4`
+      
+      // Step 4: Mark job as COMPLETED
+      const updatedJob = await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          status: 'COMPLETED',
+          progressPct: 100,
+          outputUrl,
+          updatedAt: new Date()
+        }
+      })
+      
+      // Step 5: Broadcast completion status
+      broadcastToJob(jobId, {
+        type: 'job_status_update',
+        data: {
+          jobId,
+          status: 'COMPLETED',
+          progressPct: 100,
+          outputUrl: outputUrl,
+          updatedAt: updatedJob.updatedAt.toISOString()
+        }
+      })
+      
+      console.log(`✅ Local fake processing completed for job ${jobId}`)
+    } catch (error) {
+      console.error(`❌ Local fake processing failed for job ${jobId}:`, error)
+      
+      // Mark job as failed
+      const failedJob = await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          status: 'FAILED',
+          failureReason: 'Local fake processing simulation failed',
+          updatedAt: new Date()
+        }
+      })
+      
+      // Broadcast failure status
+      broadcastToJob(jobId, {
+        type: 'job_status_update',
+        data: {
+          jobId,
+          status: 'FAILED',
+          progressPct: null,
+          outputUrl: null,
+          updatedAt: failedJob.updatedAt.toISOString(),
+          failureReason: 'Local fake processing simulation failed'
+        }
+      })
+    }
+  }, processingDelay)
+}
+
+// Upload images to storage and get presigned URLs (or simulate in local_fake mode)
 async function uploadImages(files: Express.Multer.File[], jobId: string): Promise<RunPodImage[]> {
+  const videoRunMode = process.env.VIDEO_RUN_MODE
+  
+  if (videoRunMode === 'local_fake') {
+    // In local fake mode, just return simulated image URLs
+    const images: RunPodImage[] = []
+    
+    for (const file of files) {
+      let imageName: string
+      if (file.fieldname === 'startImage') {
+        imageName = 'start_image.png'
+      } else if (file.fieldname === 'endImage') {
+        imageName = 'end_image.png'
+      } else {
+        throw new Error(`Unexpected field name: ${file.fieldname}`)
+      }
+      
+      // Create simulated URLs for local fake mode
+      const imageUrl = `https://placeholder.images/temp/${jobId}/${imageName}`
+      
+      images.push({
+        name: imageName,
+        url: imageUrl
+      })
+      
+      console.log(`🎭 Simulated image upload: ${imageName} -> ${imageUrl}`)
+    }
+    
+    // Ensure images are in the correct order
+    images.sort((a, b) => {
+      if (a.name === 'start_image.png') return -1
+      if (b.name === 'start_image.png') return 1
+      return a.name.localeCompare(b.name)
+    })
+    
+    return images
+  }
+  
+  // Cloud mode: actual upload to B2 storage
   const images: RunPodImage[] = []
   
   // Map each file to its corresponding image name based on fieldname
@@ -147,6 +273,30 @@ router.post('/api/jobs', upload.fields([
     })
 
     try {
+      // Check if we're in local fake mode
+      const videoRunMode = process.env.VIDEO_RUN_MODE
+      
+      if (videoRunMode === 'local_fake') {
+        console.log(`🎭 Using local fake mode for job ${job.id}`)
+        
+        // Upload images locally (still process them for consistency)
+        await uploadImages(allFiles, job.id)
+        
+        // Start local fake processing asynchronously
+        processLocalFakeJob(job.id)
+        
+        // Return success response immediately
+        res.status(201).json({
+          id: job.id,
+          status: 'QUEUED'
+        })
+        
+        return
+      }
+      
+      // Cloud mode processing (existing logic)
+      console.log(`☁️ Using cloud mode for job ${job.id}`)
+      
       // Generate presigned URL for output video
       const outputKey = `videos/${job.id}.mp4`
       const outputPutUrl = await presignPut(outputKey, 'video/mp4')
