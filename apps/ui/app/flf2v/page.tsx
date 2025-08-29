@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function FLF2VPage() {
   const [startImage, setStartImage] = useState<File | null>(null)
@@ -13,6 +13,18 @@ export default function FLF2VPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [jobId, setJobId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Cleanup preview URLs on component unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (startImagePreview) {
+        URL.revokeObjectURL(startImagePreview)
+      }
+      if (endImagePreview) {
+        URL.revokeObjectURL(endImagePreview)
+      }
+    }
+  }, [])
 
   const handleImageUpload = (file: File, type: 'start' | 'end') => {
     if (file) {
@@ -32,6 +44,13 @@ export default function FLF2VPage() {
 
       // Clear any previous errors
       setError(null)
+
+      // Revoke existing preview URL to prevent memory leaks
+      if (type === 'start' && startImagePreview) {
+        URL.revokeObjectURL(startImagePreview)
+      } else if (type === 'end' && endImagePreview) {
+        URL.revokeObjectURL(endImagePreview)
+      }
 
       // Create preview URL
       const previewUrl = URL.createObjectURL(file)
@@ -86,6 +105,14 @@ export default function FLF2VPage() {
   }
 
   const resetForm = () => {
+    // Revoke preview URLs to prevent memory leaks
+    if (startImagePreview) {
+      URL.revokeObjectURL(startImagePreview)
+    }
+    if (endImagePreview) {
+      URL.revokeObjectURL(endImagePreview)
+    }
+
     setStartImage(null)
     setEndImage(null)
     setStartImagePreview(null)
@@ -156,6 +183,9 @@ export default function FLF2VPage() {
                       <button
                         type="button"
                         onClick={() => {
+                          if (startImagePreview) {
+                            URL.revokeObjectURL(startImagePreview)
+                          }
                           setStartImage(null)
                           setStartImagePreview(null)
                         }}
@@ -202,6 +232,9 @@ export default function FLF2VPage() {
                       <button
                         type="button"
                         onClick={() => {
+                          if (endImagePreview) {
+                            URL.revokeObjectURL(endImagePreview)
+                          }
                           setEndImage(null)
                           setEndImagePreview(null)
                         }}
