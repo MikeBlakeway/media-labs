@@ -347,6 +347,8 @@ This ensures code maintainability, catches type errors at compile time, and impr
 - `docs/api-audio-jobs-testing.md` — integration test notes and manual test steps
 - `docs/job-model-flf2v-integration.md` — Job model enhancements for FLF2V video generation
 - `docs/flf2v-migration-guide.md` — Developer guide for migrating to FLF2V dedicated fields
+- `docs/video-local-fake-mode.md` — Video local fake mode developer guide for GPU-free development
+- `docs/video-api-implementation.md` — Video API implementation architecture and technical details
 - `docs/flf2v.md` — Comprehensive FLF2V integration setup and usage guide
 
 ### Setup and Bootstrap Documentation
