@@ -1,14 +1,11 @@
-#!/usr/bin/env node
-
 /**
  * Manual test script for the webhook callback endpoint
  * Tests the POST /api/callbacks/gpu/:jobId endpoint functionality
  */
 
-const { PrismaClient } = require('@prisma/client')
-// For manual testing, we'll skip HMAC generation to avoid config complexity
+import { PrismaClient } from '@prisma/client'
 
-async function testWebhookEndpoint() {
+async function testWebhookEndpoint(): Promise<void> {
   console.log('🧪 Testing webhook callback endpoint...')
   
   const prisma = new PrismaClient()
@@ -35,7 +32,7 @@ async function testWebhookEndpoint() {
     // 3. Prepare callback payload
     const callbackPayload = {
       id: 'test-runpod-job',
-      status: 'COMPLETED',
+      status: 'COMPLETED' as const,
       output: {
         output_url: 'https://storage.example.com/videos/test-output.mp4'
       }
@@ -50,9 +47,9 @@ async function testWebhookEndpoint() {
     const currentJob = await prisma.job.findUnique({
       where: { id: job.id }
     })
-    console.log(`   Status: ${currentJob.status}`)
-    console.log(`   Progress: ${currentJob.progressPct}%`)
-    console.log(`   Output URL: ${currentJob.outputUrl || 'none'}`)
+    console.log(`   Status: ${currentJob?.status}`)
+    console.log(`   Progress: ${currentJob?.progressPct}%`)
+    console.log(`   Output URL: ${currentJob?.outputUrl || 'none'}`)
     
     // 5. Clean up
     console.log('5. Cleaning up test job...')
@@ -75,13 +72,13 @@ async function testWebhookEndpoint() {
 }
 
 // Run the test if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   testWebhookEndpoint()
     .then(() => process.exit(0))
-    .catch(error => {
+    .catch((error: Error) => {
       console.error('💥 Test script failed:', error)
       process.exit(1)
     })
 }
 
-module.exports = { testWebhookEndpoint }
+export { testWebhookEndpoint }

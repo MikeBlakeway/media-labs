@@ -33,6 +33,15 @@ interface RunPodCallbackPayload {
   [key: string]: any          // Allow for additional fields
 }
 
+// Interface for database update data to ensure type safety
+interface JobUpdateData {
+  updatedAt: Date
+  status?: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELED'
+  progressPct?: number
+  outputUrl?: string
+  failureReason?: string
+}
+
 // POST /api/callbacks/gpu/:jobId - Secure webhook endpoint for RunPod job completion callbacks
 router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => {
   const { jobId } = req.params
@@ -88,12 +97,12 @@ router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => 
     }
 
     // 4. Prepare update data based on callback status
-    let updateData: any = {
+    const updateData: JobUpdateData = {
       updatedAt: new Date()
     }
 
-    let progressPct: number | undefined
-    let outputUrl: string | undefined
+    let progressPct: number | undefined = undefined
+    let outputUrl: string | undefined = undefined
 
     switch (payload.status) {
       case 'COMPLETED':
