@@ -349,6 +349,7 @@ This ensures code maintainability, catches type errors at compile time, and impr
 - `docs/flf2v-migration-guide.md` — Developer guide for migrating to FLF2V dedicated fields
 - `docs/video-local-fake-mode.md` — Video local fake mode developer guide for GPU-free development
 - `docs/video-api-implementation.md` — Video API implementation architecture and technical details
+- `docs/flf2v.md` — Comprehensive FLF2V integration setup and usage guide
 
 ### Setup and Bootstrap Documentation
 

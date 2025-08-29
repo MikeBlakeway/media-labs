@@ -1,10 +1,9 @@
 import { Router, Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
 import { verifyCallbackHmac } from '../lib/crypto'
 import { broadcastToJob } from './sse'
+import { jobsRepo, UpdateJobData } from '../repos/jobsRepo'
 
 const router = Router()
-const prisma = new PrismaClient()
 
 // Types for RunPod callback payload based on official documentation
 // Body equals GET /status/{job_id} response format
@@ -31,15 +30,6 @@ interface RunPodCallbackPayload {
     [key: string]: any        // Worker-defined output shape
   }
   [key: string]: any          // Allow for additional fields
-}
-
-// Interface for database update data to ensure type safety
-interface JobUpdateData {
-  updatedAt: Date
-  status?: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELED'
-  progressPct?: number
-  outputUrl?: string
-  failureReason?: string
 }
 
 // POST /api/callbacks/gpu/:jobId - Secure webhook endpoint for RunPod job completion callbacks
@@ -84,9 +74,7 @@ router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => 
     }
 
     // 3. Find the job in database
-    const job = await prisma.job.findUnique({
-      where: { id: jobId }
-    })
+    const job = await jobsRepo.getById(jobId)
 
     if (!job) {
       console.warn(`🔍 Job not found: ${jobId}`)
@@ -97,9 +85,7 @@ router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => 
     }
 
     // 4. Prepare update data based on callback status
-    const updateData: JobUpdateData = {
-      updatedAt: new Date()
-    }
+    const updateData: UpdateJobData = {}
 
     let progressPct: number | undefined = undefined
     let outputUrl: string | undefined = undefined
@@ -182,10 +168,7 @@ router.post('/api/callbacks/gpu/:jobId', async (req: Request, res: Response) => 
     }
 
     // 5. Update job in database
-    const updatedJob = await prisma.job.update({
-      where: { id: jobId },
-      data: updateData
-    })
+    const updatedJob = await jobsRepo.update(jobId, updateData)
 
     // 6. Broadcast SSE update to connected clients
     const sseMessage = {
