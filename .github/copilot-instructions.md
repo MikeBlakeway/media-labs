@@ -244,6 +244,63 @@ git log -1 --pretty=%B | grep -E "^(feat|fix|chore|docs|refactor|test)(\(.+\))?:
 
 For stronger enforcement, add `commitlint` + `husky` in the repo and configure a pre-commit/pre-push hook to block commits that don't match the style.
 
+## TypeScript Coding Standards
+
+This repository uses TypeScript with strict typing enabled. All code must follow these standards:
+
+### Strict Type Safety
+- **NEVER use `any` type** - Always define proper interfaces and types
+- Use union types, generic types, and proper type annotations
+- All functions must have explicit return types
+- All variables must have explicit types when type inference is unclear
+- Use `unknown` instead of `any` when the type is truly unknown, then use type guards
+
+### Interface and Type Definitions
+- Define interfaces for all data structures, API payloads, and database models
+- Use descriptive interface names (e.g., `RunPodCallbackPayload`, `JobUpdateData`)
+- Document interface fields with comments explaining their purpose
+- Prefer interfaces over type aliases for object shapes
+
+### Variable Initialization
+- Always initialize variables with explicit default values
+- Use `undefined` explicitly when a variable may not have a value initially
+- Avoid declaring variables without initialization unless absolutely necessary
+
+### Error Handling
+- Use proper error types (`Error`, custom error classes)
+- Type error handling in catch blocks: `catch (error: Error)` or `catch (error: unknown)`
+- Always validate external data with proper type guards
+
+### Examples of Proper TypeScript Usage:
+
+```typescript
+// ✅ Good - Proper interface definition
+interface JobUpdateData {
+  updatedAt: Date
+  status?: JobStatus
+  progressPct?: number
+  outputUrl?: string
+}
+
+// ✅ Good - Explicit initialization
+let progressPct: number | undefined = undefined
+let outputUrl: string | undefined = undefined
+
+// ✅ Good - Proper function typing
+async function processCallback(payload: RunPodCallbackPayload): Promise<JobUpdateData> {
+  // implementation
+}
+
+// ❌ Bad - Using any type
+let updateData: any = {}
+
+// ❌ Bad - Uninitialized variables
+let progressPct: number | undefined
+let outputUrl: string | undefined
+```
+
+This ensures code maintainability, catches type errors at compile time, and improves developer experience.
+
 ## Known limitations & troubleshooting
 
 - **Docker limitations:** `docker-compose.yml` exists but main apps (ui/api/worker) lack Dockerfiles. Use `pnpm run dev` for local development instead.
@@ -283,6 +340,7 @@ Required documents (read fully, in roughly this order):
 - `docs/requirements.md` — project requirements and acceptance criteria
 - `docs/epics.md` — product epics and feature context
 - `docs/api-audio-jobs.md` — API design and audio job schema details
+- `docs/api-webhook-endpoints.md` — webhook API endpoints, integration guide and troubleshooting
 - `docs/api-audio-jobs-testing.md` — integration test notes and manual test steps
 - `docs/flf2v-bootstrap.md` — additional setup or bootstrap instructions
 

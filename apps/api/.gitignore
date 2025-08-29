@@ -1,8 +1,12 @@
 # Local sqlite DBs created by prisma/migrate or local runs
 dev.db
 dev.db-journal
+test.db
+test.db-journal
 prisma/dev.db
 prisma/dev.db-journal
+prisma/test.db
+prisma/test.db-journal
 
 # Local environment files
 .env
