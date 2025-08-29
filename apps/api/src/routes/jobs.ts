@@ -6,10 +6,38 @@ import { presignGet } from '../lib/storage'
 const router = Router()
 
 /**
+ * Job response interface that includes all job fields plus optional download URL
+ */
+interface JobResponse {
+  id: string
+  createdAt: Date
+  updatedAt: Date
+  status: string
+  lane: string
+  inputs: any
+  sampleRate: number | null
+  channels: number | null
+  processing: any
+  metadata: any
+  progressPct: number | null
+  outputUrl: string | null
+  resultPaths: any
+  failureReason: string | null
+  // Video-specific fields
+  frames: any
+  fps: number | null
+  width: number | null
+  height: number | null
+  error: string | null
+  // Optional download URL for completed jobs
+  downloadUrl?: string
+}
+
+/**
  * Transform job data for API response
  * Removes sensitive/internal fields and formats data appropriately
  */
-const transformJobForResponse = (job: Job) => {
+const transformJobForResponse = (job: Job): Omit<JobResponse, 'downloadUrl'> => {
   return {
     id: job.id,
     createdAt: job.createdAt,
@@ -83,14 +111,15 @@ router.get('/api/jobs/:id', async (req: Request, res: Response) => {
     }
 
     // Transform job data for response
-    const responseData = transformJobForResponse(job)
+    const baseResponseData = transformJobForResponse(job)
 
     // For completed jobs, try to generate a presigned download URL
+    let responseData: JobResponse = baseResponseData
     if (job.status === 'COMPLETED') {
       const downloadUrl = await generateDownloadUrl(job)
       if (downloadUrl) {
-        // Add the presigned download URL to the response
-        (responseData as any).downloadUrl = downloadUrl
+        // Add the presigned download URL to the response using type-safe object spread
+        responseData = { ...baseResponseData, downloadUrl }
       }
     }
 
