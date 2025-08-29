@@ -47,6 +47,15 @@ async function loadWorkflow(): Promise<object> {
   }
 }
 
+// Sort images to ensure start_image.png comes first, then end_image.png
+function sortImagesByName(images: RunPodImage[]): RunPodImage[] {
+  return images.sort((a, b) => {
+    if (a.name === 'start_image.png') return -1
+    if (b.name === 'start_image.png') return 1
+    return a.name.localeCompare(b.name)
+  })
+}
+
 // Validate file uploads
 function validateFiles(files: Express.Multer.File[]): void {
   if (!files || files.length !== REQUIRED_IMAGE_COUNT) {
@@ -178,13 +187,7 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
     }
     
     // Ensure images are in the correct order
-    images.sort((a, b) => {
-      if (a.name === 'start_image.png') return -1
-      if (b.name === 'start_image.png') return 1
-      return a.name.localeCompare(b.name)
-    })
-    
-    return images
+    return sortImagesByName(images)
   }
   
   // Cloud mode: actual upload to B2 storage
@@ -237,13 +240,7 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
   }
   
   // Ensure images are in the correct order (start_image.png first, then end_image.png)
-  images.sort((a, b) => {
-    if (a.name === 'start_image.png') return -1
-    if (b.name === 'start_image.png') return 1
-    return a.name.localeCompare(b.name)
-  })
-  
-  return images
+  return sortImagesByName(images)
 }
 
 // POST /api/jobs - Create and submit video job
