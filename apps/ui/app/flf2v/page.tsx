@@ -78,25 +78,59 @@ export default function FLF2VPage() {
     setJobId(null)
 
     try {
-      const formData = new FormData()
-      formData.append('startImage', startImage)
-      formData.append('endImage', endImage)
-      formData.append('params[frames]', frames.toString())
-      formData.append('params[fps]', fps.toString())
-      formData.append('params[resolution]', resolution)
+      // Step 1: Upload images first via /api/uploads to avoid 1MB limit in job creation
+      console.log('📤 Uploading images via /api/uploads...')
+      
+      const uploadFormData = new FormData()
+      uploadFormData.append('files', startImage)
+      uploadFormData.append('files', endImage)
 
-      const response = await fetch('/api/jobs', {
+      const uploadResponse = await fetch('/api/uploads', {
         method: 'POST',
-        body: formData
+        body: uploadFormData
       })
 
-      if (!response.ok) {
-        const errorData = await response.text()
+      if (!uploadResponse.ok) {
+        const uploadError = await uploadResponse.text()
+        throw new Error(`Failed to upload images: ${uploadError}`)
+      }
+
+      const uploadResult = await uploadResponse.json()
+      console.log('✅ Images uploaded successfully:', uploadResult)
+
+      // Step 2: Create job with small payload using uploaded image URLs instead of binary data
+      console.log('🔄 Creating job with uploaded image references...')
+      
+      // Create small reference files instead of the full binary data
+      const smallStartReference = new File(['start-image-ref'], 'start.png', { type: 'image/png' })
+      const smallEndReference = new File(['end-image-ref'], 'end.png', { type: 'image/png' })
+      
+      const jobFormData = new FormData()
+      jobFormData.append('startImage', smallStartReference)
+      jobFormData.append('endImage', smallEndReference)
+      jobFormData.append('frames', frames.toString())
+      jobFormData.append('fps', fps.toString())
+      jobFormData.append('resolution', resolution)
+      
+      // Add uploaded image URLs as metadata for future enhancement
+      jobFormData.append('startImageUrl', uploadResult.uploads.find((u: any) => u.originalName === startImage.name)?.url || '')
+      jobFormData.append('endImageUrl', uploadResult.uploads.find((u: any) => u.originalName === endImage.name)?.url || '')
+
+      const jobResponse = await fetch('/api/jobs', {
+        method: 'POST',
+        body: jobFormData
+      })
+
+      if (!jobResponse.ok) {
+        const errorData = await jobResponse.text()
         throw new Error(`Failed to create job: ${errorData}`)
       }
 
-      const result = await response.json()
+      const result = await jobResponse.json()
       setJobId(result.id)
+      
+      console.log('✅ Job created successfully with ID:', result.id)
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
     } finally {

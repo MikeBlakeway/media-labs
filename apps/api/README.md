@@ -78,6 +78,16 @@ Default local port: `http://localhost:4000`.
   - `GET /_health`
   - Description: Returns API health status.
 
+### File Upload (Local Development)
+
+- **Upload Files**
+  - `POST /api/uploads`
+  - Description: Upload image files and receive URL references. Only available in `local_fake` mode or when `LOCAL_FAKE_UPLOADS_ENABLED=true`.
+  - Content-Type: `multipart/form-data`
+  - Max files: 2, Max size: 10MB per file
+  - Use case: Avoid Next.js Server Actions body-size limits by uploading large files separately before job creation.
+  - See: [Local Fake Upload Documentation](../../docs/local-fake-upload.md)
+
 ### Audio Job Management
 
 - **Create Audio Job**
