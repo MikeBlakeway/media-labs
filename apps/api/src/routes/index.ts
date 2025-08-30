@@ -5,6 +5,7 @@ import { videoJobRouter } from './video-jobs'
 import { sseRouter } from './sse'
 import { jobRouter } from './jobs'
 import { callbackRouter } from './callbacks'
+import { uploadsRouter } from './uploads'
 
 const router = Router()
 
@@ -13,6 +14,9 @@ router.use(healthRouter)
 
 // Mount SSE routes (must come before generic job routes to avoid conflicts)
 router.use(sseRouter)
+
+// Mount uploads routes
+router.use(uploadsRouter)
 
 // Mount generic job routes
 router.use(jobRouter)
