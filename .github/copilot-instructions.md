@@ -350,6 +350,7 @@ This ensures code maintainability, catches type errors at compile time, and impr
 - `docs/video-local-fake-mode.md` — Video local fake mode developer guide for GPU-free development
 - `docs/video-api-implementation.md` — Video API implementation architecture and technical details
 - `docs/flf2v.md` — Comprehensive FLF2V integration setup and usage guide
+- `docs/local-fake-upload.md` — Local fake upload handler for avoiding Server Action body-size limits
 
 ### Setup and Bootstrap Documentation
 
