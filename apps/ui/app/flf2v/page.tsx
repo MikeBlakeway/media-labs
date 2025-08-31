@@ -65,6 +65,25 @@ export default function FLF2VPage() {
     }
   }
 
+  // Helper function to upload a single image and get URL reference
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch('/api/uploads', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.text()
+      throw new Error(`Failed to upload image: ${errorData}`)
+    }
+
+    const result = await response.json()
+    return result.url
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -78,16 +97,30 @@ export default function FLF2VPage() {
     setJobId(null)
 
     try {
-      const formData = new FormData()
-      formData.append('startImage', startImage)
-      formData.append('endImage', endImage)
-      formData.append('params[frames]', frames.toString())
-      formData.append('params[fps]', fps.toString())
-      formData.append('params[resolution]', resolution)
+      // Step 1: Upload images individually to get URL references
+      console.log('📤 Uploading start image...')
+      const startImageUrl = await uploadImage(startImage)
+      
+      console.log('📤 Uploading end image...')
+      const endImageUrl = await uploadImage(endImage)
+      
+      console.log('✅ Both images uploaded, creating job...')
+
+      // Step 2: Create job with URL references (small payload)
+      const jobData = {
+        startImageUrl,
+        endImageUrl,
+        frames: frames.toString(),
+        fps: fps.toString(),
+        resolution
+      }
 
       const response = await fetch('/api/jobs', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jobData)
       })
 
       if (!response.ok) {
@@ -97,7 +130,9 @@ export default function FLF2VPage() {
 
       const result = await response.json()
       setJobId(result.id)
+      console.log('✅ Job created successfully:', result.id)
     } catch (err) {
+      console.error('❌ Job creation failed:', err)
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
     } finally {
       setIsSubmitting(false)

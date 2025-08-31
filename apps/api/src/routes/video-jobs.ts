@@ -6,6 +6,7 @@ import path from 'path'
 import fs from 'fs/promises'
 import { 
   CreateVideoJobSchema, 
+  CreateVideoJobFromUrlsSchema,
   SUPPORTED_IMAGE_TYPES, 
   MAX_IMAGE_SIZE, 
   REQUIRED_IMAGE_COUNT,
@@ -243,19 +244,75 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
   return sortImagesByName(images)
 }
 
-// POST /api/jobs - Create and submit video job
-router.post('/api/jobs', upload.fields([
-  { name: 'startImage', maxCount: 1 },
-  { name: 'endImage', maxCount: 1 }
-]), async (req: Request, res: Response) => {
-  try {
-    // Validate files
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] }
-    const allFiles = Object.values(files).flat()
-    validateFiles(allFiles)
+// Create RunPod images from URLs (for URL-based workflow)
+function createImagesFromUrls(startImageUrl: string, endImageUrl: string): RunPodImage[] {
+  const images: RunPodImage[] = [
+    {
+      name: 'start_image.png',
+      url: startImageUrl
+    },
+    {
+      name: 'end_image.png', 
+      url: endImageUrl
+    }
+  ]
+  
+  return sortImagesByName(images)
+}
 
-    // Validate form data
-    const validatedParams = CreateVideoJobSchema.parse(req.body)
+// POST /api/jobs - Create and submit video job (supports both multipart and JSON)
+router.post('/api/jobs', (req: Request, res: Response, next) => {
+  // Check content type to determine processing mode
+  const contentType = req.headers['content-type'] || ''
+  
+  if (contentType.includes('application/json')) {
+    // Handle JSON-based job creation with URL references
+    next()
+  } else {
+    // Handle multipart file upload
+    upload.fields([
+      { name: 'startImage', maxCount: 1 },
+      { name: 'endImage', maxCount: 1 }
+    ])(req, res, next)
+  }
+}, async (req: Request, res: Response) => {
+  try {
+    const contentType = req.headers['content-type'] || ''
+    let images: RunPodImage[] = [] // Initialize to empty array
+    let validatedParams: any
+    let allFiles: Express.Multer.File[] = []
+    
+    if (contentType.includes('application/json')) {
+      // Handle JSON-based job creation with URL references
+      console.log('📄 Processing JSON job creation with URL references')
+      
+      // Validate JSON payload
+      const urlJobData = CreateVideoJobFromUrlsSchema.parse(req.body)
+      validatedParams = {
+        frames: urlJobData.frames,
+        fps: urlJobData.fps,
+        resolution: urlJobData.resolution
+      }
+      
+      // Create images from URLs
+      images = createImagesFromUrls(urlJobData.startImageUrl, urlJobData.endImageUrl)
+      
+      console.log(`🔗 Using image URLs: start=${urlJobData.startImageUrl}, end=${urlJobData.endImageUrl}`)
+      
+    } else {
+      // Handle multipart file upload (existing logic)
+      console.log('📁 Processing multipart file upload')
+      
+      // Validate files
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] }
+      allFiles = Object.values(files).flat()
+      validateFiles(allFiles)
+
+      // Validate form data
+      validatedParams = CreateVideoJobSchema.parse(req.body)
+      
+      // Images will be uploaded after job creation to use the real job ID
+    }
     
     // Load workflow configuration
     const workflow = await loadWorkflow()
@@ -276,8 +333,14 @@ router.post('/api/jobs', upload.fields([
       if (videoRunMode === 'local_fake') {
         console.log(`🎭 Using local fake mode for job ${job.id}`)
         
-        // Upload images locally (still process them for consistency)
-        await uploadImages(allFiles, job.id)
+        // For URL-based requests, images are already ready
+        // For multipart requests, we need to upload them  
+        if (contentType.includes('application/json')) {
+          console.log('🔗 Using provided image URLs for local fake mode')
+        } else {
+          // Upload images locally for multipart requests
+          images = await uploadImages(allFiles, job.id)
+        }
         
         // Start local fake processing asynchronously
         processLocalFakeJob(job.id)
@@ -291,15 +354,18 @@ router.post('/api/jobs', upload.fields([
         return
       }
       
-      // Cloud mode processing (existing logic)
+      // Cloud mode processing
       console.log(`☁️ Using cloud mode for job ${job.id}`)
       
       // Generate presigned URL for output video
       const outputKey = `videos/${job.id}.mp4`
       const outputPutUrl = await presignPut(outputKey, 'video/mp4')
       
-      // Upload images and get their URLs
-      const images = await uploadImages(allFiles, job.id)
+      // For URL-based requests, images are already ready
+      // For multipart requests, we need to upload them
+      if (!contentType.includes('application/json')) {
+        images = await uploadImages(allFiles, job.id)
+      }
       
       // Generate callback URL with HMAC
       const appConfig = loadAppConfig()
