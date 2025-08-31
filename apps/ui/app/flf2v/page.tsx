@@ -70,7 +70,8 @@ export default function FLF2VPage() {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await fetch('/api/uploads', {
+    // Upload to the API server (port 4000), not the UI server
+    const response = await fetch('http://localhost:4000/api/uploads', {
       method: 'POST',
       body: formData
     })
@@ -115,7 +116,7 @@ export default function FLF2VPage() {
         resolution
       }
 
-      const response = await fetch('/api/jobs', {
+      const response = await fetch('http://localhost:4000/api/jobs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
