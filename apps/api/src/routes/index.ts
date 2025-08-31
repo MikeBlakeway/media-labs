@@ -5,11 +5,15 @@ import { videoJobRouter } from './video-jobs'
 import { sseRouter } from './sse'
 import { jobRouter } from './jobs'
 import { callbackRouter } from './callbacks'
+import { uploadRouter } from './uploads'
 
 const router = Router()
 
 // Mount health routes
 router.use(healthRouter)
+
+// Mount upload routes (for local_fake mode file uploads)
+router.use(uploadRouter)
 
 // Mount SSE routes (must come before generic job routes to avoid conflicts)
 router.use(sseRouter)

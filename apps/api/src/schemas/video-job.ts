@@ -15,6 +15,15 @@ export const CreateVideoJobSchema = z.object({
   resolution: z.enum(['720p', '1080p']).optional().default('720p')
 })
 
+// Video job creation request schema (for URL-based job creation)
+export const CreateVideoJobFromUrlsSchema = z.object({
+  startImageUrl: z.string().min(1, 'Start image URL is required'),
+  endImageUrl: z.string().min(1, 'End image URL is required'),
+  frames: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(4).max(120)).optional().default(16),
+  fps: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().min(1).max(60)).optional().default(8),
+  resolution: z.enum(['720p', '1080p']).optional().default('720p')
+})
+
 // Video job response schema
 export const VideoJobResponseSchema = z.object({
   id: z.string(),
@@ -29,6 +38,7 @@ export const VideoJobResponseSchema = z.object({
 
 // Type exports
 export type CreateVideoJobRequest = z.infer<typeof CreateVideoJobSchema>
+export type CreateVideoJobFromUrlsRequest = z.infer<typeof CreateVideoJobFromUrlsSchema>
 export type VideoJobParams = z.infer<typeof VideoJobParamsSchema>
 export type VideoJobResponse = z.infer<typeof VideoJobResponseSchema>
 

@@ -17,5 +17,9 @@ node_modules/
 dist/
 build/
 
+# Test artifacts and temporary files
+tmp/
+storage/
+
 # Editor
 .vscode/

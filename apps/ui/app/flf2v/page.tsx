@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
+
 export default function FLF2VPage() {
   const [startImage, setStartImage] = useState<File | null>(null)
   const [endImage, setEndImage] = useState<File | null>(null)
@@ -65,9 +67,28 @@ export default function FLF2VPage() {
     }
   }
 
+  // Helper function to upload a single image and get URL reference
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_BASE}/api/uploads`, {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.text()
+      throw new Error(`Failed to upload image: ${errorData}`)
+    }
+
+    const result = await response.json()
+    return result.url
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!startImage || !endImage) {
       setError('Both start and end images are required')
       return
@@ -78,16 +99,30 @@ export default function FLF2VPage() {
     setJobId(null)
 
     try {
-      const formData = new FormData()
-      formData.append('startImage', startImage)
-      formData.append('endImage', endImage)
-      formData.append('params[frames]', frames.toString())
-      formData.append('params[fps]', fps.toString())
-      formData.append('params[resolution]', resolution)
+      // Step 1: Upload images individually to get URL references
+      console.log('📤 Uploading start image...')
+      const startImageUrl = await uploadImage(startImage)
 
-      const response = await fetch('/api/jobs', {
+      console.log('📤 Uploading end image...')
+      const endImageUrl = await uploadImage(endImage)
+
+      console.log('✅ Both images uploaded, creating job...')
+
+      // Step 2: Create job with URL references (small payload)
+      const jobData = {
+        startImageUrl,
+        endImageUrl,
+        frames: frames.toString(),
+        fps: fps.toString(),
+        resolution
+      }
+
+      const response = await fetch(`${API_BASE}/api/jobs`, {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jobData)
       })
 
       if (!response.ok) {
@@ -97,7 +132,9 @@ export default function FLF2VPage() {
 
       const result = await response.json()
       setJobId(result.id)
+      console.log('✅ Job created successfully:', result.id)
     } catch (err) {
+      console.error('❌ Job creation failed:', err)
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
     } finally {
       setIsSubmitting(false)
@@ -125,29 +162,24 @@ export default function FLF2VPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <header className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-              First-Last Frame to Video
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              Generate smooth video transitions between two images
-            </p>
+    <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800'>
+      <div className='container mx-auto px-4 py-8'>
+        <div className='max-w-4xl mx-auto'>
+          <header className='text-center mb-8'>
+            <h1 className='text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2'>First-Last Frame to Video</h1>
+            <p className='text-slate-600 dark:text-slate-400'>Generate smooth video transitions between two images</p>
           </header>
 
           {jobId && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
-              <h3 className="text-green-800 dark:text-green-200 font-semibold mb-2">
-                Job Created Successfully!
-              </h3>
-              <p className="text-green-700 dark:text-green-300">
-                Job ID: <code className="bg-green-100 dark:bg-green-800 px-2 py-1 rounded font-mono text-sm">{jobId}</code>
+            <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6'>
+              <h3 className='text-green-800 dark:text-green-200 font-semibold mb-2'>Job Created Successfully!</h3>
+              <p className='text-green-700 dark:text-green-300'>
+                Job ID:{' '}
+                <code className='bg-green-100 dark:bg-green-800 px-2 py-1 rounded font-mono text-sm'>{jobId}</code>
               </p>
               <button
                 onClick={resetForm}
-                className="mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+                className='mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors'
               >
                 Create Another Video
               </button>
@@ -155,33 +187,29 @@ export default function FLF2VPage() {
           )}
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-              <h3 className="text-red-800 dark:text-red-200 font-semibold mb-2">Error</h3>
-              <p className="text-red-700 dark:text-red-300">{error}</p>
+            <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6'>
+              <h3 className='text-red-800 dark:text-red-200 font-semibold mb-2'>Error</h3>
+              <p className='text-red-700 dark:text-red-300'>{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 space-y-6">
+          <form onSubmit={handleSubmit} className='bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 space-y-6'>
             {/* Image Upload Section */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className='grid md:grid-cols-2 gap-6'>
               {/* Start Image */}
-              <div className="space-y-3">
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Start Image
-                </label>
-                <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors relative">
+              <div className='space-y-3'>
+                <label className='block text-sm font-semibold text-slate-700 dark:text-slate-300'>Start Image</label>
+                <div className='border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors relative'>
                   {startImagePreview ? (
-                    <div className="space-y-3">
+                    <div className='space-y-3'>
                       <img
                         src={startImagePreview}
-                        alt="Start image preview"
-                        className="max-w-full max-h-48 mx-auto rounded-lg shadow-md"
+                        alt='Start image preview'
+                        className='max-w-full max-h-48 mx-auto rounded-lg shadow-md'
                       />
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {startImage?.name}
-                      </p>
+                      <p className='text-sm text-slate-600 dark:text-slate-400'>{startImage?.name}</p>
                       <button
-                        type="button"
+                        type='button'
                         onClick={() => {
                           if (startImagePreview) {
                             URL.revokeObjectURL(startImagePreview)
@@ -189,48 +217,44 @@ export default function FLF2VPage() {
                           setStartImage(null)
                           setStartImagePreview(null)
                         }}
-                        className="text-red-600 hover:text-red-700 text-sm font-medium relative z-10"
+                        className='text-red-600 hover:text-red-700 text-sm font-medium relative z-10'
                       >
                         Remove
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <div className="text-slate-400 text-4xl">📷</div>
-                      <p className="text-slate-600 dark:text-slate-400">Click to upload start image</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-500">PNG, JPEG, JPG (max 10MB)</p>
+                    <div className='space-y-2'>
+                      <div className='text-slate-400 text-4xl'>📷</div>
+                      <p className='text-slate-600 dark:text-slate-400'>Click to upload start image</p>
+                      <p className='text-xs text-slate-500 dark:text-slate-500'>PNG, JPEG, JPG (max 10MB)</p>
                     </div>
                   )}
                   <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg"
-                    onChange={(e) => {
+                    type='file'
+                    accept='image/png,image/jpeg,image/jpg'
+                    onChange={e => {
                       const file = e.target.files?.[0]
                       if (file) handleImageUpload(file, 'start')
                     }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0"
+                    className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0'
                   />
                 </div>
               </div>
 
               {/* End Image */}
-              <div className="space-y-3">
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  End Image
-                </label>
-                <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors relative">
+              <div className='space-y-3'>
+                <label className='block text-sm font-semibold text-slate-700 dark:text-slate-300'>End Image</label>
+                <div className='border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors relative'>
                   {endImagePreview ? (
-                    <div className="space-y-3">
+                    <div className='space-y-3'>
                       <img
                         src={endImagePreview}
-                        alt="End image preview"
-                        className="max-w-full max-h-48 mx-auto rounded-lg shadow-md"
+                        alt='End image preview'
+                        className='max-w-full max-h-48 mx-auto rounded-lg shadow-md'
                       />
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {endImage?.name}
-                      </p>
+                      <p className='text-sm text-slate-600 dark:text-slate-400'>{endImage?.name}</p>
                       <button
-                        type="button"
+                        type='button'
                         onClick={() => {
                           if (endImagePreview) {
                             URL.revokeObjectURL(endImagePreview)
@@ -238,67 +262,73 @@ export default function FLF2VPage() {
                           setEndImage(null)
                           setEndImagePreview(null)
                         }}
-                        className="text-red-600 hover:text-red-700 text-sm font-medium relative z-10"
+                        className='text-red-600 hover:text-red-700 text-sm font-medium relative z-10'
                       >
                         Remove
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <div className="text-slate-400 text-4xl">📷</div>
-                      <p className="text-slate-600 dark:text-slate-400">Click to upload end image</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-500">PNG, JPEG, JPG (max 10MB)</p>
+                    <div className='space-y-2'>
+                      <div className='text-slate-400 text-4xl'>📷</div>
+                      <p className='text-slate-600 dark:text-slate-400'>Click to upload end image</p>
+                      <p className='text-xs text-slate-500 dark:text-slate-500'>PNG, JPEG, JPG (max 10MB)</p>
                     </div>
                   )}
                   <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg"
-                    onChange={(e) => {
+                    type='file'
+                    accept='image/png,image/jpeg,image/jpg'
+                    onChange={e => {
                       const file = e.target.files?.[0]
                       if (file) handleImageUpload(file, 'end')
                     }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0"
+                    className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0'
                   />
                 </div>
               </div>
             </div>
 
             {/* Parameters Section */}
-            <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
-                Video Parameters
-              </h3>
-              
-              <div className="grid md:grid-cols-3 gap-6">
+            <div className='border-t border-slate-200 dark:border-slate-700 pt-6'>
+              <h3 className='text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4'>Video Parameters</h3>
+
+              <div className='grid md:grid-cols-3 gap-6'>
                 {/* Frames */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300'>
                     Frames ({frames})
                   </label>
                   <input
-                    type="range"
-                    min="4"
-                    max="120"
+                    type='range'
+                    min='4'
+                    max='120'
                     value={frames}
-                    onChange={(e) => setFrames(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer"
+                    onChange={e => setFrames(Number(e.target.value))}
+                    className='w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer'
                   />
-                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <div className='flex justify-between text-xs text-slate-500 dark:text-slate-400'>
                     <span>4</span>
                     <span>120</span>
                   </div>
-                  <div className="flex gap-2 mt-2">
+                  <div className='flex gap-2 mt-2'>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => setFrames(16)}
-                      className={`px-3 py-1 text-xs rounded ${frames === 16 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'}`}
+                      className={`px-3 py-1 text-xs rounded ${
+                        frames === 16
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
+                      }`}
                     >
                       Standard (16)
                     </button>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => setFrames(60)}
-                      className={`px-3 py-1 text-xs rounded ${frames === 60 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'}`}
+                      className={`px-3 py-1 text-xs rounded ${
+                        frames === 60
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
+                      }`}
                     >
                       Smooth (60)
                     </button>
@@ -306,34 +336,40 @@ export default function FLF2VPage() {
                 </div>
 
                 {/* FPS */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    FPS ({fps})
-                  </label>
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300'>FPS ({fps})</label>
                   <input
-                    type="range"
-                    min="1"
-                    max="60"
+                    type='range'
+                    min='1'
+                    max='60'
                     value={fps}
-                    onChange={(e) => setFps(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer"
+                    onChange={e => setFps(Number(e.target.value))}
+                    className='w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer'
                   />
-                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <div className='flex justify-between text-xs text-slate-500 dark:text-slate-400'>
                     <span>1</span>
                     <span>60</span>
                   </div>
-                  <div className="flex gap-2 mt-2">
+                  <div className='flex gap-2 mt-2'>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => setFps(8)}
-                      className={`px-3 py-1 text-xs rounded ${fps === 8 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'}`}
+                      className={`px-3 py-1 text-xs rounded ${
+                        fps === 8
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
+                      }`}
                     >
                       Standard (8)
                     </button>
                     <button
-                      type="button"
+                      type='button'
                       onClick={() => setFps(24)}
-                      className={`px-3 py-1 text-xs rounded ${fps === 24 ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'}`}
+                      className={`px-3 py-1 text-xs rounded ${
+                        fps === 24
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
+                      }`}
                     >
                       Cinematic (24)
                     </button>
@@ -341,32 +377,30 @@ export default function FLF2VPage() {
                 </div>
 
                 {/* Resolution */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Resolution
-                  </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center space-x-2 cursor-pointer">
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-slate-700 dark:text-slate-300'>Resolution</label>
+                  <div className='space-y-2'>
+                    <label className='flex items-center space-x-2 cursor-pointer'>
                       <input
-                        type="radio"
-                        name="resolution"
-                        value="720p"
+                        type='radio'
+                        name='resolution'
+                        value='720p'
                         checked={resolution === '720p'}
-                        onChange={(e) => setResolution(e.target.value as '720p' | '1080p')}
-                        className="text-blue-600"
+                        onChange={e => setResolution(e.target.value as '720p' | '1080p')}
+                        className='text-blue-600'
                       />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">720p (HD)</span>
+                      <span className='text-sm text-slate-700 dark:text-slate-300'>720p (HD)</span>
                     </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
+                    <label className='flex items-center space-x-2 cursor-pointer'>
                       <input
-                        type="radio"
-                        name="resolution"
-                        value="1080p"
+                        type='radio'
+                        name='resolution'
+                        value='1080p'
                         checked={resolution === '1080p'}
-                        onChange={(e) => setResolution(e.target.value as '720p' | '1080p')}
-                        className="text-blue-600"
+                        onChange={e => setResolution(e.target.value as '720p' | '1080p')}
+                        className='text-blue-600'
                       />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">1080p (Full HD)</span>
+                      <span className='text-sm text-slate-700 dark:text-slate-300'>1080p (Full HD)</span>
                     </label>
                   </div>
                 </div>
@@ -374,15 +408,15 @@ export default function FLF2VPage() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-center pt-6">
+            <div className='flex justify-center pt-6'>
               <button
-                type="submit"
+                type='submit'
                 disabled={!startImage || !endImage || isSubmitting}
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center space-x-2"
+                className='px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center space-x-2'
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
                     <span>Creating Video...</span>
                   </>
                 ) : (

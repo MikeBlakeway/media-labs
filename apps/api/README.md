@@ -78,6 +78,18 @@ Default local port: `http://localhost:4000`.
   - `GET /_health`
   - Description: Returns API health status.
 
+### Upload Management (Local Fake Mode)
+
+- **Upload File**
+  - `POST /api/uploads`
+  - Description: Uploads a single image file for local_fake mode workflows. Helps avoid Server Action body-size limits by allowing separate image uploads.
+  - Content-Type: `multipart/form-data`
+  - Field: `file` (single image file, PNG/JPEG/JPG, max 10MB)
+  - Environment: Only enabled when `LOCAL_FAKE_UPLOADS_ENABLED=true` or `VIDEO_RUN_MODE=local_fake`
+  - Response: `{ "id": "uuid", "url": "/uploads/filename" }`
+
+For detailed upload documentation, see [docs/local-fake-upload.md](../../docs/local-fake-upload.md).
+
 ### Audio Job Management
 
 - **Create Audio Job**
