@@ -1,3 +1,4 @@
+import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 import path from 'path'
@@ -10,6 +11,12 @@ const app = express()
 
 // Middleware
 app.use(express.json())
+
+// CORS configuration for development
+app.use(cors({
+  origin: ['http://localhost:3000'],
+  credentials: true
+}))
 
 // Serve uploaded files statically (only when uploads are enabled)
 function isUploadsEnabled(): boolean {
