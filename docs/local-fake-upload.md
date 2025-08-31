@@ -199,6 +199,27 @@ To configure the body size limit for Server Actions, see: https://nextjs.org/doc
 - Ensure job creation goes to `http://localhost:4000/api/jobs` not `/api/jobs` 
 - Both servers must be running: UI on port 3000, API on port 4000
 
+**CORS Error (Access to fetch at 'http://localhost:4000' blocked):**
+```
+Access to fetch at 'http://localhost:4000/api/uploads' from origin 'http://localhost:3000' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+**Root Cause**: The API server is not configured to allow cross-origin requests from the UI.
+
+**Solution**: The API server includes CORS middleware that allows requests from localhost:3000. Ensure both servers are running:
+- API server: `pnpm --filter ./apps/api dev` (port 4000)
+- UI server: `pnpm --filter ./apps/ui dev` (port 3000)
+
+**Test CORS configuration:**
+```bash
+# Test preflight request
+curl -v -H "Origin: http://localhost:3000" \
+  -H "Access-Control-Request-Method: POST" \
+  -X OPTIONS http://localhost:4000/api/uploads
+
+# Should return Access-Control-Allow-Origin: http://localhost:3000
+```
+
 **403 Forbidden Error:**
 ```bash
 # Check environment variables
