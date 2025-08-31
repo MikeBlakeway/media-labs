@@ -93,12 +93,12 @@ curl -X POST http://localhost:4000/api/jobs \
 ### Frontend Integration
 
 ```typescript
-// Upload images first
+// Upload images first (IMPORTANT: Use API server port 4000, not UI server port 3000)
 const uploadStartImage = async (file: File) => {
   const formData = new FormData()
   formData.append('file', file)
   
-  const response = await fetch('/api/uploads', {
+  const response = await fetch('http://localhost:4000/api/uploads', {
     method: 'POST',
     body: formData
   })
@@ -110,7 +110,7 @@ const uploadStartImage = async (file: File) => {
   return await response.json() // { id, url }
 }
 
-// Then create job with references
+// Then create job with references (IMPORTANT: Use API server port 4000, not UI server port 3000)
 const createJobWithReferences = async (startUrl: string, endUrl: string) => {
   const jobData = {
     startImageUrl: startUrl,
@@ -120,7 +120,7 @@ const createJobWithReferences = async (startUrl: string, endUrl: string) => {
   }
   
   // This payload is small (< 1KB) and won't trigger 413 errors
-  const response = await fetch('/api/jobs', {
+  const response = await fetch('http://localhost:4000/api/jobs', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(jobData)
@@ -185,6 +185,19 @@ apps/api/
 ## Troubleshooting
 
 ### Common Issues
+
+**413 (Payload Too Large) / Server Action body-size limit:**
+```
+Error: Body exceeded 1 MB limit.
+To configure the body size limit for Server Actions, see: https://nextjs.org/docs/app/api-reference/next-config-js/serverActions#bodysizelimit
+```
+
+**Root Cause**: The UI is trying to upload to the Next.js server (port 3000) instead of the API server (port 4000).
+
+**Solution**: 
+- Ensure UI uploads to `http://localhost:4000/api/uploads` not `/api/uploads`
+- Ensure job creation goes to `http://localhost:4000/api/jobs` not `/api/jobs` 
+- Both servers must be running: UI on port 3000, API on port 4000
 
 **403 Forbidden Error:**
 ```bash
