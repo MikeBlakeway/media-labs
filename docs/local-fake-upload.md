@@ -2,13 +2,13 @@
 
 ## Overview
 
-The Local Fake Upload Handler is a development-focused API endpoint that solves Next.js Server Actions body-size limitations (default 1MB) when working with image uploads in `local_fake` mode. Instead of sending large binary image data directly in Server Action payloads, developers can upload images separately and send only small URL references in job creation requests.
+The Upload Handler is a development-focused API endpoint that solves Next.js Server Actions body-size limitations (default 1MB) when working with image uploads in both `local_fake` and `cloud` modes. Instead of sending large binary image data directly in Server Action payloads, developers can upload images separately and send only small URL references in job creation requests.
 
 ## Why This Exists
 
 - **Server Actions Limitation**: Next.js Server Actions have a 1MB request body limit by default
 - **Large Image Uploads**: Video job creation requires uploading start and end images, which can exceed the 1MB limit
-- **Development Workflow**: In `local_fake` mode, we want to simulate the full workflow without cloud dependencies
+- **Development Workflow**: In both `local_fake` and `cloud` modes, we want to simulate the full workflow during local development
 - **Error Prevention**: Avoid 413 (Payload Too Large) errors during local development
 
 ## API Specification
@@ -44,10 +44,12 @@ Content-Type: multipart/form-data
 ### Required Environment Variables
 
 ```bash
-# Enable uploads (either flag works)
+# Enable uploads (any of these options work)
 LOCAL_FAKE_UPLOADS_ENABLED=true
 # OR
 VIDEO_RUN_MODE=local_fake
+# OR
+VIDEO_RUN_MODE=cloud
 
 # Optional: Custom upload directory (defaults to ./storage/uploads)
 UPLOADS_DIR=./custom/upload/path
@@ -180,7 +182,7 @@ apps/api/
 - **Development Only**: This endpoint is designed for local development
 - **File Type Validation**: Only allows image types (PNG, JPEG, JPG)
 - **Size Limits**: 10MB maximum file size
-- **Environment Gated**: Only enabled when `LOCAL_FAKE_UPLOADS_ENABLED=true` or `VIDEO_RUN_MODE=local_fake`
+- **Environment Gated**: Only enabled when `LOCAL_FAKE_UPLOADS_ENABLED=true`, `VIDEO_RUN_MODE=local_fake`, or `VIDEO_RUN_MODE=cloud`
 
 ## Troubleshooting
 

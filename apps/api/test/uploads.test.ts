@@ -93,7 +93,7 @@ describe('Upload API', () => {
 
     it('should return 403 when uploads are disabled', async () => {
       process.env.LOCAL_FAKE_UPLOADS_ENABLED = 'false'
-      process.env.VIDEO_RUN_MODE = 'cloud'
+      process.env.VIDEO_RUN_MODE = 'disabled' // Invalid mode
       
       const response = await request(app)
         .post('/api/uploads')
@@ -115,6 +115,22 @@ describe('Upload API', () => {
       expect(response.status).toBe(201)
       expect(response.body).toHaveProperty('id')
       expect(response.body).toHaveProperty('url')
+    })
+
+    it('should work when VIDEO_RUN_MODE=cloud', async () => {
+      process.env.LOCAL_FAKE_UPLOADS_ENABLED = 'false'
+      process.env.VIDEO_RUN_MODE = 'cloud'
+      
+      const response = await request(app)
+        .post('/api/uploads')
+        .attach('file', testImageBuffer, 'test-image.png')
+
+      expect(response.status).toBe(201)
+      expect(response.body).toHaveProperty('id')
+      expect(response.body).toHaveProperty('url')
+      expect(typeof response.body.id).toBe('string')
+      expect(typeof response.body.url).toBe('string')
+      expect(response.body.url).toMatch(/^\/uploads\//)
     })
   })
 })
