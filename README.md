@@ -157,6 +157,48 @@ rm -rf .turbo && pnpm run build
 
 If you prefer a self-hosted remote cache, consult the Turborepo docs for `remoteCache.apiUrl` and `turbo link --api` for custom endpoints.
 
+## Testing
+
+### Unit and Integration Tests
+
+The project includes comprehensive testing capabilities:
+
+```bash
+# Run all unit and integration tests
+pnpm run test
+
+# Run tests for a specific package
+pnpm --filter ./apps/api test
+```
+
+### End-to-End Testing with Playwright
+
+The project includes end-to-end testing using Playwright to validate core user workflows:
+
+```bash
+# Install Playwright browsers (first time setup)
+pnpm exec playwright install
+
+# Run all E2E tests across multiple browsers
+pnpm run test:e2e
+
+# Run E2E tests with interactive UI
+pnpm run test:e2e:ui
+
+# Run E2E tests in headed mode (see browser)
+pnpm run test:e2e:headed
+
+# Debug E2E tests step by step
+pnpm run test:e2e:debug
+```
+
+The E2E tests automatically start the development server and test:
+- Home page loading and navigation
+- FLF2V video generator page functionality
+- Responsive design across desktop and mobile viewports
+
+**Note:** E2E tests require the UI application to be available. The tests automatically start `pnpm --filter ./apps/ui dev` and wait for it to be ready.
+
 ## FLF2V Integration Bootstrap
 
 The repository includes automated GitHub project planning tools for the FLF2V (First-Last-Frame-to-Video) cloud mode implementation:

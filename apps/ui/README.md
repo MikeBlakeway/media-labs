@@ -94,7 +94,30 @@ We welcome contributions! Please follow the standard GitHub workflow:
 1. Fork the repository.
 2. Create a new branch for your feature or bug fix.
 3. Make your changes and commit them.
-4. Push your branch and create a pull request.
+4. Run tests to ensure your changes don't break existing functionality.
+5. Push your branch and create a pull request.
+
+### Testing
+
+This application includes end-to-end testing with Playwright:
+
+```bash
+# From the repository root, run E2E tests
+pnpm run test:e2e
+
+# Run E2E tests with interactive UI
+pnpm run test:e2e:ui
+
+# Debug specific tests
+pnpm run test:e2e:debug
+```
+
+The E2E tests validate:
+- Application loading and basic navigation
+- Core FLF2V video generator functionality
+- Responsive design across different viewport sizes
+
+Tests are configured to automatically start the development server when needed.
 
 ## License
 
