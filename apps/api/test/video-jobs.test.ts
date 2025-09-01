@@ -13,12 +13,19 @@ jest.mock('../src/lib/crypto')
 jest.mock('../src/config/storage')
 
 const mockSubmitToRunPod = require('../src/lib/runpod').submitToRunPod as jest.MockedFunction<any>
+const mockConvertImageToBase64 = require('../src/lib/runpod').convertImageToBase64 as jest.MockedFunction<any>
+const mockInjectWorkflowParameters = require('../src/lib/runpod').injectWorkflowParameters as jest.MockedFunction<any>
 const mockPresignPut = require('../src/lib/storage').presignPut as jest.MockedFunction<any>
 const mockGenerateCallbackUrl = require('../src/lib/crypto').generateCallbackUrl as jest.MockedFunction<any>
 const mockLoadAppConfig = require('../src/config/storage').loadAppConfig as jest.MockedFunction<any>
 
 describe('Video Job API', () => {
+  const originalVideoRunMode = process.env.VIDEO_RUN_MODE
+
   beforeEach(async () => {
+    // Set up cloud mode for these tests
+    process.env.VIDEO_RUN_MODE = 'cloud'
+    
     // Clean up database before each test
     await prisma.job.deleteMany()
     
@@ -31,6 +38,8 @@ describe('Video Job API', () => {
       id: 'runpod-job-123',
       status: 'IN_QUEUE'
     })
+    mockConvertImageToBase64.mockResolvedValue('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==')
+    mockInjectWorkflowParameters.mockReturnValue({ test: 'workflow' })
     mockGenerateCallbackUrl.mockReturnValue('https://api.example.com/callbacks/gpu/test-job?hmac=abc123')
     mockLoadAppConfig.mockReturnValue({
       publicBaseUrl: 'https://api.example.com',
@@ -45,6 +54,9 @@ describe('Video Job API', () => {
   })
 
   afterAll(async () => {
+    // Restore original environment
+    process.env.VIDEO_RUN_MODE = originalVideoRunMode
+    
     // Clean up and disconnect
     await prisma.job.deleteMany()
     await prisma.$disconnect()
@@ -210,8 +222,8 @@ describe('Video Job API', () => {
         jobId: expect.any(String),
         workflow: expect.any(Object),
         images: [
-          { name: 'start_image.png', url: expect.any(String) },
-          { name: 'end_image.png', url: expect.any(String) }
+          { name: 'start_image.png', image: expect.any(String) },
+          { name: 'end_image.png', image: expect.any(String) }
         ],
         outputPutUrl: expect.any(String),
         callbackUrl: expect.any(String)

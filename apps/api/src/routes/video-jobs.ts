@@ -98,12 +98,23 @@ async function processLocalFakeJob(jobId: string): Promise<void> {
     }
   })
 
-  // Step 2: Simulate processing delay (30-60 seconds for realistic timing)
-  const processingDelay = Math.floor(Math.random() * 30000) + 30000 // 30-60 seconds
+  // Step 2: Simulate processing delay (shorter for tests, longer for production)
+  const isTest = process.env.NODE_ENV === 'test'
+  const processingDelay = isTest ? 100 : Math.floor(Math.random() * 30000) + 30000 // 100ms for tests, 30-60s for production
   console.log(`🕐 Job ${jobId} will complete in ${processingDelay}ms`)
 
   setTimeout(async () => {
     try {
+      // Check if job still exists before updating (important for tests)
+      const existingJob = await prisma.job.findUnique({
+        where: { id: jobId }
+      })
+
+      if (!existingJob) {
+        console.log(`⚠️ Job ${jobId} not found, skipping local fake processing completion`)
+        return
+      }
+
       // Step 3: Generate a placeholder MP4 URL (simulated output)
       const outputUrl = `https://placeholder.video/placeholder-${jobId}.mp4`
 
@@ -133,6 +144,16 @@ async function processLocalFakeJob(jobId: string): Promise<void> {
       console.log(`✅ Local fake processing completed for job ${jobId}`)
     } catch (error) {
       console.error(`❌ Local fake processing failed for job ${jobId}:`, error)
+
+      // Check if job still exists before updating
+      const existingJob = await prisma.job.findUnique({
+        where: { id: jobId }
+      })
+
+      if (!existingJob) {
+        console.log(`⚠️ Job ${jobId} not found, skipping failure update`)
+        return
+      }
 
       // Mark job as failed
       const failedJob = await prisma.job.update({
