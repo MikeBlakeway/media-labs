@@ -27,18 +27,33 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
+      name: 'chromium-local-fake',
       use: { ...devices['Desktop Chrome'] },
+      testMatch: '**/app.spec.ts',
     },
 
     {
-      name: 'firefox',
+      name: 'firefox-local-fake',
       use: { ...devices['Desktop Firefox'] },
+      testMatch: '**/app.spec.ts',
     },
 
     {
-      name: 'webkit',
+      name: 'webkit-local-fake',
       use: { ...devices['Desktop Safari'] },
+      testMatch: '**/app.spec.ts',
+    },
+
+    {
+      name: 'chromium-cloud-mode',
+      use: { 
+        ...devices['Desktop Chrome'],
+        // Use different API base for cloud mode tests
+        extraHTTPHeaders: {
+          'X-Test-Mode': 'cloud'
+        }
+      },
+      testMatch: '**/cloud-mode.spec.ts',
     },
 
     /* Test against mobile viewports. */
@@ -63,10 +78,18 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'pnpm --filter ./apps/ui dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: [
+    {
+      command: 'VIDEO_RUN_MODE=local_fake pnpm --filter ./apps/api dev',
+      url: 'http://localhost:4000/_health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+    {
+      command: 'pnpm --filter ./apps/ui dev',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    },
+  ],
 });

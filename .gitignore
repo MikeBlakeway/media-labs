@@ -52,6 +52,9 @@ Thumbs.db
 coverage/
 test-results/
 playwright-report/
+tests/fixtures/*.png
+tests/fixtures/*.jpg
+tests/fixtures/*.jpeg
 
 ## Misc
 .cache/
