@@ -11,8 +11,8 @@ describe('Video Jobs Local Fake Mode', () => {
     jest.resetModules()
     process.env = { ...originalEnv }
     process.env.VIDEO_RUN_MODE = 'local_fake'
-    // Use the same database as other tests
-    process.env.DATABASE_URL = 'file:./prisma/dev.db'
+    // Use the same test database as other tests (setup.ts configures this)
+    // Don't override DATABASE_URL here
     
     // Clean up database
     await prisma.job.deleteMany()
