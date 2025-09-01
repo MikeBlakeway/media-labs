@@ -244,6 +244,80 @@ describe('RunPod submission helper', () => {
         await expect(convertImageToBase64('https://example.com/missing.png'))
           .rejects.toThrow('Failed to fetch image from https://example.com/missing.png: Not Found')
       })
+
+      it('should convert relative URL to absolute URL using PUBLIC_BASE_URL', async () => {
+        const originalPublicBaseUrl = process.env.PUBLIC_BASE_URL
+        process.env.PUBLIC_BASE_URL = 'https://api.example.com'
+
+        const mockArrayBuffer = new ArrayBuffer(8)
+        const mockResponse = {
+          ok: true,
+          arrayBuffer: () => Promise.resolve(mockArrayBuffer)
+        }
+        mockFetch.mockResolvedValue(mockResponse as any)
+
+        await convertImageToBase64('/uploads/test-image.png')
+        
+        expect(mockFetch).toHaveBeenCalledWith('https://api.example.com/uploads/test-image.png')
+
+        // Restore original value
+        if (originalPublicBaseUrl !== undefined) {
+          process.env.PUBLIC_BASE_URL = originalPublicBaseUrl
+        } else {
+          delete process.env.PUBLIC_BASE_URL
+        }
+      })
+
+      it('should convert relative URL to localhost when PUBLIC_BASE_URL is not set', async () => {
+        const originalPublicBaseUrl = process.env.PUBLIC_BASE_URL
+        const originalPort = process.env.PORT
+        delete process.env.PUBLIC_BASE_URL
+        process.env.PORT = '4000'
+
+        const mockArrayBuffer = new ArrayBuffer(8)
+        const mockResponse = {
+          ok: true,
+          arrayBuffer: () => Promise.resolve(mockArrayBuffer)
+        }
+        mockFetch.mockResolvedValue(mockResponse as any)
+
+        await convertImageToBase64('/uploads/test-image.png')
+        
+        expect(mockFetch).toHaveBeenCalledWith('http://localhost:4000/uploads/test-image.png')
+
+        // Restore original values
+        if (originalPublicBaseUrl !== undefined) {
+          process.env.PUBLIC_BASE_URL = originalPublicBaseUrl
+        }
+        if (originalPort !== undefined) {
+          process.env.PORT = originalPort
+        } else {
+          delete process.env.PORT
+        }
+      })
+
+      it('should handle PUBLIC_BASE_URL with trailing slash', async () => {
+        const originalPublicBaseUrl = process.env.PUBLIC_BASE_URL
+        process.env.PUBLIC_BASE_URL = 'https://api.example.com/'
+
+        const mockArrayBuffer = new ArrayBuffer(8)
+        const mockResponse = {
+          ok: true,
+          arrayBuffer: () => Promise.resolve(mockArrayBuffer)
+        }
+        mockFetch.mockResolvedValue(mockResponse as any)
+
+        await convertImageToBase64('/uploads/test-image.png')
+        
+        expect(mockFetch).toHaveBeenCalledWith('https://api.example.com/uploads/test-image.png')
+
+        // Restore original value
+        if (originalPublicBaseUrl !== undefined) {
+          process.env.PUBLIC_BASE_URL = originalPublicBaseUrl
+        } else {
+          delete process.env.PUBLIC_BASE_URL
+        }
+      })
     })
 
     describe('injectWorkflowParameters', () => {

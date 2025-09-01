@@ -35,11 +35,26 @@ export async function convertImageToBase64(source: string | Buffer): Promise<str
     return source.toString('base64')
   }
 
+  // If source is a relative URL (starts with /), convert to absolute URL
+  let imageUrl = source
+  if (source.startsWith('/')) {
+    // Check if we have a PUBLIC_BASE_URL configured
+    const publicBaseUrl = process.env.PUBLIC_BASE_URL
+    if (publicBaseUrl) {
+      imageUrl = `${publicBaseUrl.replace(/\/$/, '')}${source}`
+    } else {
+      // Fallback to localhost for development
+      const port = process.env.PORT || 4000
+      imageUrl = `http://localhost:${port}${source}`
+    }
+    console.log(`🔗 Converting relative URL ${source} to absolute URL: ${imageUrl}`)
+  }
+
   // If source is a URL, fetch and convert to base64
   try {
-    const response = await fetch(source)
+    const response = await fetch(imageUrl)
     if (!response.ok) {
-      throw new Error(`Failed to fetch image from ${source}: ${response.statusText}`)
+      throw new Error(`Failed to fetch image from ${imageUrl}: ${response.statusText}`)
     }
     
     const arrayBuffer = await response.arrayBuffer()
