@@ -1,5 +1,7 @@
 import { loadRunPodConfig } from '../config/runpod'
 import { z } from 'zod'
+import path from 'path'
+import fs from 'fs/promises'
 
 // Validation schema for RunPod serverless payload
 export const RunPodImageSchema = z.object({
@@ -28,11 +30,34 @@ export function mapResolutionToPixels(resolution: '720p' | '1080p'): { width: nu
   }
 }
 
+// Helper function to get upload directory path (matches uploads.ts)
+function getUploadDir(): string {
+  return process.env.UPLOADS_DIR || './storage/uploads'
+}
+
 // Convert image URL or buffer to base64
 export async function convertImageToBase64(source: string | Buffer): Promise<string> {
   if (Buffer.isBuffer(source)) {
     // If source is already a buffer, convert directly to base64
     return source.toString('base64')
+  }
+
+  // Local-file-first logic: if this is a local upload path, read directly from filesystem
+  if (source.startsWith('/uploads/')) {
+    try {
+      const fileName = path.basename(source)
+      const uploadDir = getUploadDir()
+      const filePath = path.join(uploadDir, fileName)
+      
+      console.log(`📁 Reading local upload file: ${source} -> ${filePath}`)
+      
+      // Read file directly from disk
+      const fileBuffer = await fs.readFile(filePath)
+      return fileBuffer.toString('base64')
+    } catch (error) {
+      console.warn(`⚠️ Failed to read local file ${source}, falling back to HTTP fetch:`, error instanceof Error ? error.message : 'Unknown error')
+      // Fall through to HTTP fetch as fallback
+    }
   }
 
   // If source is a relative URL (starts with /), convert to absolute URL

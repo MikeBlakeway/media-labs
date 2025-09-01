@@ -5,6 +5,11 @@ import * as runpodConfig from '../src/config/runpod'
 jest.mock('../src/config/runpod')
 const mockLoadRunPodConfig = jest.mocked(runpodConfig.loadRunPodConfig)
 
+// Mock fs/promises
+jest.mock('fs/promises')
+import * as fs from 'fs/promises'
+const mockFs = jest.mocked(fs)
+
 // Mock fetch globally
 global.fetch = jest.fn()
 const mockFetch = jest.mocked(fetch)
@@ -317,6 +322,50 @@ describe('RunPod submission helper', () => {
         } else {
           delete process.env.PUBLIC_BASE_URL
         }
+      })
+
+      it('should read local upload file directly from filesystem', async () => {
+        const testData = Buffer.from('test image from local file')
+        mockFs.readFile.mockResolvedValue(testData)
+        
+        // Mock console.log to verify the local file message
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation()
+        
+        const result = await convertImageToBase64('/uploads/test-file.png')
+        
+        expect(result).toBe(testData.toString('base64'))
+        expect(mockFs.readFile).toHaveBeenCalledWith(expect.stringMatching(/test-uploads[\/\\]test-file\.png$/))
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('📁 Reading local upload file'))
+        expect(mockFetch).not.toHaveBeenCalled() // Should not fall back to HTTP fetch
+        
+        consoleSpy.mockRestore()
+      })
+
+      it('should fallback to HTTP fetch when local file read fails', async () => {
+        mockFs.readFile.mockRejectedValue(new Error('ENOENT: no such file or directory'))
+        
+        // Mock successful HTTP fetch
+        const mockArrayBuffer = new ArrayBuffer(8)
+        const mockResponse = {
+          ok: true,
+          arrayBuffer: () => Promise.resolve(mockArrayBuffer)
+        }
+        mockFetch.mockResolvedValue(mockResponse as any)
+        
+        // Mock console.warn to verify the fallback message
+        const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
+        
+        const result = await convertImageToBase64('/uploads/missing-file.png')
+        
+        expect(result).toBe(Buffer.from(mockArrayBuffer).toString('base64'))
+        expect(mockFs.readFile).toHaveBeenCalled()
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('⚠️ Failed to read local file'),
+          expect.any(String)
+        )
+        expect(mockFetch).toHaveBeenCalledWith('http://localhost:4000/uploads/missing-file.png')
+        
+        consoleWarnSpy.mockRestore()
       })
     })
 
