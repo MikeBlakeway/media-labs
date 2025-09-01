@@ -179,44 +179,31 @@ export default function FLF2VPage() {
             <p className='text-slate-600 dark:text-slate-400'>Generate smooth video transitions between two images</p>
           </header>
 
-          {/* Job Status Display */}
-          {job && (
-            <JobStatusDisplay
-              job={job}
-              isConnected={isConnected}
-              error={sseError}
-              onReconnect={reconnect}
-              className="mb-6"
-            />
-          )}
-
-          {/* Video Player (when completed) */}
+          {/* Video Player (when completed) - Make this prominent */}
           {showVideo && (
-            <VideoPlayer
-              videoUrl={job.outputUrl!}
-              downloadUrl={job.downloadUrl}
-              title="Generated Video"
-              className="mb-6"
-            />
-          )}
-
-          {/* Success Message (when job created but not yet completed) */}
-          {jobId && !showVideo && (
-            <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6'>
-              <h3 className='text-green-800 dark:text-green-200 font-semibold mb-2'>Job Created Successfully!</h3>
-              <p className='text-green-700 dark:text-green-300'>
-                Job ID:{' '}
-                <code className='bg-green-100 dark:bg-green-800 px-2 py-1 rounded font-mono text-sm'>{jobId}</code>
-              </p>
-              <p className='text-green-700 dark:text-green-300 text-sm mt-2'>
-                Your video is being processed. You'll see real-time updates above.
-              </p>
-              <button
-                onClick={resetForm}
-                className='mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors'
-              >
-                Create Another Video
-              </button>
+            <div className="mb-8">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">
+                  🎉 Video Generated Successfully!
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Your video is ready to view and download
+                </p>
+              </div>
+              <VideoPlayer
+                videoUrl={job.outputUrl!}
+                downloadUrl={job.downloadUrl}
+                title="Generated Video"
+                className="mb-6"
+              />
+              <div className="text-center">
+                <button
+                  onClick={resetForm}
+                  className='px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors'
+                >
+                  Create Another Video
+                </button>
+              </div>
             </div>
           )}
 
@@ -227,9 +214,41 @@ export default function FLF2VPage() {
             </div>
           )}
 
-          {/* Form - only show if no job is running or if job failed */}
-          {(!job || job.status === 'FAILED') && (
-            <form onSubmit={handleSubmit} className='bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 space-y-6'>
+          {/* Form - Always visible for easy workflow */}
+          <div className="relative">
+            {/* Job Status Display - Compact overlay when job is running */}
+            {job && job.status !== 'COMPLETED' && (
+              <div className="absolute top-4 right-4 z-10">
+                <JobStatusDisplay
+                  job={job}
+                  isConnected={isConnected}
+                  error={sseError}
+                  onReconnect={reconnect}
+                  className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border shadow-lg rounded-lg"
+                />
+              </div>
+            )}
+            
+            {/* Success Message - Minimal when job created */}
+            {jobId && !showVideo && job && (
+              <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-4'>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className='text-green-700 dark:text-green-300 text-sm font-medium'>
+                      Video generation in progress...
+                    </span>
+                  </div>
+                  <button
+                    onClick={resetForm}
+                    className='px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors'
+                  >
+                    New Video
+                  </button>
+                </div>
+              </div>
+            )}
+            <form onSubmit={handleSubmit} className={`bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 space-y-6 ${job ? (job.status !== 'COMPLETED' && job.status !== 'FAILED' ? 'opacity-75' : '') : ''}`}>
             {/* Image Upload Section */}
             <div className='grid md:grid-cols-2 gap-6'>
               {/* Start Image */}
@@ -254,6 +273,7 @@ export default function FLF2VPage() {
                           setStartImagePreview(null)
                         }}
                         className='text-red-600 hover:text-red-700 text-sm font-medium relative z-10'
+                        disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                       >
                         Remove
                       </button>
@@ -273,6 +293,7 @@ export default function FLF2VPage() {
                       if (file) handleImageUpload(file, 'start')
                     }}
                     className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0'
+                    disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                   />
                 </div>
               </div>
@@ -299,6 +320,7 @@ export default function FLF2VPage() {
                           setEndImagePreview(null)
                         }}
                         className='text-red-600 hover:text-red-700 text-sm font-medium relative z-10'
+                        disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                       >
                         Remove
                       </button>
@@ -318,6 +340,7 @@ export default function FLF2VPage() {
                       if (file) handleImageUpload(file, 'end')
                     }}
                     className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-0'
+                    disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                   />
                 </div>
               </div>
@@ -340,6 +363,7 @@ export default function FLF2VPage() {
                     value={frames}
                     onChange={e => setFrames(Number(e.target.value))}
                     className='w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer'
+                    disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                   />
                   <div className='flex justify-between text-xs text-slate-500 dark:text-slate-400'>
                     <span>4</span>
@@ -354,6 +378,7 @@ export default function FLF2VPage() {
                           ? 'bg-blue-600 text-white'
                           : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
                       }`}
+                      disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                     >
                       Standard (16)
                     </button>
@@ -365,6 +390,7 @@ export default function FLF2VPage() {
                           ? 'bg-blue-600 text-white'
                           : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
                       }`}
+                      disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                     >
                       Smooth (60)
                     </button>
@@ -381,6 +407,7 @@ export default function FLF2VPage() {
                     value={fps}
                     onChange={e => setFps(Number(e.target.value))}
                     className='w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer'
+                    disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                   />
                   <div className='flex justify-between text-xs text-slate-500 dark:text-slate-400'>
                     <span>1</span>
@@ -395,6 +422,7 @@ export default function FLF2VPage() {
                           ? 'bg-blue-600 text-white'
                           : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
                       }`}
+                      disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                     >
                       Standard (8)
                     </button>
@@ -406,6 +434,7 @@ export default function FLF2VPage() {
                           ? 'bg-blue-600 text-white'
                           : 'bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300'
                       }`}
+                      disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                     >
                       Cinematic (24)
                     </button>
@@ -424,6 +453,7 @@ export default function FLF2VPage() {
                         checked={resolution === '720p'}
                         onChange={e => setResolution(e.target.value as '720p' | '1080p')}
                         className='text-blue-600'
+                        disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                       />
                       <span className='text-sm text-slate-700 dark:text-slate-300'>720p (HD)</span>
                     </label>
@@ -435,6 +465,7 @@ export default function FLF2VPage() {
                         checked={resolution === '1080p'}
                         onChange={e => setResolution(e.target.value as '720p' | '1080p')}
                         className='text-blue-600'
+                        disabled={job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false}
                       />
                       <span className='text-sm text-slate-700 dark:text-slate-300'>1080p (Full HD)</span>
                     </label>
@@ -447,7 +478,7 @@ export default function FLF2VPage() {
             <div className='flex justify-center pt-6'>
               <button
                 type='submit'
-                disabled={!startImage || !endImage || isSubmitting}
+                disabled={!startImage || !endImage || isSubmitting || (job ? job.status !== 'COMPLETED' && job.status !== 'FAILED' : false)}
                 className='px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center space-x-2'
               >
                 {isSubmitting ? (
@@ -455,13 +486,18 @@ export default function FLF2VPage() {
                     <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
                     <span>Creating Video...</span>
                   </>
+                ) : (job && job.status !== 'COMPLETED' && job.status !== 'FAILED') ? (
+                  <>
+                    <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    <span>Processing...</span>
+                  </>
                 ) : (
                   <span>Generate Video</span>
                 )}
               </button>
             </div>
           </form>
-          )}
+          </div>
         </div>
       </div>
     </div>
