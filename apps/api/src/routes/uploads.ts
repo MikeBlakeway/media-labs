@@ -48,7 +48,9 @@ function getUploadDir(): string {
 
 // Helper function to check if uploads are enabled
 function isUploadsEnabled(): boolean {
-  return process.env.LOCAL_FAKE_UPLOADS_ENABLED === 'true' || process.env.VIDEO_RUN_MODE === 'local_fake'
+  return process.env.LOCAL_FAKE_UPLOADS_ENABLED === 'true' || 
+         process.env.VIDEO_RUN_MODE === 'local_fake' || 
+         process.env.VIDEO_RUN_MODE === 'cloud'
 }
 
 /**
@@ -95,7 +97,7 @@ router.post('/api/uploads', (req: Request, res: Response, next) => {
     // Check if uploads are enabled
     if (!isUploadsEnabled()) {
       return res.status(403).json({
-        error: 'Uploads are not enabled. Set LOCAL_FAKE_UPLOADS_ENABLED=true or VIDEO_RUN_MODE=local_fake'
+        error: 'Uploads are not enabled. Set LOCAL_FAKE_UPLOADS_ENABLED=true, VIDEO_RUN_MODE=local_fake, or VIDEO_RUN_MODE=cloud'
       })
     }
 
