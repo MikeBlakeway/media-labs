@@ -11,7 +11,7 @@ import {
   MAX_IMAGE_SIZE,
   REQUIRED_IMAGE_COUNT
 } from '../schemas/video-job'
-import { submitToRunPod, RunPodImage } from '../lib/runpod'
+import { submitToRunPod, RunPodImageWithBuffer } from '../lib/runpod'
 import { presignPut } from '../lib/storage'
 import { generateCallbackUrl } from '../lib/crypto'
 import { loadAppConfig } from '../config/storage'
@@ -50,7 +50,7 @@ async function loadWorkflow(): Promise<object> {
 }
 
 // Sort images to ensure start_image.png comes first, then end_image.png
-function sortImagesByName(images: RunPodImage[]): RunPodImage[] {
+function sortImagesByName(images: RunPodImageWithBuffer[]): RunPodImageWithBuffer[] {
   return images.sort((a, b) => {
     if (a.name === 'start_image.png') return -1
     if (b.name === 'start_image.png') return 1
@@ -160,12 +160,12 @@ async function processLocalFakeJob(jobId: string): Promise<void> {
 }
 
 // Upload images to storage and get presigned URLs (or simulate in local_fake mode)
-async function uploadImages(files: Express.Multer.File[], jobId: string): Promise<RunPodImage[]> {
+async function uploadImages(files: Express.Multer.File[], jobId: string): Promise<RunPodImageWithBuffer[]> {
   const videoRunMode = process.env.VIDEO_RUN_MODE
 
   if (videoRunMode === 'local_fake') {
-    // In local fake mode, just return simulated image URLs
-    const images: RunPodImage[] = []
+    // In local fake mode, return simulated URLs with actual file buffers for RunPod submission
+    const images: RunPodImageWithBuffer[] = []
 
     for (const file of files) {
       let imageName: string
@@ -177,15 +177,16 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
         throw new Error(`Unexpected field name: ${file.fieldname}`)
       }
 
-      // Create simulated URLs for local fake mode
+      // Create simulated URLs for local fake mode but include the actual buffer
       const imageUrl = `https://placeholder.images/temp/${jobId}/${imageName}`
 
       images.push({
         name: imageName,
-        url: imageUrl
+        url: imageUrl,
+        buffer: file.buffer // Include actual file buffer for base64 conversion
       })
 
-      console.log(`🎭 Simulated image upload: ${imageName} -> ${imageUrl}`)
+      console.log(`🎭 Simulated image upload: ${imageName} -> ${imageUrl} (with ${Math.round(file.buffer.length / 1024)}KB buffer)`)
     }
 
     // Ensure images are in the correct order
@@ -193,7 +194,7 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
   }
 
   // Cloud mode: actual upload to B2 storage
-  const images: RunPodImage[] = []
+  const images: RunPodImageWithBuffer[] = []
 
   // Map each file to its corresponding image name based on fieldname
   for (const file of files) {
@@ -246,8 +247,8 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
 }
 
 // Create RunPod images from URLs (for URL-based workflow)
-function createImagesFromUrls(startImageUrl: string, endImageUrl: string): RunPodImage[] {
-  const images: RunPodImage[] = [
+function createImagesFromUrls(startImageUrl: string, endImageUrl: string): RunPodImageWithBuffer[] {
+  const images: RunPodImageWithBuffer[] = [
     {
       name: 'start_image.png',
       url: startImageUrl
@@ -282,7 +283,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const contentType = req.headers['content-type'] || ''
-      let images: RunPodImage[] = []
+      let images: RunPodImageWithBuffer[] = []
       let validatedParams: any
       // allFiles is only populated for multipart requests; keep it optional here
       let allFiles: Express.Multer.File[] | undefined = undefined
@@ -393,7 +394,12 @@ router.post(
           workflow,
           images,
           outputPutUrl,
-          callbackUrl
+          callbackUrl,
+          videoParams: {
+            frames: validatedParams.frames,
+            fps: validatedParams.fps,
+          },
+          resolution: validatedParams.resolution
         })
 
         // Update job with RunPod details
