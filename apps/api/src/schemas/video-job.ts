@@ -1,5 +1,17 @@
 import { z } from 'zod'
 
+// Resolution mapping utility
+export function mapResolutionToPixels(resolution: '720p' | '1080p'): { width: number; height: number } {
+  switch (resolution) {
+    case '720p':
+      return { width: 1280, height: 720 }
+    case '1080p':
+      return { width: 1920, height: 1080 }
+    default:
+      throw new Error(`Unsupported resolution: ${resolution}`)
+  }
+}
+
 // Video job input parameters schema
 export const VideoJobParamsSchema = z.object({
   frames: z.number().int().min(4).max(120).optional().default(16),

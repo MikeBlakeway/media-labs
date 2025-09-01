@@ -9,9 +9,10 @@ import {
   CreateVideoJobFromUrlsSchema,
   SUPPORTED_IMAGE_TYPES,
   MAX_IMAGE_SIZE,
-  REQUIRED_IMAGE_COUNT
+  REQUIRED_IMAGE_COUNT,
+  mapResolutionToPixels
 } from '../schemas/video-job'
-import { submitToRunPod, RunPodImage } from '../lib/runpod'
+import { submitToRunPod, RunPodImage, convertImageToBase64, injectWorkflowParameters } from '../lib/runpod'
 import { presignPut } from '../lib/storage'
 import { generateCallbackUrl } from '../lib/crypto'
 import { loadAppConfig } from '../config/storage'
@@ -39,12 +40,12 @@ const upload = multer({
 // Load workflow configuration
 async function loadWorkflow(): Promise<object> {
   try {
-    const workflowPath = path.join(__dirname, '../../workflows/wan2.1_flf2v_720_f16.json')
+    const workflowPath = path.join(__dirname, '../../workflows/comfyui_flf2v_workflow.json')
     const workflowContent = await fs.readFile(workflowPath, 'utf-8')
     return JSON.parse(workflowContent)
   } catch (error) {
     throw new Error(
-      `Failed to load workflow configuration: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to load ComfyUI workflow configuration: ${error instanceof Error ? error.message : 'Unknown error'}`
     )
   }
 }
@@ -159,12 +160,12 @@ async function processLocalFakeJob(jobId: string): Promise<void> {
   }, processingDelay)
 }
 
-// Upload images to storage and get presigned URLs (or simulate in local_fake mode)
+// Upload images to storage and convert to base64 format for RunPod (or simulate in local_fake mode)
 async function uploadImages(files: Express.Multer.File[], jobId: string): Promise<RunPodImage[]> {
   const videoRunMode = process.env.VIDEO_RUN_MODE
 
   if (videoRunMode === 'local_fake') {
-    // In local fake mode, just return simulated image URLs
+    // In local fake mode, convert file buffers directly to base64
     const images: RunPodImage[] = []
 
     for (const file of files) {
@@ -177,22 +178,22 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
         throw new Error(`Unexpected field name: ${file.fieldname}`)
       }
 
-      // Create simulated URLs for local fake mode
-      const imageUrl = `https://placeholder.images/temp/${jobId}/${imageName}`
+      // Convert buffer to base64 for local fake mode
+      const base64Image = await convertImageToBase64(file.buffer)
 
       images.push({
         name: imageName,
-        url: imageUrl
+        image: base64Image
       })
 
-      console.log(`🎭 Simulated image upload: ${imageName} -> ${imageUrl}`)
+      console.log(`🎭 Simulated image upload: ${imageName} (${file.size} bytes) -> base64 (${base64Image.length} chars)`)
     }
 
     // Ensure images are in the correct order
     return sortImagesByName(images)
   }
 
-  // Cloud mode: actual upload to B2 storage
+  // Cloud mode: upload to B2 storage then convert to base64
   const images: RunPodImage[] = []
 
   // Map each file to its corresponding image name based on fieldname
@@ -228,14 +229,15 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
         throw new Error(`Failed to upload ${imageName}: ${uploadResponse.statusText}`)
       }
 
-      // Create the public URL for RunPod to access
-      // Note: This would typically be a signed GET URL, but for simplicity using the PUT URL base
-      const imageUrl = uploadUrl.split('?')[0] // Remove query parameters to get base URL
+      // Convert the file buffer to base64 for RunPod
+      const base64Image = await convertImageToBase64(file.buffer)
 
       images.push({
         name: imageName,
-        url: imageUrl
+        image: base64Image
       })
+
+      console.log(`☁️ Uploaded ${imageName} to storage and converted to base64 (${base64Image.length} chars)`)
     } catch (error) {
       throw new Error(`Failed to upload ${imageName}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
@@ -245,20 +247,32 @@ async function uploadImages(files: Express.Multer.File[], jobId: string): Promis
   return sortImagesByName(images)
 }
 
-// Create RunPod images from URLs (for URL-based workflow)
-function createImagesFromUrls(startImageUrl: string, endImageUrl: string): RunPodImage[] {
-  const images: RunPodImage[] = [
-    {
-      name: 'start_image.png',
-      url: startImageUrl
-    },
-    {
-      name: 'end_image.png',
-      url: endImageUrl
-    }
-  ]
+// Create RunPod images from URLs (for URL-based workflow) - convert to base64 format
+async function createImagesFromUrls(startImageUrl: string, endImageUrl: string): Promise<RunPodImage[]> {
+  try {
+    // Convert both image URLs to base64
+    const [startImageBase64, endImageBase64] = await Promise.all([
+      convertImageToBase64(startImageUrl),
+      convertImageToBase64(endImageUrl)
+    ])
 
-  return sortImagesByName(images)
+    const images: RunPodImage[] = [
+      {
+        name: 'start_image.png',
+        image: startImageBase64
+      },
+      {
+        name: 'end_image.png',
+        image: endImageBase64
+      }
+    ]
+
+    console.log(`🔗 Converted images from URLs to base64: start (${startImageBase64.length} chars), end (${endImageBase64.length} chars)`)
+
+    return sortImagesByName(images)
+  } catch (error) {
+    throw new Error(`Failed to convert image URLs to base64: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
 }
 
 // POST /api/jobs - Create and submit video job (supports both multipart and JSON)
@@ -299,8 +313,8 @@ router.post(
           resolution: urlJobData.resolution
         }
 
-        // Create images from URLs
-        images = createImagesFromUrls(urlJobData.startImageUrl, urlJobData.endImageUrl)
+        // Create images from URLs (convert to base64)
+        images = await createImagesFromUrls(urlJobData.startImageUrl, urlJobData.endImageUrl)
 
         console.log(`🔗 Using image URLs: start=${urlJobData.startImageUrl}, end=${urlJobData.endImageUrl}`)
       } else {
@@ -321,8 +335,8 @@ router.post(
         // Images will be uploaded after job creation to use the real job ID
       }
 
-      // Load workflow configuration
-      const workflow = await loadWorkflow()
+      // Load workflow configuration to validate it exists
+      await loadWorkflow()
 
       // Create job in database
       const job = await prisma.job.create({
@@ -367,6 +381,22 @@ router.post(
         // Cloud mode processing
         console.log(`☁️ Using cloud mode for job ${job.id}`)
 
+        // Map resolution to pixels
+        const { width, height } = mapResolutionToPixels(validatedParams.resolution)
+
+        // Load base workflow configuration
+        const baseWorkflow = await loadWorkflow()
+
+        // Inject video parameters into workflow
+        const workflow = injectWorkflowParameters(baseWorkflow, {
+          frames: validatedParams.frames,
+          fps: validatedParams.fps,
+          width,
+          height
+        })
+
+        console.log(`📐 Injected video parameters: ${width}x${height}, ${validatedParams.frames} frames at ${validatedParams.fps}fps`)
+
         // Generate presigned URL for output video
         const outputKey = `videos/${job.id}.mp4`
         const outputPutUrl = await presignPut(outputKey, 'video/mp4')
@@ -387,7 +417,7 @@ router.post(
         }
         const callbackUrl = generateCallbackUrl(appConfig.publicBaseUrl, job.id)
 
-        // Submit job to RunPod
+        // Submit job to RunPod with new serverless payload format
         const runpodResponse = await submitToRunPod({
           jobId: job.id,
           workflow,

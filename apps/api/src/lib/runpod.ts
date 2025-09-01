@@ -1,9 +1,92 @@
 import { loadRunPodConfig } from '../config/runpod'
+import { z } from 'zod'
 
-// RunPod API Types
+// Validation schema for RunPod serverless payload
+export const RunPodImageSchema = z.object({
+  name: z.string().min(1),
+  image: z.string().min(1) // base64 encoded image
+})
+
+export const RunPodServerlessPayloadSchema = z.object({
+  input: z.object({
+    workflow: z.object({}),
+    images: z.array(RunPodImageSchema),
+    output_put_url: z.string().url(),
+    callback_url: z.string().url()
+  })
+})
+
+// Resolution mapping utility
+export function mapResolutionToPixels(resolution: '720p' | '1080p'): { width: number; height: number } {
+  switch (resolution) {
+    case '720p':
+      return { width: 1280, height: 720 }
+    case '1080p':
+      return { width: 1920, height: 1080 }
+    default:
+      throw new Error(`Unsupported resolution: ${resolution}`)
+  }
+}
+
+// Convert image URL or buffer to base64
+export async function convertImageToBase64(source: string | Buffer): Promise<string> {
+  if (Buffer.isBuffer(source)) {
+    // If source is already a buffer, convert directly to base64
+    return source.toString('base64')
+  }
+
+  // If source is a URL, fetch and convert to base64
+  try {
+    const response = await fetch(source)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image from ${source}: ${response.statusText}`)
+    }
+    
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    return buffer.toString('base64')
+  } catch (error) {
+    throw new Error(`Failed to convert image to base64: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
+// Inject video parameters into ComfyUI workflow JSON
+export function injectWorkflowParameters(
+  workflow: any,
+  params: {
+    frames: number
+    fps: number
+    width: number
+    height: number
+  }
+): object {
+  // Deep clone to avoid mutating the original workflow
+  const modifiedWorkflow = JSON.parse(JSON.stringify(workflow))
+
+  // Inject parameters into specific nodes as per ComfyUI requirements
+  if (modifiedWorkflow['83']) {
+    modifiedWorkflow['83']['inputs'] = {
+      ...modifiedWorkflow['83']['inputs'],
+      length: params.frames,
+      width: params.width,
+      height: params.height
+    }
+  }
+
+  if (modifiedWorkflow['91']) {
+    modifiedWorkflow['91']['inputs'] = {
+      ...modifiedWorkflow['91']['inputs'],
+      fps: params.fps
+    }
+  }
+
+  return modifiedWorkflow
+}
+
+// RunPod API Types - Updated for ComfyUI Serverless Requirements
 export interface RunPodImage {
   name: string
-  url: string
+  image: string // base64 encoded image data
 }
 
 export interface SubmitToRunPodParams {
@@ -14,11 +97,14 @@ export interface SubmitToRunPodParams {
   callbackUrl: string
 }
 
+// ComfyUI Serverless requires top-level 'input' field
 export interface RunPodJobInput {
-  workflow: object
-  images: RunPodImage[]
-  output_put_url: string
-  callback_url: string
+  input: {
+    workflow: object
+    images: RunPodImage[]
+    output_put_url: string
+    callback_url: string
+  }
 }
 
 export interface RunPodApiResponse {
@@ -58,16 +144,43 @@ export async function submitToRunPod(params: SubmitToRunPodParams): Promise<RunP
 
   const { jobId, workflow, images, outputPutUrl, callbackUrl } = params
 
-  // Prepare the request payload according to RunPod API spec
+  // Prepare the request payload according to RunPod Serverless API spec
+  // ComfyUI Serverless requires all parameters under top-level 'input' field
   const payload: RunPodJobInput = {
-    workflow,
-    images,
-    output_put_url: outputPutUrl,
-    callback_url: callbackUrl,
+    input: {
+      workflow,
+      images,
+      output_put_url: outputPutUrl,
+      callback_url: callbackUrl,
+    }
+  }
+
+  // Validate payload structure
+  try {
+    RunPodServerlessPayloadSchema.parse(payload)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const validationErrors = error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')
+      throw new RunPodError(`Invalid payload structure: ${validationErrors}`)
+    }
+    throw new RunPodError('Payload validation failed')
   }
 
   const url = `https://api.runpod.ai/v2/${config.endpointId}/run`
   const requestId = `${jobId}-${Date.now()}`
+
+  // Log payload structure for debugging (keys only, not full base64 data)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🐛 RunPod payload structure [request: ${requestId}]`, {
+      input: {
+        workflow: Object.keys(payload.input.workflow || {}),
+        imagesCount: payload.input.images.length,
+        imageNames: payload.input.images.map(img => img.name),
+        output_put_url: 'present',
+        callback_url: 'present'
+      }
+    })
+  }
 
   console.log(`🚀 Submitting job to RunPod [request: ${requestId}]`, {
     endpoint: config.endpointId,

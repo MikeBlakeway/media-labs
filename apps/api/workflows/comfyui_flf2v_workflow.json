@@ -1,0 +1,121 @@
+{
+  "3": {
+    "inputs": {
+      "seed": 156680208700286,
+      "steps": 40,
+      "cfg": 6.5,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1,
+      "model": ["4", 0],
+      "positive": ["6", 0],
+      "negative": ["7", 0],
+      "latent_image": ["5", 0]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "4": {
+    "inputs": {
+      "ckpt_name": "runwayml--stable-diffusion-v1-5.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "5": {
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "6": {
+    "inputs": {
+      "text": "beautiful landscape, high quality",
+      "clip": ["4", 1]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "text": "low quality, blurry",
+      "clip": ["4", 1]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "8": {
+    "inputs": {
+      "samples": ["3", 0],
+      "vae": ["4", 2]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "83": {
+    "inputs": {
+      "length": 16,
+      "width": 1280,
+      "height": 720,
+      "start_image": ["84", 0],
+      "end_image": ["85", 0]
+    },
+    "class_type": "FLF2VProcessor",
+    "_meta": {
+      "title": "First Last Frame to Video Processor"
+    }
+  },
+  "84": {
+    "inputs": {
+      "image": "start_image.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Start Image"
+    }
+  },
+  "85": {
+    "inputs": {
+      "image": "end_image.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load End Image"
+    }
+  },
+  "91": {
+    "inputs": {
+      "fps": 8,
+      "input_frames": ["83", 0]
+    },
+    "class_type": "VideoEncoder",
+    "_meta": {
+      "title": "Video Encoder"
+    }
+  },
+  "92": {
+    "inputs": {
+      "filename_prefix": "flf2v_output",
+      "images": ["91", 0]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  }
+}
