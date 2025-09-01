@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useJobSSE } from '../../hooks/useJobSSE'
+import { VideoPlayer } from '../../components/VideoPlayer'
+import { JobStatusDisplay } from '../../components/JobStatusDisplay'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000'
 
@@ -15,6 +18,9 @@ export default function FLF2VPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [jobId, setJobId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Use SSE hook for real-time job updates
+  const { job, isConnected, error: sseError, isLoading, reconnect } = useJobSSE(jobId)
 
   // Cleanup preview URLs on component unmount to prevent memory leaks
   useEffect(() => {
@@ -161,6 +167,9 @@ export default function FLF2VPage() {
     setError(null)
   }
 
+  // Check if we should show the completed video
+  const showVideo = job?.status === 'COMPLETED' && (job.outputUrl || job.downloadUrl)
+
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800'>
       <div className='container mx-auto px-4 py-8'>
@@ -170,12 +179,37 @@ export default function FLF2VPage() {
             <p className='text-slate-600 dark:text-slate-400'>Generate smooth video transitions between two images</p>
           </header>
 
-          {jobId && (
+          {/* Job Status Display */}
+          {job && (
+            <JobStatusDisplay
+              job={job}
+              isConnected={isConnected}
+              error={sseError}
+              onReconnect={reconnect}
+              className="mb-6"
+            />
+          )}
+
+          {/* Video Player (when completed) */}
+          {showVideo && (
+            <VideoPlayer
+              videoUrl={job.outputUrl!}
+              downloadUrl={job.downloadUrl}
+              title="Generated Video"
+              className="mb-6"
+            />
+          )}
+
+          {/* Success Message (when job created but not yet completed) */}
+          {jobId && !showVideo && (
             <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6'>
               <h3 className='text-green-800 dark:text-green-200 font-semibold mb-2'>Job Created Successfully!</h3>
               <p className='text-green-700 dark:text-green-300'>
                 Job ID:{' '}
                 <code className='bg-green-100 dark:bg-green-800 px-2 py-1 rounded font-mono text-sm'>{jobId}</code>
+              </p>
+              <p className='text-green-700 dark:text-green-300 text-sm mt-2'>
+                Your video is being processed. You'll see real-time updates above.
               </p>
               <button
                 onClick={resetForm}
@@ -193,7 +227,9 @@ export default function FLF2VPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className='bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 space-y-6'>
+          {/* Form - only show if no job is running or if job failed */}
+          {(!job || job.status === 'FAILED') && (
+            <form onSubmit={handleSubmit} className='bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 space-y-6'>
             {/* Image Upload Section */}
             <div className='grid md:grid-cols-2 gap-6'>
               {/* Start Image */}
@@ -425,6 +461,7 @@ export default function FLF2VPage() {
               </button>
             </div>
           </form>
+          )}
         </div>
       </div>
     </div>
