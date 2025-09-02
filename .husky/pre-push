@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-# Husky pre-push hook: run workspace build
-pnpm -w -s run build || exit 1

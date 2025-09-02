@@ -56,3 +56,4 @@ coverage/
 .local/
 /.cache/
 node_modules
+package-copy.json

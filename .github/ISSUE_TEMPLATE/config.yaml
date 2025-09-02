@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: 📚 Development Documentation
-    url: https://github.com/MikeBlakeway/media-labs/blob/main/docs/how-to-develop.md
-    about: Instructions for setting up and running the development environment
-  - name: 💬 General Discussion
-    url: https://github.com/MikeBlakeway/media-labs/discussions
-    about: For questions, ideas, or general discussion about the activity system

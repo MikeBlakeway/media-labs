@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-# Husky commit-msg hook: run commitlint
-pnpm -w -s commitlint --edit "$1"
