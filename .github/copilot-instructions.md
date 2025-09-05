@@ -1,23 +1,104 @@
 # GitHub Copilot Instructions
 
-# GitHub Copilot Instructions — Media Labs
+## Priority Guidelines
 
-What this file is: concise, actionable guidance for AI coding agents working on Media Labs. It prioritizes repo-specific facts, conventions, and debugging tips.
+When generating code for this repository:
 
-## Big picture (architecture)
+1. **Version Compatibility**: Always detect and respect the exact versions of languages, frameworks, and libraries used in this project
+2. **Context Files**: Prioritize patterns and standards defined in the .github/copilot directory
+3. **Codebase Patterns**: When context files don't provide specific guidance, scan the codebase for established patterns
+4. **Architectural Consistency**: Maintain our layered serverless architectural style and established boundaries
+5. **Code Quality**: Prioritize maintainability, performance, security, and testability in all generated code
 
-- Next.js app-router (Next 15) with client and server components under `src/app/`.
-- Server API routes under `src/app/api/*` implement workflows, preflight checks, and file uploads. Many routes declare `export const runtime = 'nodejs'`.
-- Model files live on an S3-compatible Runpod volume (configured in `src/lib/runpodVolume.ts`). The UI uploads inputs to the volume and workers read `/runpod-volume/models/<type>/<filename>` paths. All model files must be stored under `models/<type>/...` at the root of your S3 bucket (e.g., `s3://$RUNPOD_VOLUME_ID/models/unet/...`).
-- Templates (registered workflows) are stored on disk under `data/workflows/*.json` and served via `src/lib/templates.fs.ts`.
+## Technology Version Detection
 
-## Key files to read first
+Before generating code, scan the codebase to identify:
 
-- `src/app/w/[slug]/page.tsx` — dynamic workflow form, client-side submit & polling.
-- `src/app/api/workflows/preflight/route.ts` — model presence checks (HEAD-based with defensive parsing).
-- `src/lib/workflow.preflight.ts` — infers required models and builds `s3Key` + `workerPath` (`modelPaths`).
-- `src/lib/runpodVolume.ts` — S3 client config and required env vars.
-- `src/lib/templates.fs.ts` — templates storage and schema interactions.
+1. **Language Versions**:
+
+   - TypeScript 5.x with strict mode enabled (see tsconfig.json)
+   - ES2017 target with modern ESNext modules
+   - Node.js 18+ (20+ recommended per README.md)
+
+2. **Framework Versions**:
+
+   - Next.js 15.5.2 with App Router architecture
+   - React 19.1.0 with React DOM 19.1.0
+   - TailwindCSS 4.x with PostCSS configuration
+
+3. **Library Versions**:
+   - Zod 4.1.5 for schema validation
+   - AWS SDK v3.879.0 (@aws-sdk/client-s3, @aws-sdk/s3-request-presigner)
+   - ESLint 9.x with Next.js TypeScript configuration
+
+## Architecture Overview
+
+- **Next.js App Router (Next 15)**: Client and server components under `src/app/`
+- **API Routes**: Server-side routes under `src/app/api/*` implementing workflows, preflight checks, and file uploads
+- **Runtime Declaration**: Many routes declare `export const runtime = 'nodejs'` for Node.js runtime
+- **S3 Storage**: Model files live on S3-compatible RunPod volume configured in `src/lib/runpodVolume.ts`
+- **Model Storage Convention**: All model files must be stored under `models/<type>/...` at the root of your S3 bucket
+- **Template Storage**: Workflow templates stored on disk under `data/workflows/*.json` and served via `src/lib/templates.fs.ts`
+
+## Code Quality Standards
+
+### Maintainability
+
+- Write self-documenting code with clear, descriptive naming following patterns in the codebase
+- Function names use camelCase: `sanitizeFilename`, `objectExists`, `inferModelRequirements`
+- Type names use PascalCase with descriptive suffixes: `ModelRequirement`, `TemplateMeta`, `ExportApiWorkflow`
+- Constant names use UPPER_SNAKE_CASE: `RUNPOD_BUCKET`, `MODELS_PREFIX`, `MAX_UPLOAD_BYTES`
+- Keep functions focused on single responsibilities following existing patterns
+- Organize code in logical modules under `src/lib/` for reusable logic
+
+### Performance
+
+- Use `HeadObjectCommand` for S3 existence checks instead of listing operations
+- Apply timeout handling for S3 operations to prevent hanging requests
+- Stream file uploads without converting to base64
+- Use Next.js Turbopack for development builds via `--turbopack` flag
+- Implement defensive error handling with detailed logging for troubleshooting
+
+### Security
+
+- Keep all secrets server-side only - never expose RunPod/B2 credentials to browser
+- Sanitize filenames using established pattern: reject path traversal, limit length to 200 chars
+- Validate file types with `isAllowedMime()` function from `src/lib/filename.ts`
+- Apply size limits using `MAX_UPLOAD_BYTES` constant (200MB default)
+- Use parameterized S3 operations with proper key validation
+
+### Testability
+
+- Structure functions for easy testing with clear input/output contracts
+- Separate business logic from API routes into `src/lib/` modules
+- Use dependency injection patterns for S3 clients and external services
+- Follow established error handling patterns with typed responses
+
+## Documentation Requirements
+
+- Follow JSDoc-style comments for complex functions and type definitions
+- Document function parameters and return types explicitly when not obvious from TypeScript
+- Include inline comments for non-obvious business logic, especially S3 error handling
+- Document environment variables and their purposes in configuration modules
+- Use descriptive commit messages and maintain clear file organization
+
+## Key Files to Read First
+
+- `src/app/w/[slug]/page.tsx` — dynamic workflow form, client-side submit & polling
+- `src/app/api/workflows/preflight/route.ts` — model presence checks (HEAD-based with defensive parsing)
+- `src/lib/workflow.preflight.ts` — infers required models and builds `s3Key` + `workerPath` (`modelPaths`)
+- `src/lib/runpodVolume.ts` — S3 client config and required env vars
+- `src/lib/templates.fs.ts` — templates storage and schema interactions
+
+## Codebase Scanning Instructions
+
+When context files don't provide specific guidance:
+
+1. **Identify Similar Files**: Look for existing implementations in the same directory or with similar functionality
+2. **Analyze Patterns**: Extract consistent patterns for naming, error handling, validation, and module organization
+3. **Follow Established Conventions**: Prioritize patterns found in multiple files over single instances
+4. **Error Handling**: Use the defensive S3 error parsing pattern from `src/app/api/workflows/preflight/route.ts`
+5. **Validation**: Follow the Zod-first validation pattern used throughout API routes
 
 ## Project conventions & strict rules
 
@@ -28,11 +109,88 @@ What this file is: concise, actionable guidance for AI coding agents working on 
   - Server route handlers receive `params` as a Promise: e.g. `export async function GET(req, ctx: { params: Promise<{ slug: string }> }) { const { slug } = await ctx.params }` (this repo follows that pattern).
   - Client components in this repo unwrap route params with React's `use` hook: `import { use } from 'react'; const { slug } = use(params)` in `use client` components. The `next/navigation` `useParams()` hook is an alternative but this codebase uses `use(params)` in places.
 
+## TypeScript Guidelines
+
+- Use strict TypeScript settings from tsconfig.json (target: ES2017, strict: true)
+- Prefer explicit typing over type inference for public APIs and module boundaries
+- Use Zod schemas for runtime validation and derive TypeScript types with `z.infer<>`
+- Structure types in dedicated schema files under `src/lib/` for reusability
+- Follow naming convention: Schema suffix for Zod schemas, Type suffix for inferred types
+
+## React/Next.js Guidelines
+
+- Use App Router patterns from Next.js 15.5.2
+- Declare server runtime explicitly: `export const runtime = 'nodejs'` in API routes
+- Use `'use client'` directive only when necessary for client-side interactivity
+- Import Next.js utilities from their canonical paths: `next/navigation`, `next/headers`
+- Follow component composition patterns from existing components in `src/components/`
+
+## AWS SDK Guidelines
+
+- Use AWS SDK v3.879.0 patterns for S3 operations
+- Prefer command-based API: `runpodS3.send(new HeadObjectCommand(...))`
+- Implement defensive error handling for S3-compatible endpoints
+- Use environment-based configuration pattern from `src/lib/runpodVolume.ts`
+- Apply timeout protection for potentially hanging operations
+
 ## Env vars (server-only)
 
 - Runpod S3: `RUNPOD_VOLUME_ID` (used as RUNPOD_BUCKET), `RUNPOD_S3_REGION`, `RUNPOD_S3_ENDPOINT`, `RUNPOD_S3_ACCESS_KEY_ID`, `RUNPOD_S3_SECRET_ACCESS_KEY`.
 - Model mapping: All models must be stored under `models/<type>/...` at the root of your S3 bucket. Per-type directories: `RUNPOD_MODEL_DIR_UNET`, `RUNPOD_MODEL_DIR_CLIP`, `RUNPOD_MODEL_DIR_CLIP_VISION`, `RUNPOD_MODEL_DIR_VAE`, `RUNPOD_MODEL_DIR_LORA`, `RUNPOD_MODEL_DIR_CHECKPOINTS`.
 - Backblaze B2 output storage: `B2_S3_ENDPOINT`, `B2_S3_REGION`, `B2_S3_BUCKET`, `B2_S3_ACCESS_KEY_ID`, `B2_S3_SECRET_ACCESS_KEY`.
+
+## Error Handling Patterns
+
+### Zod Validation Pattern
+
+```typescript
+const parsed = Schema.safeParse(payload)
+if (!parsed.success) {
+  return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+}
+```
+
+### S3 Error Handling Pattern
+
+```typescript
+try {
+  await runpodS3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }))
+  return true
+} catch (err: unknown) {
+  if (err && typeof err === 'object') {
+    const obj = err as Record<string, unknown>
+
+    // Check $response.statusCode
+    const rawResp = obj['$response']
+    if (rawResp && typeof rawResp === 'object') {
+      const statusVal = (rawResp as Record<string, unknown>)['statusCode']
+      if (typeof statusVal === 'number' && statusVal === 404) return false
+    }
+
+    // Check $metadata.httpStatusCode
+    const meta = obj['$metadata']
+    if (meta && typeof meta === 'object') {
+      const httpStatusCode = (meta as Record<string, unknown>)['httpStatusCode']
+      if (typeof httpStatusCode === 'number' && httpStatusCode === 404) return false
+    }
+  }
+
+  console.error('S3 operation failed', { bucket, key, error: err })
+  return false
+}
+```
+
+### Environment Configuration Pattern
+
+```typescript
+function req(...names: string[]): string {
+  for (const n of names) {
+    const v = process.env[n]
+    if (v && v.trim()) return v
+  }
+  throw new Error(`[config] Missing one of: ${names.join(', ')}`)
+}
+```
 
 ## Developer commands
 
@@ -41,11 +199,149 @@ What this file is: concise, actionable guidance for AI coding agents working on 
 - Start (prod): `npm run start`
 - Lint: `npm run lint`
 
+## API Route Patterns
+
+### Basic Route Structure
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+
+export const runtime = 'nodejs'
+
+const RequestSchema = z.object({
+  // Define request schema
+})
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const parsed = RequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    }
+
+    // Process request
+    return NextResponse.json({ success: true }, { status: 200 })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+```
+
+### Dynamic Route Handler
+
+```typescript
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  // Handle request with slug parameter
+}
+```
+
+## Client Component Patterns
+
+### Zod Schema Usage in Components
+
+```typescript
+'use client'
+
+import { z } from 'zod'
+
+const ResponseSchema = z.object({
+  // Define response schema
+})
+
+// In component
+const handleSubmit = async () => {
+  const response = await fetch('/api/endpoint', { method: 'POST', body: JSON.stringify(data) })
+  const json = await response.json()
+
+  const parsed = ResponseSchema.safeParse(json)
+  if (!parsed.success) {
+    setError('Invalid response format')
+    return
+  }
+
+  // Use parsed.data
+}
+```
+
+### Form State Management
+
+```typescript
+const [formData, setFormData] = useState<Record<string, ValueUnion>>({})
+const [errors, setErrors] = useState<string[]>([])
+const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+```
+
 ## Troubleshooting checklist — HEAD vs LIST fallback
 
 1. Verify the computed S3 key (server-side):
 
 - Confirm `modelPaths()` produced the expected `s3Key` and `workerPath` for the model. Example: `models/diffusion_models/wan2.1_flf2v_720p_14B_fp16.safetensors` → `/runpod-volume/models/diffusion_models/wan2.1_flf2v_720p_14B_fp16.safetensors`.
+
+## File Organization Patterns
+
+### Library Module Structure (`src/lib/`)
+
+- **Schema files**: `*.schema.ts` - Zod schemas and type definitions
+- **Type files**: `*.types.ts` - TypeScript interfaces and type aliases
+- **Utility files**: `*.ts` - Pure functions and business logic
+- **Client files**: `*.client.ts` - Browser-specific utilities
+- **Config files**: Environment and configuration management
+
+### API Route Organization (`src/app/api/`)
+
+- **Grouped by feature**: `/workflows/`, `/volume/`, `/runpod/`
+- **Dynamic routes**: `[slug]/route.ts` for parameterized endpoints
+- **Nested routes**: `/workflows/[slug]/raw/route.ts` for specialized endpoints
+
+### Component Structure (`src/components/`)
+
+- **PascalCase naming**: `UploadCard.tsx`, `WorkflowRunner.tsx`
+- **Single responsibility**: Each component focused on one concern
+- **Client/Server distinction**: Use `'use client'` directive when needed
+
+## Testing Patterns
+
+### Schema Validation Testing
+
+```typescript
+// Test Zod schemas explicitly
+const validData = {
+  /* valid data */
+}
+const invalidData = {
+  /* invalid data */
+}
+
+const validResult = Schema.safeParse(validData)
+expect(validResult.success).toBe(true)
+
+const invalidResult = Schema.safeParse(invalidData)
+expect(invalidResult.success).toBe(false)
+```
+
+### API Route Testing
+
+```typescript
+// Test API routes with proper error handling
+const response = await POST(mockRequest, mockContext)
+const body = await response.json()
+
+expect(response.status).toBe(200)
+expect(body).toMatchObject({ expected: 'response' })
+```
+
+## General Best Practices
+
+- Follow naming conventions exactly as they appear in existing code
+- Match code organization patterns from similar files
+- Apply error handling consistent with existing patterns
+- Follow the same approach to testing as seen in the codebase
+- Match logging patterns from existing code
+- Use the same approach to configuration as seen in the codebase
 
 ## Migration Note
 

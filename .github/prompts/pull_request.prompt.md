@@ -1,8 +1,8 @@
 ---
 mode: 'agent'
-model: GPT-4o
-tools: ['githubRepo', 'codebase']
-description: 'GitHub PR template for contributors and Copilot agents. Enforces Conventional Commit titles and avoids raw filenames on standalone lines.'
+model: GPT-4.1
+tools: ['codebase', 'searchResults', 'search', 'atlassian']
+description: 'Jira story template for Transact Agent UI. Guides contributors to write well-structured, testable stories with clear problem, impact, scope, acceptance criteria, developer checklist, and definition of done.
 ---
 
 # Pull Request Prompt

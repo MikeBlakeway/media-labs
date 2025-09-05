@@ -1,7 +1,7 @@
 ---
 mode: 'agent'
-model: GPT-4o
-tools: ['githubRepo', 'codebase']
+model: GPT-4.1
+tools: ['githubRepo', 'searchResults', 'search', 'codebase']
 description: 'Generate a Conventional Commit style commit message and a safe PR body for this repository.'
 ---
 

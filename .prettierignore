@@ -18,3 +18,5 @@ public
 .turbo
 .DS_Store
 /.git
+/.github/prompts/
+/.github/chatmodes/
