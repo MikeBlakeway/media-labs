@@ -1,0 +1,9 @@
+{
+  "input": {
+    "workflow": {
+      "10": { "class_type": "LoadImage", "inputs": { "image": "/runpod-volume/inputs/start_image.png" } },
+      "20": { "class_type": "SaveImage", "inputs": { "images": ["10", 0], "filename_prefix": "smoketest" } }
+    },
+    "patches": []
+  }
+}

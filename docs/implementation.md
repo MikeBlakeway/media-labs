@@ -2,6 +2,11 @@
 
 > Scope: Next.js v15 (App Router, TS strict) app that uploads inputs to a Runpod Network Volume, patches ComfyUI workflows, submits jobs to Runpod Serverless, and persists outputs to Backblaze B2. Canonical input method: **Direct Volume Path**.
 
+## Model Storage Convention (2025 update)
+
+All model files must be stored under `models/<type>/...` at the root of your S3 bucket (e.g., `s3://$RUNPOD_VOLUME_ID/models/unet/...`).
+If you previously used `ComfyUI/models/`, move your files to `models/` and update all references and worker configuration accordingly.
+
 ## 1) Architecture (high level)
 
 - **UI (Next.js client)** → uploads media via `POST /api/volume/upload` (multipart) → gets back `workerPath`.

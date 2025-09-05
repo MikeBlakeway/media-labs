@@ -7,6 +7,11 @@
 - **Persist outputs** (images/videos) to **Backblaze B2 (S3‑compatible)** and make them viewable/downloadable inside Media Labs.
 - Support **workflow deployment** from the browser (upload Export‑API `workflow.json` → patch inputs → run → track → view) with a clean developer UX.
 
+## Model Storage Convention (2025 update)
+
+All model files must be stored under `models/<type>/...` at the root of your S3 bucket (e.g., `s3://$RUNPOD_VOLUME_ID/models/unet/...`).
+If you previously used `ComfyUI/models/`, move your files to `models/` and update all references and worker configuration accordingly.
+
 ## Background
 
 - You already operate a **Runpod Serverless ComfyUI** endpoint with an attached **Network Volume (\~60GB)** and have a **Backblaze B2** bucket.

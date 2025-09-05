@@ -25,6 +25,7 @@ This document instructs automated coding agents (or humans acting as agents) how
 - Server API routes under `src/app/api/` (many use `export const runtime = 'nodejs'`).
 - Zod-first: runtime validation with Zod schemas in `src/lib`.
 - S3 integration: `src/lib/runpodVolume.ts` (Runpod), `src/lib/b2.ts` (Backblaze B2).
+- Model files must be stored under `models/<type>/...` at the root of your S3 bucket (e.g., `s3://$RUNPOD_VOLUME_ID/models/unet/...`).
 - Template files stored in `data/workflows/*.json` and accessed via `src/lib/templates.fs.ts`.
 - Key scripts in `package.json`: `dev`, `build`, `start`, `lint`.
 
@@ -34,6 +35,7 @@ This document instructs automated coding agents (or humans acting as agents) how
 2. Zod validation for public-facing APIs: use `Schema.safeParse()` and return `NextResponse.json({ error: ... }, { status: 400 })` on failure.
 3. Params handling: server route handlers receive `params` as a Promise. Always `await` or type accordingly: `({ params }: { params: Promise<{ slug: string }> })` and `const { slug } = await params`.
 4. S3 existence checks: prefer `HeadObjectCommand` for single-key checks and defensively inspect SDK error internals (`$response`, `$metadata`) for 404 detection. Only fallback to `ListObjectsV2` when a provider lacks HEAD support.
+5. All model files must be stored under `models/<type>/...` at the root of your S3 bucket. Update any legacy references from `ComfyUI/models/`.
 
 ## How to make changes (safe workflow)
 
@@ -92,6 +94,11 @@ This document instructs automated coding agents (or humans acting as agents) how
 
 - If an external dependency (S3 provider) behaves unexpectedly, add safe debug logging (redact creds) and propose a small fallback (LIST fallback behind a feature flag).
 - If type information is missing for an external SDK shape, add a small internal type (in `src/lib`) and reuse it; prefer `unknown` + safe narrowing if uncertain.
+
+## Migration Note
+
+**As of September 2025, all model files must be stored under `models/<type>/...` at the root of your S3 bucket.**
+If you previously used `ComfyUI/models/`, move your files to `models/` and update all references and worker configuration accordingly.
 
 ## Final note
 

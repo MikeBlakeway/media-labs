@@ -4,7 +4,9 @@
 
 Media Labs is a local‑first developer tool for running your saved **ComfyUI** workflows on **Runpod Serverless** and viewing the results in a **Next.js v15 + TypeScript** app. Inputs are uploaded to a **Runpod Network Volume** (no base64), and outputs (images/videos) are persisted to **Backblaze B2 (S3‑compatible)** for easy access.
 
-> Canonical input method: **Direct Volume Path** — upload files to the Runpod Network Volume and load them by absolute path in your workflow (e.g., `/runpod-volume/inputs/<job>/<file>`). A URL loader via pre‑signed B2 GET is optional.
+**Model Storage Convention (2025 update):**
+All model files must be stored under `models/<type>/...` at the root of your S3 bucket (e.g., `s3://$RUNPOD_VOLUME_ID/models/unet/...`).
+If you previously used `ComfyUI/models/`, move your files to `models/` and update all references and worker configuration accordingly.
 
 ---
 
@@ -24,6 +26,7 @@ Media Labs is a local‑first developer tool for running your saved **ComfyUI** 
 ```
 Browser (Next.js)
   ├─ POST /api/volume/upload  ──►  Runpod S3 (Network Volume)  ──►  /runpod-volume/inputs/…
+  ├─ Model files must be stored under /runpod-volume/models/<type>/<filename> (S3: models/<type>/<filename>)
   ├─ POST /api/workflows/patch-run  ──►  Runpod /run or /runsync  ──►  /status or webhook
   └─ View outputs ◄─────────────────────────────  B2 (S3)  ◄────  ComfyUI worker uploads
 ```
@@ -78,6 +81,7 @@ RUNPOD_S3_REGION=<DC>
 RUNPOD_VOLUME_ID=<NETWORK_VOLUME_ID>
 RUNPOD_S3_ACCESS_KEY_ID=user_xxx
 RUNPOD_S3_SECRET_ACCESS_KEY=rps_xxx
+# Model files must be stored under models/<type>/... at the root of your S3 bucket
 
 # Backblaze B2 (S3-compatible outputs)
 B2_S3_ENDPOINT=https://s3.eu-west-000.backblazeb2.com
