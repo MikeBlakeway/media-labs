@@ -9,6 +9,7 @@ The GitHub Actions build is failing because the `runpod/worker-comfyui:5.3.0-flu
 3. **System dependencies**: Full Ubuntu base with GPU drivers
 
 GitHub Actions has limitations:
+
 - 6-hour timeout per job
 - Network bandwidth limitations
 - Disk space constraints (14GB available)
@@ -50,8 +51,8 @@ If you have GitHub Pro/Enterprise, use larger runners:
 ```yaml
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest-8-cores  # or ubuntu-latest-16-cores
-    timeout-minutes: 360  # 6 hours
+    runs-on: ubuntu-latest-8-cores # or ubuntu-latest-16-cores
+    timeout-minutes: 360 # 6 hours
 ```
 
 ### Option 3: Split Build Process

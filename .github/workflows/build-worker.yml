@@ -59,7 +59,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./worker
-          file: ./worker/Dockerfile.custom
+          file: ./worker/Dockerfile
+          target: runtime
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

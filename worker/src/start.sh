@@ -4,6 +4,12 @@
 TCMALLOC="$(ldconfig -p | grep -Po "libtcmalloc.so.\d" | head -n 1)"
 export LD_PRELOAD="${TCMALLOC}"
 
+# Download models from HuggingFace to S3 volume if enabled
+if [ "$DOWNLOAD_MODELS_ON_START" == "true" ] && [ "$MODELS_SOURCE" == "s3" ]; then
+    echo "worker-comfyui: Downloading models to S3 volume..."
+    python /usr/local/bin/download-models || echo "worker-comfyui: Model download failed, continuing..." >&2
+fi
+
 # Ensure ComfyUI-Manager runs in offline network mode inside the container
 comfy-manager-set-mode offline || echo "worker-comfyui - Could not set ComfyUI-Manager network_mode" >&2
 

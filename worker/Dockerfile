@@ -1,3 +1,13 @@
+# Multi-stage Dockerfile for Media Labs ComfyUI Worker
+#
+# Targets:
+#   - base: Common dependencies and ComfyUI installation
+#   - runtime: Lightweight image for CI/CD (models loaded from S3 at runtime)
+#   - dev: Full image with models pre-downloaded (for local development)
+#
+# CI Usage: docker build --target runtime
+# Local Usage: docker build --target dev (or runtime with S3 volume mount)
+
 # Build argument for base image selection
 ARG BASE_IMAGE=nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04
 
@@ -71,7 +81,7 @@ ADD src/extra_model_paths.yaml ./
 WORKDIR /
 
 # Install Python runtime dependencies for the handler
-RUN uv pip install runpod requests websocket-client
+RUN uv pip install runpod requests websocket-client boto3 huggingface_hub
 
 # Add application code and scripts
 ADD src/start.sh handler.py test_input.json ./
@@ -88,11 +98,31 @@ ENV PIP_NO_INPUT=1
 COPY scripts/comfy-manager-set-mode.sh /usr/local/bin/comfy-manager-set-mode
 RUN chmod +x /usr/local/bin/comfy-manager-set-mode
 
+# Add model download script for S3 volume integration
+COPY scripts/download-models.py /usr/local/bin/download-models
+RUN chmod +x /usr/local/bin/download-models
+
+# Stage 2: Runtime image (lightweight, models loaded from S3 at runtime)
+FROM base AS runtime
+
+# Add metadata for media-labs
+LABEL org.opencontainers.image.title="Media Labs ComfyUI Worker"
+LABEL org.opencontainers.image.description="Custom ComfyUI worker for Media Labs platform"
+LABEL org.opencontainers.image.vendor="Media Labs"
+LABEL org.opencontainers.image.source="https://github.com/mikeblakeway/media-labs"
+
+# Environment variables for S3 model loading
+ENV MODELS_SOURCE=s3
+ENV DOWNLOAD_MODELS_ON_START=true
+
+# Expose the standard ports
+EXPOSE 8000 8188
+
 # Set the default command to run when starting the container
 CMD ["/start.sh"]
 
-# Stage 2: Download models
-FROM base AS downloader
+# Stage 3: Development image (with models pre-downloaded for local use)
+FROM base AS dev
 
 ARG HUGGINGFACE_ACCESS_TOKEN
 # Set default model type if none is provided
@@ -133,8 +163,17 @@ RUN if [ "$MODEL_TYPE" = "flux1-dev-fp8" ]; then \
       wget -q -O models/checkpoints/flux1-dev-fp8.safetensors https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors; \
     fi
 
-# Stage 3: Final image
-FROM base AS final
+# Go back to the root
+WORKDIR /
 
-# Copy models from stage 2 to the final image
-COPY --from=downloader /comfyui/models /comfyui/models
+# Add metadata for media-labs
+LABEL org.opencontainers.image.title="Media Labs ComfyUI Worker (Dev)"
+LABEL org.opencontainers.image.description="ComfyUI worker with pre-downloaded models for local development"
+LABEL org.opencontainers.image.vendor="Media Labs"
+LABEL org.opencontainers.image.source="https://github.com/mikeblakeway/media-labs"
+
+# Expose the standard ports
+EXPOSE 8000 8188
+
+# Set the default command to run when starting the container
+CMD ["/start.sh"]
