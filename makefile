@@ -131,9 +131,13 @@ ensure-local-volume:
 	fi
 
 # ---------- Cross-build for linux/amd64 (RunPod) ----------
-.PHONY: buildx-init
-buildx-init: ## Create/enable a buildx builder (once)
-	-docker buildx create --use --name mlabs-builder
+buildx-init:
+	@if docker buildx inspect mlabs-builder >/dev/null 2>&1; then \
+	  echo "Using existing builder: mlabs-builder"; \
+	  docker buildx use mlabs-builder; \
+	else \
+	  docker buildx create --use --name mlabs-builder; \
+	fi
 	docker buildx inspect --bootstrap
 
 .PHONY: build-amd64
@@ -141,14 +145,14 @@ build-amd64: ## Cross-build linux/amd64 image (no push; loads if supported)
 	docker buildx build --platform linux/amd64 \
 	  -t $(IMAGE) \
 	  -f $(WORKER_DIR)/Dockerfile \
-	  --load .
+	  --load $(WORKER_DIR)
 
 .PHONY: push-amd64
 push-amd64: ## Cross-build and PUSH linux/amd64 image (recommended for Apple Silicon)
 	docker buildx build --platform linux/amd64 \
 	  -t $(IMAGE) \
 	  -f $(WORKER_DIR)/Dockerfile \
-	  --push .
+	  --push $(WORKER_DIR)
 
 # ---------- RunPod Endpoint helpers ----------
 define _need_endpoint_env
