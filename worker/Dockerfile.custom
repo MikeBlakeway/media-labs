@@ -1,8 +1,9 @@
 # Custom Dockerfile for media-labs worker
 # This extends the base worker-comfyui with your specific configuration
 
-# Use the official worker-comfyui as base (or build from source)
-ARG BASE_WORKER_IMAGE=runpod/worker-comfyui:5.3.0-flux1-dev
+# Use the smaller base image without pre-installed models
+# Models will be downloaded at runtime to keep image size manageable
+ARG BASE_WORKER_IMAGE=runpod/worker-comfyui:5.3.0-base
 FROM ${BASE_WORKER_IMAGE}
 
 # Add metadata
@@ -15,6 +16,8 @@ LABEL org.opencontainers.image.source="https://github.com/mikeblakeway/media-lab
 WORKDIR /comfyui
 
 # Copy any custom configuration or models if needed
+# Note: Large models (FLUX.1, etc.) should be loaded at runtime from S3 storage
+# to keep the Docker image size manageable for CI/CD
 # COPY custom_models/ ./models/
 # COPY custom_nodes/ ./custom_nodes/
 
