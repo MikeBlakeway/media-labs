@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "worker:dev": "./scripts/dev-worker.sh",
+    "worker:test": "./scripts/test-worker.sh",
+    "worker:build": "cd worker && docker build -f Dockerfile.custom -t ghcr.io/mikeblakeway/media-labs-worker:latest .",
+    "worker:push": "docker push ghcr.io/mikeblakeway/media-labs-worker:latest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.879.0",
