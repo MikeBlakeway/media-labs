@@ -1,0 +1,33 @@
+# Custom Dockerfile for media-labs worker
+# This extends the base worker-comfyui with your specific configuration
+
+# Use the official worker-comfyui as base (or build from source)
+ARG BASE_WORKER_IMAGE=runpod/worker-comfyui:2.5.1-flux1-dev
+FROM ${BASE_WORKER_IMAGE}
+
+# Add metadata
+LABEL org.opencontainers.image.title="Media Labs ComfyUI Worker"
+LABEL org.opencontainers.image.description="Custom ComfyUI worker for Media Labs platform"
+LABEL org.opencontainers.image.vendor="Media Labs"
+LABEL org.opencontainers.image.source="https://github.com/mikeblakeway/media-labs"
+
+# Set working directory
+WORKDIR /comfyui
+
+# Copy any custom configuration or models if needed
+# COPY custom_models/ ./models/
+# COPY custom_nodes/ ./custom_nodes/
+
+# Install any additional Python dependencies if needed
+# COPY requirements.custom.txt .
+# RUN pip install -r requirements.custom.txt
+
+# Copy custom startup scripts or configuration
+# COPY scripts/custom_start.sh ./
+# RUN chmod +x custom_start.sh
+
+# Expose the standard ports
+EXPOSE 8000 8188
+
+# Use the existing entrypoint from the base image
+# The base image already sets up the handler and starts ComfyUI

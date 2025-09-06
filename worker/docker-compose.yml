@@ -1,0 +1,57 @@
+services:
+  # ComfyUI worker container with local API server
+  comfyui-worker:
+    image: local-comfyui-worker:latest
+    # Using locally built ARM64 image
+    # image: runpod/worker-comfyui:5.4.1-base
+    # image: ghcr.io/mikeblakeway/media-labs-worker:latest
+    pull_policy: never
+    # Removed GPU requirements for macOS testing
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    environment:
+      - SERVE_API_LOCALLY=true
+      - COMFY_LOG_LEVEL=INFO
+      # Optional: Configure S3 upload for local testing
+      # - BUCKET_ENDPOINT_URL=${BUCKET_ENDPOINT_URL}
+      # - BUCKET_ACCESS_KEY_ID=${BUCKET_ACCESS_KEY_ID}
+      # - BUCKET_SECRET_ACCESS_KEY=${BUCKET_SECRET_ACCESS_KEY}
+    ports:
+      - '8000:8000' # Worker API
+      - '8188:8188' # ComfyUI web interface
+    volumes:
+      # Mount local directories for development
+      - ./data/comfyui/output:/comfyui/output
+      - ./data/runpod-volume:/runpod-volume
+      # Optional: Mount local models for testing
+      # - ./data/models:/comfyui/models
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  # Optional: Local S3-compatible storage for testing (MinIO)
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - ./data/minio:/data
+    profiles:
+      - storage # Use `docker-compose --profile storage up` to include this
+
+networks:
+  default:
+    name: media-labs-network
