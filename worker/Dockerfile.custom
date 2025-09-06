@@ -2,7 +2,7 @@
 # This extends the base worker-comfyui with your specific configuration
 
 # Use the official worker-comfyui as base (or build from source)
-ARG BASE_WORKER_IMAGE=runpod/worker-comfyui:2.5.1-flux1-dev
+ARG BASE_WORKER_IMAGE=runpod/worker-comfyui:5.3.0-flux1-dev
 FROM ${BASE_WORKER_IMAGE}
 
 # Add metadata
