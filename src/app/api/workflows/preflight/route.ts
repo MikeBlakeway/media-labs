@@ -5,6 +5,7 @@ import { HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getTemplate } from '@/lib/templates.fs'
 import { ExportApiWorkflowSchema, type ExportApiWorkflow } from '@/lib/workflow.infer'
 import { inferModelRequirements, modelPaths, ModelPresenceSchema, type ModelPresence } from '@/lib/workflow.preflight'
+import { detectRunPodVariant, isModelPreinstalled } from '@/lib/runpod.preinstalled'
 
 export const runtime = 'nodejs'
 
@@ -14,6 +15,18 @@ const PreflightReqSchema = z.discriminatedUnion('kind', [
 ])
 
 const MODELS_PREFIX = process.env.RUNPOD_MODELS_PREFIX || 'models'
+
+async function checkModelPresence(bucket: string, s3Key: string, modelName: string): Promise<boolean> {
+  // First check if model is pre-installed in the RunPod variant
+  const variant = detectRunPodVariant()
+  if (isModelPreinstalled(modelName, variant)) {
+    console.log(`Model ${modelName} is pre-installed in RunPod variant ${variant}`)
+    return true
+  }
+
+  // If not pre-installed, check if it exists in the S3 volume
+  return objectExists(bucket, s3Key)
+}
 
 async function objectExists(bucket: string, key: string): Promise<boolean> {
   try {
@@ -97,7 +110,7 @@ export async function POST(req: NextRequest) {
 
     for (const r of reqs) {
       const { s3Key, workerPath } = modelPaths(MODELS_PREFIX, r)
-      const present = await objectExists(RUNPOD_BUCKET, s3Key) // <- boolean
+      const present = await checkModelPresence(RUNPOD_BUCKET, s3Key, r.name)
       // ✅ present is now a boolean, not an object
       presences.push(ModelPresenceSchema.parse({ ...r, present, s3Key, workerPath }))
     }

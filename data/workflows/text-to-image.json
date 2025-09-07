@@ -6,10 +6,7 @@
       "class_type": "CLIPTextEncode",
       "inputs": {
         "text": "a whimsical and intricate treehouse nestled in the branches of a giant, ancient cherry blossom tree, surrounded by a field of glowing flowers. A gentle stream flows nearby. Fantasy art, cinematic, volumetric lighting, epic scale.",
-        "clip": [
-          "30",
-          1
-        ]
+        "clip": ["30", 1]
       },
       "_meta": {
         "title": "CLIP Text Encode (Positive Prompt)"
@@ -18,14 +15,8 @@
     "8": {
       "class_type": "VAEDecode",
       "inputs": {
-        "samples": [
-          "31",
-          0
-        ],
-        "vae": [
-          "30",
-          2
-        ]
+        "samples": ["31", 0],
+        "vae": ["30", 2]
       },
       "_meta": {
         "title": "VAE Decode"
@@ -35,10 +26,7 @@
       "class_type": "SaveImage",
       "inputs": {
         "filename_prefix": "ComfyUI",
-        "images": [
-          "8",
-          0
-        ]
+        "images": ["8", 0]
       },
       "_meta": {
         "title": "Save Image"
@@ -58,7 +46,7 @@
     "30": {
       "class_type": "CheckpointLoaderSimple",
       "inputs": {
-        "ckpt_name": "flux1-dev-fp8.safetensors"
+        "ckpt_name": "flux1-dev.safetensors"
       },
       "_meta": {
         "title": "Load Checkpoint"
@@ -73,22 +61,10 @@
         "sampler_name": "euler",
         "scheduler": "simple",
         "denoise": 1,
-        "model": [
-          "30",
-          0
-        ],
-        "positive": [
-          "35",
-          0
-        ],
-        "negative": [
-          "33",
-          0
-        ],
-        "latent_image": [
-          "27",
-          0
-        ]
+        "model": ["30", 0],
+        "positive": ["35", 0],
+        "negative": ["33", 0],
+        "latent_image": ["27", 0]
       },
       "_meta": {
         "title": "KSampler"
@@ -98,10 +74,7 @@
       "class_type": "CLIPTextEncode",
       "inputs": {
         "text": "",
-        "clip": [
-          "30",
-          1
-        ]
+        "clip": ["30", 1]
       },
       "_meta": {
         "title": "CLIP Text Encode (Negative Prompt)"
@@ -111,10 +84,7 @@
       "class_type": "FluxGuidance",
       "inputs": {
         "guidance": 3.5,
-        "conditioning": [
-          "6",
-          0
-        ]
+        "conditioning": ["6", 0]
       },
       "_meta": {
         "title": "FluxGuidance"
@@ -123,10 +93,7 @@
     "38": {
       "class_type": "PreviewImage",
       "inputs": {
-        "images": [
-          "8",
-          0
-        ]
+        "images": ["8", 0]
       },
       "_meta": {
         "title": "Preview Image"
@@ -136,10 +103,7 @@
       "class_type": "SaveImage",
       "inputs": {
         "filename_prefix": "ComfyUI",
-        "images": [
-          "8",
-          0
-        ]
+        "images": ["8", 0]
       },
       "_meta": {
         "title": "Save Image"
