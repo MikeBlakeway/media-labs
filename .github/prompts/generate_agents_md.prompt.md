@@ -1,7 +1,18 @@
 ---
-description: "Prompt for generating an AGENTS.md file for a repository"
-mode: "agent"
-tools: ['codebase', 'usages', 'think', 'fetch', 'searchResults', 'editFiles', 'search', 'context7', 'sequentialthinking', 'markitdown']
+description: 'Prompt for generating an AGENTS.md file for a repository'
+mode: 'agent'
+tools: [
+    'codebase',
+    'usages',
+    'think',
+    'fetch',
+    'searchResults',
+    'editFiles',
+    'search',
+    'context7',
+    'sequentialthinking',
+    'markitdown'
+  ]
 ---
 
 # Create high‑quality AGENTS.md file
@@ -196,21 +207,18 @@ Here's a real example from the agents.md website:
 ## Implementation Steps
 
 1. **Analyze the project structure** to understand:
-
    - Programming languages and frameworks used
    - Package managers and build tools
    - Testing frameworks
    - Project architecture (monorepo, single package, etc.)
 
 2. **Identify key workflows** by examining:
-
    - package.json scripts
    - Makefile or other build files
    - CI/CD configuration files
    - Documentation files
 
 3. **Create comprehensive sections** covering:
-
    - All essential setup and development commands
    - Testing strategies and commands
    - Code style and conventions

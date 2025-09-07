@@ -1,7 +1,18 @@
 ---
 mode: 'agent'
 description: 'Create a README.md file for the project'
-tools: ['codebase', 'usages', 'think', 'fetch', 'searchResults', 'editFiles', 'search', 'context7', 'sequentialthinking', 'markitdown']
+tools: [
+    'codebase',
+    'usages',
+    'think',
+    'fetch',
+    'searchResults',
+    'editFiles',
+    'search',
+    'context7',
+    'sequentialthinking',
+    'markitdown'
+  ]
 ---
 
 ## Role

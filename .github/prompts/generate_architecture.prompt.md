@@ -1,8 +1,18 @@
 ---
 description: 'Comprehensive project architecture blueprint generator that analyzes codebases to create detailed architectural documentation. Automatically detects technology stacks and architectural patterns, generates visual diagrams, documents implementation patterns, and provides extensible blueprints for maintaining architectural consistency and guiding new development.'
 mode: 'agent'
-tools: ['codebase', 'usages', 'think', 'fetch', 'searchResults', 'editFiles', 'search', 'context7', 'sequentialthinking', 'markitdown']
-
+tools: [
+    'codebase',
+    'usages',
+    'think',
+    'fetch',
+    'searchResults',
+    'editFiles',
+    'search',
+    'context7',
+    'sequentialthinking',
+    'markitdown'
+  ]
 ---
 
 # Comprehensive Project Architecture Blueprint Generator
@@ -25,7 +35,6 @@ ${FOCUS_ON_EXTENSIBILITY=true|false} <!-- Emphasize extension points and pattern
 ### 1. Architecture Detection and Analysis
 
 - ${PROJECT_TYPE == "Auto-detect" ? "Analyze the project structure to identify all technology stacks and frameworks in use by examining:
-
   - Project and configuration files
   - Package dependencies and import statements
   - Framework-specific patterns and conventions
@@ -61,19 +70,16 @@ ${DIAGRAM_TYPE != "None" ? `Create ${DIAGRAM_TYPE} diagrams at multiple levels o
 For each architectural component discovered in the codebase:
 
 - **Purpose and Responsibility**:
-
   - Primary function within the architecture
   - Business domains or technical concerns addressed
   - Boundaries and scope limitations
 
 - **Internal Structure**:
-
   - Organization of classes/modules within the component
   - Key abstractions and their implementations
   - Design patterns utilized
 
 - **Interaction Patterns**:
-
   - How the component communicates with others
   - Interfaces exposed and consumed
   - Dependency injection patterns
@@ -106,28 +112,24 @@ For each architectural component discovered in the codebase:
 Document implementation patterns for cross-cutting concerns:
 
 - **Authentication & Authorization**:
-
   - Security model implementation
   - Permission enforcement patterns
   - Identity management approach
   - Security boundary patterns
 
 - **Error Handling & Resilience**:
-
   - Exception handling patterns
   - Retry and circuit breaker implementations
   - Fallback and graceful degradation strategies
   - Error reporting and monitoring approaches
 
 - **Logging & Monitoring**:
-
   - Instrumentation patterns
   - Observability implementation
   - Diagnostic information flow
   - Performance monitoring approach
 
 - **Validation**:
-
   - Input validation strategies
   - Business rule validation implementation
   - Validation responsibility distribution
@@ -207,28 +209,24 @@ ${INCLUDES_IMPLEMENTATION_PATTERNS ?
 "Document concrete implementation patterns for key architectural components:
 
 - **Interface Design Patterns**:
-
   - Interface segregation approaches
   - Abstraction level decisions
   - Generic vs. specific interface patterns
   - Default implementation patterns
 
 - **Service Implementation Patterns**:
-
   - Service lifetime management
   - Service composition patterns
   - Operation implementation templates
   - Error handling within services
 
 - **Repository Implementation Patterns**:
-
   - Query pattern implementations
   - Transaction management
   - Concurrency handling
   - Bulk operation patterns
 
 - **Controller/API Implementation Patterns**:
-
   - Request handling patterns
   - Response formatting approaches
   - Parameter validation
@@ -263,14 +261,12 @@ ${FOCUS_ON_EXTENSIBILITY ?
 "Provide detailed guidance for extending the architecture:
 
 - **Feature Addition Patterns**:
-
   - How to add new features while preserving architectural integrity
   - Where to place new components by type
   - Dependency introduction guidelines
   - Configuration extension patterns
 
 - **Modification Patterns**:
-
   - How to safely modify existing components
   - Strategies for maintaining backward compatibility
   - Deprecation patterns
@@ -287,13 +283,11 @@ ${INCLUDES_CODE_EXAMPLES ?
 Extract representative code examples that illustrate key architectural patterns:
 
 - **Layer Separation Examples**:
-
   - Interface definition and implementation separation
   - Cross-layer communication patterns
   - Dependency injection examples
 
 - **Component Communication Examples**:
-
   - Service invocation patterns
   - Event publication and handling
   - Message passing implementation
@@ -310,13 +304,11 @@ ${INCLUDES_DECISION_RECORDS ?
 Document key architectural decisions evident in the codebase:
 
 - **Architectural Style Decisions**:
-
   - Why the current architectural pattern was chosen
   - Alternatives considered (based on code evolution)
   - Constraints that influenced the decision
 
 - **Technology Selection Decisions**:
-
   - Key technology choices and their architectural impact
   - Framework selection rationales
   - Custom vs. off-the-shelf component decisions
@@ -345,14 +337,12 @@ For each decision, note:
 Create a clear architectural guide for implementing new features:
 
 - **Development Workflow**:
-
   - Starting points for different feature types
   - Component creation sequence
   - Integration steps with existing architecture
   - Testing approach by architectural layer
 
 - **Implementation Templates**:
-
   - Base class/interface templates for key architectural components
   - Standard file organization for new components
   - Dependency declaration patterns

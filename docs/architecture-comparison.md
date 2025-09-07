@@ -160,14 +160,12 @@ export interface TemplateMeta {
 ## Recommended Approach
 
 1. **Keep your unique value propositions**:
-
    - Template system with parameter patching
    - Next.js API integration
    - TypeScript type safety
    - S3 volume model loading
 
 2. **Adopt proven patterns from original**:
-
    - Robust error handling and configuration
    - Local development tools
    - comfy-cli integration

@@ -2,34 +2,31 @@
   "name": "media-labs",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "setup": "npm install && npm run env:setup",
-    "env:setup": "test -f .env || cp .env.example .env",
-    "env:check": "node -e \"const required=['RUNPOD_API_KEY','RUNPOD_ENDPOINT_ID','RUNPOD_S3_ACCESS_KEY_ID','RUNPOD_S3_SECRET_ACCESS_KEY']; required.forEach(v => { if(!process.env[v]) { console.error('Missing env var:', v); process.exit(1); } }); console.log('✅ All required env vars present');\"",
-    "dev": "npm run dev --workspace=packages/web",
-    "dev:web": "npm run dev --workspace=packages/web",
-    "dev:worker": "npm run dev --workspace=packages/worker",
-    "build": "npm run build --workspace=packages/web && npm run build --workspace=packages/worker",
-    "build:web": "npm run build --workspace=packages/web",
-    "build:worker": "npm run build --workspace=packages/worker",
-    "start": "npm run start --workspace=packages/web",
-    "lint": "npm run lint --workspaces --if-present",
-    "lint:web": "npm run lint --workspace=packages/web",
-    "test": "npm run test --workspaces --if-present",
-    "test:web": "npm run test --workspace=packages/web",
-    "test:worker": "npm run test --workspace=packages/worker",
-    "clean": "rm -rf node_modules packages/*/node_modules packages/*/.next packages/*/dist",
-    "format": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
-    "type-check": "npm run type-check --workspaces --if-present"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.879.0",
+    "@aws-sdk/s3-request-presigner": "^3.879.0",
+    "dotenv": "^17.2.2",
+    "next": "15.5.2",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
-    "prettier": "^3.0.0"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

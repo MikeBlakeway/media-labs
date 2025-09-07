@@ -28,6 +28,7 @@ Explicitly exclude unrelated areas.
 ---
 
 ## Acceptance criteria
+
 <!-- Define clear, testable acceptance criteria that cover all aspects of the story. Use the "Given/When/Then" format for clarity. -->
 
 - Given [trigger/action], when [event/API call/validation], then [expected outcome in UI/state].
@@ -40,9 +41,11 @@ Explicitly exclude unrelated areas.
 ---
 
 ## Checklist
+
 <!-- Provide a developer checklist to ensure all aspects of the story are covered. Break down tasks into manageable items. -->
 
 ### Inspect and modify:
+
 <!-- Example descriptions are provided; adjust as needed for the specific story. -->
 
 - [ ] `[filepath]` — ensure handlers perform required actions and state verification.
@@ -51,6 +54,7 @@ Explicitly exclude unrelated areas.
 - [ ] `[filepath]` — ensure real-time updates reconcile with verification logic.
 
 ### Tests:
+
 <!-- Tests should cover all acceptance criteria, including success and error paths. -->
 
 - [ ] Unit: `[filepath]` — detail tests for all functions and components.
@@ -59,6 +63,7 @@ Explicitly exclude unrelated areas.
 - [ ] Ensure tests cover success, error, and edge cases for all acceptance criteria.
 
 ### General:
+
 <!-- Add common tasks to ensure code quality and maintainability in this section. Be sure to include i18n and documentation updates. -->
 
 - [ ] `[filepath]` — add/use i18n key for error messages and ensure modal/feedback is shown.
@@ -68,7 +73,6 @@ Explicitly exclude unrelated areas.
 - [ ] Keep implementation hook-based and reuse existing endpoints.
 - [ ] Use i18n via `next-intl` `useTranslations()` in UI components.
 - [ ] Documentation updated (if applicable)
-
 
 ---
 

@@ -15,13 +15,11 @@ When generating code for this repository:
 Before generating code, scan the codebase to identify:
 
 1. **Language Versions**:
-
    - TypeScript 5.x with strict mode enabled (see tsconfig.json)
    - ES2017 target with modern ESNext modules
    - Node.js 18+ (20+ recommended per README.md)
 
 2. **Framework Versions**:
-
    - Next.js 15.5.2 with App Router architecture
    - React 19.1.0 with React DOM 19.1.0
    - TailwindCSS 4.x with PostCSS configuration

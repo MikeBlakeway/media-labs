@@ -2,44 +2,46 @@
 
 ## Project Overview
 
-Media Labs is a modern monorepo combining a Next.js web application with a ComfyUI worker for AI-powered image generation. The project uses a professional workspace structure with comprehensive automation via Makefile.
+Media Labs is a Next.js web application for AI-powered image generation using RunPod's hosted ComfyUI serverless endpoints. The project uses a simplified single-repository structure with automation via Makefile.
 
 ## Repository Structure
 
 ```bash
 media-labs/
 ├── AGENTS.md                    # This file - AI agent guidance
-├── Makefile                     # Comprehensive automation commands
+├── Makefile                     # Development automation commands
 ├── README.md                    # Main project documentation
-├── package.json                 # Workspace root configuration
+├── package.json                 # Next.js application configuration
+├── next.config.ts               # Next.js configuration
+├── tsconfig.json                # TypeScript configuration
+├── tailwind.config.ts           # Tailwind CSS configuration
 ├── .env.example                 # Environment variable template
-├── packages/
-│   ├── web/                     # Next.js application (TypeScript, React 19, Tailwind)
-│   └── worker/                  # ComfyUI worker (Python, Docker, RunPod)
-├── tools/                       # Shared tooling configurations
-├── docs/                        # All project documentation
-├── scripts/                     # Development automation scripts
-└── data/                        # Shared data and configurations
+├── src/                         # Next.js application source code
+│   ├── app/                     # App Router (pages and API routes)
+│   ├── components/              # React components
+│   └── lib/                     # Utilities and libraries
+├── public/                      # Static assets
+├── docs/                        # Project documentation
+└── data/                        # Workflow templates
 ```
 
 ## Architecture Overview
 
-### Web Application (`packages/web/`)
+### Next.js Web Application
 
 - **Framework**: Next.js 15.5.2 with App Router
 - **Language**: TypeScript 5.x with strict mode
 - **UI**: React 19.1.0 + Tailwind CSS 4.x
 - **Validation**: Zod 4.1.5 for runtime schema validation
-- **API Layer**: Next.js API routes acting as middleware to RunPod worker
+- **API Layer**: Next.js API routes acting as middleware to RunPod ComfyUI endpoints
 - **Template System**: Workflow templates stored in `data/workflows/` with parameter patching
 
-### Worker (`packages/worker/`)
+### RunPod Integration
 
-- **Base**: ComfyUI serverless worker on RunPod platform
-- **Runtime**: Python 3.12 with RunPod serverless framework
-- **Models**: Downloaded at runtime from HuggingFace to S3 volume
-- **Storage**: RunPod S3-compatible volume for models, Backblaze B2 for outputs
-- **Deployment**: Docker images built locally and pushed to GitHub Container Registry
+- **Endpoint**: Hosted ComfyUI serverless endpoints on RunPod
+- **Models**: Pre-configured on RunPod infrastructure
+- **Execution**: Direct API calls to RunPod endpoints
+- **Storage**: Optional S3 volume for custom models/assets
 
 ## Development Workflows
 
@@ -50,23 +52,19 @@ media-labs/
 make setup
 
 # Daily development
-make dev                    # Start all services
-make dev-web               # Web app only
-make dev-worker            # Worker only
+make dev                    # Start web application
 
 # Building and deployment
-make build                 # Build everything
-make push                  # Build and push worker image
-make deploy                # Full deployment pipeline
+make build                 # Build web application
+make deploy                # Prepare for deployment
 
 # Code quality
-make lint                  # Lint all code
-make format                # Format all code
-make test                  # Run all tests
+make lint                  # Lint code
+make format                # Format code
+make test                  # Run tests
 
 # Environment management
 make env-check             # Verify environment variables
-make env-setup             # Initialize environment from template
 ```
 
 ### Environment Variables
@@ -78,22 +76,26 @@ make env-setup             # Initialize environment from template
 RUNPOD_API_KEY=your_api_key
 RUNPOD_ENDPOINT_ID=your_endpoint_id
 
-# RunPod S3 Volume
+# Optional: Local development worker
+USE_LOCAL_WORKER=false
+LOCAL_WORKER_URL=http://localhost:8000
+```
+
+**Optional (for custom model uploads and storage):**
+
+```bash
+# RunPod S3 Volume (optional)
 RUNPOD_S3_ACCESS_KEY_ID=your_access_key
 RUNPOD_S3_SECRET_ACCESS_KEY=your_secret_key
 RUNPOD_S3_ENDPOINT=https://volume_id.vol.runpod.net
 RUNPOD_S3_REGION=us-east-1
 RUNPOD_VOLUME_ID=your_volume_id
 
-# Backblaze B2 (for output storage)
+# Backblaze B2 (optional - for output storage)
 B2_S3_ACCESS_KEY_ID=your_b2_key
 B2_S3_SECRET_ACCESS_KEY=your_b2_secret
 B2_S3_ENDPOINT=your_b2_endpoint
 B2_S3_BUCKET=your_b2_bucket
-
-# Development
-USE_LOCAL_WORKER=true              # Use local worker for development
-LOCAL_WORKER_URL=http://localhost:8000
 ```
 
 ## Key Design Patterns
@@ -114,7 +116,20 @@ if (!parsed.success) {
 }
 ```
 
-### S3 Operations Pattern
+### RunPod Integration Pattern
+
+```typescript
+import { runSync, runAsync } from '@/lib/runpod'
+
+// For quick workflows (< 20MB)
+const result = await runSync({ workflow })
+
+// For larger workflows or async processing
+const { id } = await runAsync({ workflow })
+// Poll status with: await getStatus(id)
+```
+
+### S3 Operations Pattern (Optional)
 
 ```typescript
 try {
