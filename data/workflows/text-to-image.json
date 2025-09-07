@@ -1,0 +1,251 @@
+{
+  "slug": "text-to-image",
+  "name": "Text to Image (FLUX)",
+  "workflow": {
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "a whimsical and intricate treehouse nestled in the branches of a giant, ancient cherry blossom tree, surrounded by a field of glowing flowers. A gentle stream flows nearby. Fantasy art, cinematic, volumetric lighting, epic scale.",
+        "clip": [
+          "30",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "CLIP Text Encode (Positive Prompt)"
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "31",
+          0
+        ],
+        "vae": [
+          "30",
+          2
+        ]
+      },
+      "_meta": {
+        "title": "VAE Decode"
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "ComfyUI",
+        "images": [
+          "8",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Save Image"
+      }
+    },
+    "27": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 512,
+        "height": 512,
+        "batch_size": 1
+      },
+      "_meta": {
+        "title": "EmptySD3LatentImage"
+      }
+    },
+    "30": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "flux1-dev-fp8.safetensors"
+      },
+      "_meta": {
+        "title": "Load Checkpoint"
+      }
+    },
+    "31": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 243057879077961,
+        "steps": 10,
+        "cfg": 1,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "model": [
+          "30",
+          0
+        ],
+        "positive": [
+          "35",
+          0
+        ],
+        "negative": [
+          "33",
+          0
+        ],
+        "latent_image": [
+          "27",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "33": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "",
+        "clip": [
+          "30",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "CLIP Text Encode (Negative Prompt)"
+      }
+    },
+    "35": {
+      "class_type": "FluxGuidance",
+      "inputs": {
+        "guidance": 3.5,
+        "conditioning": [
+          "6",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "FluxGuidance"
+      }
+    },
+    "38": {
+      "class_type": "PreviewImage",
+      "inputs": {
+        "images": [
+          "8",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Preview Image"
+      }
+    },
+    "40": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "ComfyUI",
+        "images": [
+          "8",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Save Image"
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "text_6_text",
+      "label": "Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "a whimsical and intricate treehouse nestled in the branches of a giant, ancient cherry blossom tree, surrounded by a field of glowing flowers. A gentle stream flows nearby. Fantasy art, cinematic, volumetric lighting, epic scale.",
+      "nodeId": "6",
+      "inputKey": "text"
+    },
+    {
+      "id": "save_9_prefix",
+      "label": "Filename prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "ComfyUI",
+      "nodeId": "9",
+      "inputKey": "filename_prefix"
+    },
+    {
+      "id": "ckpt_30_ckpt_name",
+      "label": "Checkpoint (ckpt_name)",
+      "type": "string",
+      "required": true,
+      "defaultValue": "flux1-dev-fp8.safetensors",
+      "nodeId": "30",
+      "inputKey": "ckpt_name"
+    },
+    {
+      "id": "ks_31_seed",
+      "label": "Seed",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 243057879077961,
+      "nodeId": "31",
+      "inputKey": "seed"
+    },
+    {
+      "id": "ks_31_steps",
+      "label": "Steps",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 10,
+      "nodeId": "31",
+      "inputKey": "steps"
+    },
+    {
+      "id": "ks_31_cfg",
+      "label": "CFG",
+      "type": "number",
+      "required": true,
+      "defaultValue": 1,
+      "nodeId": "31",
+      "inputKey": "cfg"
+    },
+    {
+      "id": "ks_31_sampler",
+      "label": "Sampler",
+      "type": "string",
+      "required": true,
+      "defaultValue": "euler",
+      "nodeId": "31",
+      "inputKey": "sampler_name"
+    },
+    {
+      "id": "ks_31_scheduler",
+      "label": "Scheduler",
+      "type": "string",
+      "required": true,
+      "defaultValue": "simple",
+      "nodeId": "31",
+      "inputKey": "scheduler"
+    },
+    {
+      "id": "ks_31_denoise",
+      "label": "Denoise",
+      "type": "number",
+      "required": false,
+      "defaultValue": 1,
+      "nodeId": "31",
+      "inputKey": "denoise"
+    },
+    {
+      "id": "text_33_text",
+      "label": "Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "",
+      "nodeId": "33",
+      "inputKey": "text"
+    },
+    {
+      "id": "save_40_prefix",
+      "label": "Filename prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "ComfyUI",
+      "nodeId": "40",
+      "inputKey": "filename_prefix"
+    }
+  ],
+  "createdAt": 1757283689456
+}
