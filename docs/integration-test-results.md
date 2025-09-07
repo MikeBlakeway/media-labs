@@ -121,7 +121,7 @@ echo "USE_LOCAL_WORKER=false" >> .env.local
 
 ## Conclusion
 
-**🎯 Integration Test: SUCCESSFUL**
+### 🎯 Integration Test: SUCCESSFUL
 
 The Media Labs ComfyUI worker integration is **production-ready**. The local development environment correctly simulates the production RunPod deployment, with the only difference being GPU availability.
 
@@ -134,4 +134,4 @@ All API endpoints, data formats, and integration points are working correctly.
 
 ---
 
-**Ready for production deployment! 🚀**
+Ready for production deployment! 🚀
