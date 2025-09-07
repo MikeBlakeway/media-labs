@@ -73,7 +73,7 @@ MODEL_TYPE=flux1-dev-fp8
 HUGGINGFACE_ACCESS_TOKEN=your_hf_token
 ```
 
-#### Local Development
+#### Local Development Settings
 
 ```bash
 # Disable S3 model downloading
@@ -197,7 +197,7 @@ docker run --rm -it \
   python /usr/local/bin/download-models
 ```
 
-### Local Development
+### Local Development Setup
 
 ```bash
 # Build and test locally

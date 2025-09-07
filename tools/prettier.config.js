@@ -1,0 +1,16 @@
+const prettierConfig = {
+  arrowParens: "avoid",
+  bracketSameLine: false,
+  bracketSpacing: true,
+  endOfLine: "lf",
+  jsxSingleQuote: true,
+  printWidth: 120,
+  proseWrap: "preserve",
+  quoteProps: "as-needed",
+  semi: false,
+  singleQuote: true,
+  trailingComma: "none",
+  useTabs: false
+};
+
+export default prettierConfig;

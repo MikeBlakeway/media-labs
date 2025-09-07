@@ -1,0 +1,17 @@
+{
+  "slug": "simple-test",
+  "name": "Simple Test",
+  "workflow": {
+    "1": {
+      "inputs": {
+        "text": "Hello from ComfyUI!"
+      },
+      "class_type": "Note",
+      "_meta": {
+        "title": "Test Note"
+      }
+    }
+  },
+  "fields": [],
+  "createdAt": 1725676800000
+}

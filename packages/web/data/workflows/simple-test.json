@@ -1,0 +1,19 @@
+{
+  "slug": "simple-test",
+  "name": "Simple Test",
+  "workflow": {
+    "1": {
+      "inputs": {
+        "width": 32,
+        "height": 32,
+        "batch_size": 1
+      },
+      "class_type": "EmptyLatentImage",
+      "_meta": {
+        "title": "Generate Empty Latent"
+      }
+    }
+  },
+  "fields": [],
+  "createdAt": 1725676800000
+}

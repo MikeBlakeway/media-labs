@@ -1,0 +1,231 @@
+{
+  "slug": "text-to-image",
+  "name": "text-to-image",
+  "workflow": {
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 156680208700286,
+        "steps": 20,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "normal",
+        "denoise": 1,
+        "model": [
+          "4",
+          0
+        ],
+        "positive": [
+          "6",
+          0
+        ],
+        "negative": [
+          "7",
+          0
+        ],
+        "latent_image": [
+          "5",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "v1-5-pruned-emaonly-fp16.safetensors"
+      },
+      "_meta": {
+        "title": "Load Checkpoint"
+      }
+    },
+    "5": {
+      "class_type": "EmptyLatentImage",
+      "inputs": {
+        "width": 512,
+        "height": 512,
+        "batch_size": 1
+      },
+      "_meta": {
+        "title": "Empty Latent Image"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
+        "clip": [
+          "4",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "CLIP Text Encode (Prompt)"
+      }
+    },
+    "7": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "text, watermark",
+        "clip": [
+          "4",
+          1
+        ]
+      },
+      "_meta": {
+        "title": "CLIP Text Encode (Prompt)"
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": [
+          "3",
+          0
+        ],
+        "vae": [
+          "4",
+          2
+        ]
+      },
+      "_meta": {
+        "title": "VAE Decode"
+      }
+    },
+    "9": {
+      "class_type": "SaveImage",
+      "inputs": {
+        "filename_prefix": "ComfyUI",
+        "images": [
+          "8",
+          0
+        ]
+      },
+      "_meta": {
+        "title": "Save Image"
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "ks_3_seed",
+      "label": "Seed",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 156680208700286,
+      "nodeId": "3",
+      "inputKey": "seed"
+    },
+    {
+      "id": "ks_3_steps",
+      "label": "Steps",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 20,
+      "nodeId": "3",
+      "inputKey": "steps"
+    },
+    {
+      "id": "ks_3_cfg",
+      "label": "CFG",
+      "type": "number",
+      "required": true,
+      "defaultValue": 8,
+      "nodeId": "3",
+      "inputKey": "cfg"
+    },
+    {
+      "id": "ks_3_sampler",
+      "label": "Sampler",
+      "type": "string",
+      "required": true,
+      "defaultValue": "euler",
+      "nodeId": "3",
+      "inputKey": "sampler_name"
+    },
+    {
+      "id": "ks_3_scheduler",
+      "label": "Scheduler",
+      "type": "string",
+      "required": true,
+      "defaultValue": "normal",
+      "nodeId": "3",
+      "inputKey": "scheduler"
+    },
+    {
+      "id": "ks_3_denoise",
+      "label": "Denoise",
+      "type": "number",
+      "required": false,
+      "defaultValue": 1,
+      "nodeId": "3",
+      "inputKey": "denoise"
+    },
+    {
+      "id": "ckpt_4_ckpt_name",
+      "label": "Checkpoint (ckpt_name)",
+      "type": "string",
+      "required": true,
+      "defaultValue": "v1-5-pruned-emaonly-fp16.safetensors",
+      "nodeId": "4",
+      "inputKey": "ckpt_name"
+    },
+    {
+      "id": "eli_5_width",
+      "label": "Width",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 512,
+      "nodeId": "5",
+      "inputKey": "width"
+    },
+    {
+      "id": "eli_5_height",
+      "label": "Height",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 512,
+      "nodeId": "5",
+      "inputKey": "height"
+    },
+    {
+      "id": "eli_5_batch",
+      "label": "Batch size",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 1,
+      "nodeId": "5",
+      "inputKey": "batch_size"
+    },
+    {
+      "id": "text_6_text",
+      "label": "Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
+      "nodeId": "6",
+      "inputKey": "text"
+    },
+    {
+      "id": "text_7_text",
+      "label": "Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "text, watermark",
+      "nodeId": "7",
+      "inputKey": "text"
+    },
+    {
+      "id": "save_9_prefix",
+      "label": "Filename prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "ComfyUI",
+      "nodeId": "9",
+      "inputKey": "filename_prefix"
+    }
+  ],
+  "createdAt": 1757208510202
+}

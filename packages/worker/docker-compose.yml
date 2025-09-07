@@ -17,6 +17,12 @@ services:
     environment:
       - SERVE_API_LOCALLY=true
       - COMFY_LOG_LEVEL=INFO
+      - CUDA_VISIBLE_DEVICES=""
+      - FORCE_CPU=true
+      - CPU_ONLY=true
+      - COMMANDLINE_ARGS="--force-fp16 --cpu"
+      - PYTORCH_CUDA_ALLOC_CONF=""
+      - TORCH_CUDA_DEVICE_COUNT=0
       # Optional: Configure S3 upload for local testing
       # - BUCKET_ENDPOINT_URL=${BUCKET_ENDPOINT_URL}
       # - BUCKET_ACCESS_KEY_ID=${BUCKET_ACCESS_KEY_ID}
