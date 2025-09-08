@@ -22,12 +22,7 @@ interface ProgressIndicatorProps {
   attempts?: number
 }
 
-export function ProgressIndicator({ 
-  status, 
-  jobId, 
-  startTime, 
-  attempts = 0 
-}: ProgressIndicatorProps) {
+export function ProgressIndicator({ status, jobId, startTime, attempts = 0 }: ProgressIndicatorProps) {
   // Use hooks for business logic
   const timer = useProgressTimer(startTime, status)
   const { calculation } = useProgressCalculation(status, timer.elapsedSeconds)
@@ -43,32 +38,23 @@ export function ProgressIndicator({
       <ProgressHeader
         isTerminalState={calculation.isTerminalState}
         formattedElapsed={timer.formattedElapsed}
-        formattedRemaining={!calculation.isTerminalState && calculation.estimatedRemaining > 0 
-          ? calculation.formattedRemaining 
-          : undefined}
+        formattedRemaining={
+          !calculation.isTerminalState && calculation.estimatedRemaining > 0
+            ? calculation.formattedRemaining
+            : undefined
+        }
         jobId={jobId}
-        className="mb-4"
+        className='mb-4'
       />
 
       {/* Overall progress bar */}
-      <ProgressBar
-        progress={calculation.progress}
-        status={status}
-        className="mb-4"
-      />
+      <ProgressBar progress={calculation.progress} status={status} className='mb-4' />
 
       {/* Stage indicators */}
-      <ProgressStages
-        currentStageIndex={calculation.currentStageIndex}
-        isTerminalState={calculation.isTerminalState}
-      />
+      <ProgressStages currentStageIndex={calculation.currentStageIndex} isTerminalState={calculation.isTerminalState} />
 
       {/* Additional alerts and warnings */}
-      <ProgressAlerts
-        status={status}
-        attempts={attempts}
-        className="mt-3"
-      />
+      <ProgressAlerts status={status} attempts={attempts} className='mt-3' />
     </div>
   )
 }

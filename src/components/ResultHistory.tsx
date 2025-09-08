@@ -21,7 +21,7 @@ interface ResultHistoryProps {
 
 export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProps) {
   const [selectedResult, setSelectedResult] = useState<HistoryItem | null>(null)
-  
+
   // Use our history hook for all data management
   const history = useResultHistory(currentSlug)
 
@@ -70,9 +70,7 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
           <button
             onClick={() => history.setFilter('current')}
             className={`px-3 py-1 text-sm rounded ${
-              history.filter === 'current'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              history.filter === 'current' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             Current
@@ -80,9 +78,7 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
           <button
             onClick={() => history.setFilter('all')}
             className={`px-3 py-1 text-sm rounded ${
-              history.filter === 'all'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              history.filter === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             All
@@ -107,10 +103,7 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
       {history.error && (
         <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-4'>
           <p className='text-red-700 text-sm'>{history.error}</p>
-          <button
-            onClick={history.loadHistory}
-            className='mt-2 text-red-600 hover:text-red-800 text-sm underline'
-          >
+          <button onClick={history.loadHistory} className='mt-2 text-red-600 hover:text-red-800 text-sm underline'>
             Try again
           </button>
         </div>
@@ -153,29 +146,25 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
                 </div>
 
                 {/* Status Badge */}
-                <div className={`inline-block px-2 py-1 text-xs rounded ${statusColorClass} mb-2`}>
-                  {item.status}
-                </div>
+                <div className={`inline-block px-2 py-1 text-xs rounded ${statusColorClass} mb-2`}>{item.status}</div>
 
                 {/* Metadata */}
                 <div className='text-xs text-gray-600 space-y-1'>
                   <div>{formatTimeAgo(item.timestamp)}</div>
                   {item.slug && history.filter === 'all' && (
-                    <div className='font-mono text-xs bg-gray-100 px-1 rounded'>
-                      {item.slug}
-                    </div>
+                    <div className='font-mono text-xs bg-gray-100 px-1 rounded'>{item.slug}</div>
                   )}
-                  {item.duration && (
-                    <div>⏱️ {Math.round(item.duration / 1000)}s</div>
-                  )}
+                  {item.duration && <div>⏱️ {Math.round(item.duration / 1000)}s</div>}
                   {item.output?.images && (
-                    <div>🖼️ {item.output.images.length} image{item.output.images.length !== 1 ? 's' : ''}</div>
+                    <div>
+                      🖼️ {item.output.images.length} image{item.output.images.length !== 1 ? 's' : ''}
+                    </div>
                   )}
                 </div>
 
                 {/* Download Button */}
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation()
                     history.downloadResult(item)
                   }}
@@ -196,10 +185,7 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
           <div className='bg-white rounded-xl max-w-4xl max-h-[90vh] overflow-auto p-6'>
             <div className='flex items-center justify-between mb-4'>
               <h3 className='font-medium text-lg'>Result Details</h3>
-              <button
-                onClick={closeModal}
-                className='text-gray-400 hover:text-gray-600 text-xl'
-              >
+              <button onClick={closeModal} className='text-gray-400 hover:text-gray-600 text-xl'>
                 ✕
               </button>
             </div>
@@ -236,7 +222,7 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
                     {selectedResult.output.images.map((img, imgIndex) => {
                       const base64Data = img.base64 || img.data
                       const imageUrl = img.url
-                      
+
                       return (
                         <div key={imgIndex} className='space-y-2'>
                           {base64Data ? (

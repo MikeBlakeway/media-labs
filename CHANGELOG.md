@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Component Refactoring Achievements
 
 - **WorkflowRunner.tsx**: 892 → 219 lines (75.5% reduction)
-- **UploadCard.tsx**: 84 → 41 lines (51% reduction)  
+- **UploadCard.tsx**: 84 → 41 lines (51% reduction)
 - **page.tsx**: 62 → 45 lines (27% reduction)
 - **manage/page.tsx**: 53 → 36 lines (32% reduction)
 - **register/page.tsx**: 190 → 176 lines (7% reduction)
