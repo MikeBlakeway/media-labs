@@ -8,6 +8,7 @@
 // Template and workflow management
 export { useWorkflowTemplate } from './useWorkflowTemplate'
 export type { UseWorkflowTemplateResult } from './useWorkflowTemplate'
+export { useWorkflowsList } from './useWorkflowsList'
 
 // Form management
 export { useWorkflowForm } from './useWorkflowForm'
