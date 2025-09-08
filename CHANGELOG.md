@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-09-08
 
 ### Added
+
 - **Complete End-to-End Workflow Execution**: Full workflow execution from form submission to result display
 - **Real-time Progress Tracking**: Live progress indicators showing workflow stages (Waiting for worker → Loading models → Generating content → Processing results)
 - **Result History Management**: View, filter, and manage previous workflow results with thumbnail gallery
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TypeScript Safety**: Full type safety throughout the application
 
 ### Technical Features
+
 - **RunPod Integration**: Complete integration with RunPod serverless ComfyUI endpoints
 - **Polling System**: Robust job status polling with proper cleanup and error handling
 - **Response Format Support**: Handles both legacy and RunPod-native response formats
@@ -28,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **TailwindCSS UI**: Modern, responsive interface with consistent design
 
 ### Infrastructure
+
 - **Next.js 15.5.2**: Latest Next.js with App Router architecture
 - **React 19.1.0**: Latest React with modern hooks and patterns
 - **TypeScript 5.x**: Strict TypeScript configuration for type safety
@@ -35,12 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AWS SDK v3**: S3 integration for file storage and management
 
 ### Bug Fixes
+
 - **Critical Polling Fix**: Fixed schema validation order that was preventing async workflows from starting polling
 - **Response Handling**: Corrected async vs sync response detection logic
 - **Image Display**: Fixed base64 image rendering in both thumbnails and full-size displays
 - **Error Boundaries**: Proper error handling and user feedback throughout the application
 
 ### Developer Experience
+
 - **Clean Codebase**: Removed debug logging and prepared for production
 - **Documentation**: Comprehensive README with features and setup instructions
 - **Type Safety**: Full TypeScript coverage with proper error handling patterns
