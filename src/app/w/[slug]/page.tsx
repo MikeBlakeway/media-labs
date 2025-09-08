@@ -178,26 +178,24 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
           </button>
         )}
 
-        <div className='self-center'>
-          <JobStatusDisplay
-            job={{
-              jobId,
-              status,
-              jobResults,
-              jobError,
-              submitting,
-              jobStartTime,
-              pollAttempts,
-              submitJob,
-              cancelJob,
-              forceCheckStatus,
-              resetJob: () => {},
-              isTerminal,
-              isSuccess: status === 'completed',
-              duration: jobStartTime ? Date.now() - jobStartTime : undefined
-            }}
-          />
-        </div>
+        <JobStatusDisplay
+          job={{
+            jobId,
+            status,
+            jobResults,
+            jobError,
+            submitting,
+            jobStartTime,
+            pollAttempts,
+            submitJob,
+            cancelJob,
+            forceCheckStatus,
+            resetJob: () => {},
+            isTerminal,
+            isSuccess: status === 'completed',
+            duration: jobStartTime ? Date.now() - jobStartTime : undefined
+          }}
+        />
       </div>
 
       {/* Progress Indicator */}
