@@ -10,6 +10,7 @@ A modern Next.js web application for AI-powered image generation using RunPod's 
 ## ✨ Features
 
 - **🎨 AI Image Generation**: Generate high-quality images using Flux and other AI models
+- **🏗️ Hooks-Based Architecture**: Clean, modular code with comprehensive custom hooks
 - **📊 Real-time Progress Tracking**: Live progress indicators during workflow execution
 - **📚 Result History**: View and manage previous workflow results with thumbnails
 - **⚡ Async/Sync Support**: Handles both synchronous and asynchronous RunPod endpoints
@@ -17,6 +18,7 @@ A modern Next.js web application for AI-powered image generation using RunPod's 
 - **💾 S3 Integration**: Seamless file upload to RunPod volumes
 - **🎯 TypeScript**: Full type safety with Zod schema validation
 - **📱 Responsive UI**: Modern, clean interface built with TailwindCSS
+- **🔧 Component Composition**: Modular UI components with clear separation of concerns
 
 ## 🚀 Quick Start
 
@@ -66,21 +68,53 @@ LOCAL_WORKER_URL=http://localhost:8000
 
 ```bash
 media-labs/
-├── src/              # Next.js application source
-│   ├── app/          # App Router (pages and API routes)
-│   ├── components/   # React components
-│   └── lib/          # Utilities and libraries
-├── public/           # Static assets
-├── data/             # Workflow templates
-├── docs/             # Documentation
-├── Makefile          # Development automation
-├── package.json      # Dependencies and scripts
-├── next.config.ts    # Next.js configuration
-├── tsconfig.json     # TypeScript configuration
-└── AGENTS.md         # AI agent guidance
+├── src/                         # Next.js application source
+│   ├── app/                     # App Router (pages and API routes)
+│   │   ├── api/                 # API routes for RunPod integration
+│   │   ├── w/[slug]/            # Dynamic workflow pages
+│   │   ├── manage/              # Workflow management pages
+│   │   └── register/            # Workflow registration
+│   ├── components/              # UI components (22 components)
+│   │   ├── FormFields.tsx       # Form input components
+│   │   ├── WorkflowRunner.tsx   # Main workflow execution
+│   │   ├── ProgressIndicator.tsx # Progress tracking UI
+│   │   └── ...                  # Other specialized components
+│   ├── hooks/                   # Custom hooks (21 hooks)
+│   │   ├── useWorkflowTemplate.ts  # Template loading
+│   │   ├── useJobManagement.ts     # Job execution & polling
+│   │   ├── useFileUpload.ts        # File upload handling
+│   │   └── ...                     # Other business logic hooks
+│   └── lib/                     # Utilities and libraries
+│       ├── workflow.*.ts        # Workflow processing
+│       ├── runpod*.ts          # RunPod integration
+│       └── templates.*.ts      # Template management
+├── public/                      # Static assets
+├── data/                        # Workflow templates
+├── docs/                        # RunPod documentation
+├── .github/                     # GitHub configuration & prompts
+├── Makefile                     # Development automation
+├── package.json                 # Dependencies and scripts
+├── next.config.ts              # Next.js configuration
+├── tsconfig.json               # TypeScript configuration
+└── AGENTS.md                   # AI agent guidance
 ```
 
 ## 🏗️ Architecture
+
+### Hooks-Based Architecture
+
+The application follows a comprehensive **hooks-based architecture** where:
+
+- **21 Custom Hooks**: All business logic extracted into focused, reusable hooks
+- **22 UI Components**: Pure presentation components that consume hooks
+- **Complete Separation**: Clear boundaries between logic (hooks) and presentation (components)
+
+#### Key Hook Categories
+
+- **Workflow Management**: `useWorkflowTemplate`, `useWorkflowsList`, `useWorkflowRegistration`
+- **Job Execution**: `useJobManagement`, `useEnhancedPolling`, `useWorkflowRunnerJob`
+- **Form & UI**: `useWorkflowForm`, `useFileUpload`, `useFieldLabeling`
+- **Specialized**: `useManualPreflight`, `useResultHistory`, `useProgressCalculation`
 
 ### Next.js Web Application
 
@@ -89,6 +123,7 @@ media-labs/
 - **UI**: React 19.1.0 + Tailwind CSS 4.x
 - **Backend**: RunPod ComfyUI serverless endpoints
 - **API**: Next.js API routes acting as middleware to RunPod endpoints
+- **Validation**: Zod schema validation throughout
 
 ## 🛠️ Development Commands
 

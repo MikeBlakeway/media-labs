@@ -1,14 +1,50 @@
-# Media Labs v1.0.0-beta.1 Release Notes
+# Media Labs v1.1.0 Release Notes
 
 **Release Date:** September 8, 2025
 
-## 🎉 Major Milestone - First Production Release
+## 🎉 Major Architecture Update - Hooks-Based Refactoring
 
-Media Labs v1.0.0-beta.1 marks the first production-ready release of our AI-powered media generation platform. This release delivers a complete, end-to-end workflow execution system with real-time progress tracking and robust RunPod integration.
+Media Labs v1.1.0 represents a comprehensive architectural transformation, introducing a complete hooks-based architecture that improves maintainability, testability, and developer experience while maintaining all existing functionality.
 
 ---
 
-## ✨ New Features
+## 🏗️ Architectural Revolution
+
+### 📦 Complete Hooks-Based Architecture
+
+- **21 Custom Hooks**: All business logic extracted into focused, reusable hooks
+- **22 UI Components**: Pure presentation components with clear separation of concerns
+- **100% Consistency**: All async operations (fetch calls) organized into hooks
+- **Enhanced Maintainability**: Single source of truth for each operation type
+
+### 🔄 Major Component Refactoring
+
+- **WorkflowRunner.tsx**: 892 → 219 lines (75.5% reduction)
+- **UploadCard.tsx**: 84 → 41 lines (51% reduction)
+- **Workflow List Pages**: 27-32% code reduction with eliminated duplication
+- **Registration Flow**: Enhanced with dedicated registration hook
+
+### 🎯 Hook Categories
+
+#### Workflow Management
+
+- `useWorkflowTemplate`, `useWorkflowsList`, `useWorkflowRegistration`
+- `useWorkflowManagement`, `useWorkflowEditor`
+
+#### Job & Execution
+
+- `useJobManagement`, `useWorkflowRunnerJob`, `useEnhancedPolling`
+
+#### Form & UI
+
+- `useWorkflowForm`, `useFileUpload`, `useFieldLabeling`, `useUploadCard`
+
+#### Specialized Utilities
+
+- `useManualPreflight`, `useWorkflowPreflight`, `useResultHistory`
+- `useProgressCalculation`, `useProgressTimer`, `useOutputProcessor`
+
+## ✨ Previous Features (v1.0.0)
 
 ### 🎨 Complete AI Image Generation Pipeline
 

@@ -18,14 +18,58 @@ media-labs/
 ├── .env.example                 # Environment variable template
 ├── src/                         # Next.js application source code
 │   ├── app/                     # App Router (pages and API routes)
-│   ├── components/              # React components
+│   ├── components/              # UI components (22 components)
+│   ├── hooks/                   # Custom hooks (21 hooks)
 │   └── lib/                     # Utilities and libraries
 ├── public/                      # Static assets
 ├── docs/                        # Project documentation
-└── data/                        # Workflow templates
+├── data/                        # Workflow templates
+└── .github/                     # GitHub configuration and AI prompts
 ```
 
 ## Architecture Overview
+
+### Hooks-Based Architecture (Completed)
+
+The application has been **fully refactored** into a comprehensive hooks-based architecture:
+
+- **21 Custom Hooks**: All business logic extracted into focused, reusable hooks
+- **22 UI Components**: Pure presentation components that consume hooks
+- **Complete Separation**: Clear boundaries between logic (hooks) and presentation (components)
+- **100% Consistency**: All async operations (fetch calls) organized into hooks
+
+#### Hook Categories
+
+##### Workflow Management
+
+- `useWorkflowTemplate` - Template loading and metadata management
+- `useWorkflowsList` - Workflow list fetching with error handling
+- `useWorkflowRegistration` - Workflow registration with validation
+- `useWorkflowManagement` - CRUD operations for workflows
+- `useWorkflowEditor` - Workflow editing state management
+
+##### Job & Execution
+
+- `useJobManagement` - Job submission, polling, and result management
+- `useWorkflowRunnerJob` - Job-specific execution and status tracking
+- `useEnhancedPolling` - Robust polling with retry logic
+
+##### Form & UI
+
+- `useWorkflowForm` - Form state management and validation
+- `useFieldLabeling` - Enhanced field labeling for workflows
+- `useFileUpload` - File upload functionality
+- `useUploadCard` - Upload card specific state management
+
+##### Utility & Specialized
+
+- `useManualPreflight` - Model preflight checks
+- `useWorkflowPreflight` - Workflow-specific preflight validation
+- `useResultHistory` - Result history management with filtering
+- `useProgressCalculation` - Progress calculation utilities
+- `useProgressTimer` - Progress timing functionality
+- `useOutputProcessor` - Output processing logic
+- `useResultsDisplay` - Results display state management
 
 ### Next.js Web Application
 
