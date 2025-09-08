@@ -9,6 +9,7 @@
 export { useWorkflowTemplate } from './useWorkflowTemplate'
 export type { UseWorkflowTemplateResult } from './useWorkflowTemplate'
 export { useWorkflowsList } from './useWorkflowsList'
+export { useWorkflowRegistration } from './useWorkflowRegistration'
 
 // Form management
 export { useWorkflowForm } from './useWorkflowForm'

@@ -6,13 +6,7 @@ import { z } from 'zod'
 import { slugify } from '@/lib/slug'
 import { ExportApiWorkflowSchema, inferFieldsFromExportApi } from '@/lib/workflow.infer'
 import type { FieldSpec } from '@/lib/templates.types'
-import { FieldSpecSchema } from '@/lib/templates.schema'
-
-const RegisterResponseSchema = z.object({
-  ok: z.boolean(),
-  slug: z.string(),
-  fields: z.array(FieldSpecSchema)
-})
+import { useWorkflowRegistration } from '@/hooks'
 
 export default function RegisterWorkflowPage() {
   const [dragOver, setDragOver] = useState(false)
@@ -20,34 +14,38 @@ export default function RegisterWorkflowPage() {
   const [previewFields, setPreviewFields] = useState<FieldSpec[]>([])
   const [slug, setSlug] = useState('')
   const [name, setName] = useState('')
-  const [error, setError] = useState<string>('')
-  const [status, setStatus] = useState<'idle' | 'registering' | 'registered'>('idle')
-  const [resultSlug, setResultSlug] = useState<string>('')
 
-  const parseWorkflow = useCallback(async (file: File) => {
-    setError('')
-    const text = await file.text()
-    let json: unknown
-    try {
-      json = JSON.parse(text)
-    } catch {
-      setError('Invalid JSON')
-      setRawJson(null)
-      setPreviewFields([])
-      return
-    }
-    const parsed = ExportApiWorkflowSchema.safeParse(json)
-    if (!parsed.success) {
-      setError('This is not a ComfyUI Export (API) workflow. In ComfyUI: Workflow → Export (API).')
-      setRawJson(null)
-      setPreviewFields([])
-      return
-    }
-    setRawJson(parsed.data)
-    setSlug(s => (s ? s : slugify(file.name)))
-    setName(n => (n ? n : 'Untitled Workflow'))
-    setPreviewFields(inferFieldsFromExportApi(parsed.data))
-  }, [])
+  // Use the registration hook
+  const registration = useWorkflowRegistration()
+
+  const parseWorkflow = useCallback(
+    async (file: File) => {
+      registration.reset() // Clear any previous registration state
+      const text = await file.text()
+      let json: unknown
+      try {
+        json = JSON.parse(text)
+      } catch {
+        // Note: parseWorkflow errors are separate from registration errors
+        // We could add a separate parseError state if needed
+        setRawJson(null)
+        setPreviewFields([])
+        return
+      }
+      const parsed = ExportApiWorkflowSchema.safeParse(json)
+      if (!parsed.success) {
+        // Note: parseWorkflow errors are separate from registration errors
+        setRawJson(null)
+        setPreviewFields([])
+        return
+      }
+      setRawJson(parsed.data)
+      setSlug(s => (s ? s : slugify(file.name)))
+      setName(n => (n ? n : 'Untitled Workflow'))
+      setPreviewFields(inferFieldsFromExportApi(parsed.data))
+    },
+    [registration]
+  )
 
   const onFileInput = async (f: File | null) => {
     if (f) await parseWorkflow(f)
@@ -70,25 +68,12 @@ export default function RegisterWorkflowPage() {
 
   const register = async () => {
     if (!canRegister || rawJson === null) return
-    setStatus('registering')
-    setError('')
-    const res = await fetch('/api/workflows/register', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ slug, name, workflow: rawJson })
+
+    await registration.register({
+      slug,
+      name,
+      workflow: rawJson
     })
-    const dataUnknown = await res.json()
-    const data = RegisterResponseSchema.safeParse(dataUnknown)
-    if (!res.ok || !data.success || data.data.ok !== true) {
-      setStatus('idle')
-      setError(
-        (data.success ? 'Registration failed' : 'Invalid server response') +
-          (data.success ? '' : `: ${JSON.stringify(dataUnknown)}`)
-      )
-      return
-    }
-    setResultSlug(data.data.slug)
-    setStatus('registered')
   }
 
   return (
@@ -117,7 +102,11 @@ export default function RegisterWorkflowPage() {
         />
       </div>
 
-      {error && <div className='mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>{error}</div>}
+      {registration.error && (
+        <div className='mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+          {registration.error}
+        </div>
+      )}
 
       {rawJson && (
         <>
@@ -172,14 +161,14 @@ export default function RegisterWorkflowPage() {
           <div className='mt-6 flex items-center gap-2'>
             <button
               onClick={register}
-              disabled={!canRegister || status === 'registering'}
+              disabled={!canRegister || registration.registering}
               className='rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50'
             >
-              {status === 'registering' ? 'Registering…' : 'Register workflow'}
+              {registration.registering ? 'Registering…' : 'Register workflow'}
             </button>
-            {status === 'registered' && resultSlug && (
-              <Link href={`/w/${resultSlug}`} className='text-sm underline'>
-                Open /w/{resultSlug}
+            {registration.registered && registration.resultSlug && (
+              <Link href={`/w/${registration.resultSlug}`} className='text-sm underline'>
+                Open /w/{registration.resultSlug}
               </Link>
             )}
           </div>
