@@ -35,3 +35,10 @@ export type { UseFieldLabelingResult } from './useFieldLabeling'
 
 // Enhanced polling (already exists)
 export { useEnhancedPolling } from './useEnhancedPolling'
+
+// Workflow runner hooks
+export { useWorkflowRunner } from './useWorkflowRunner'
+export type { UseWorkflowRunnerResult, WorkflowMode } from './useWorkflowRunner'
+
+export { useWorkflowRunnerJob } from './useWorkflowRunnerJob'
+export type { UseWorkflowRunnerJobResult } from './useWorkflowRunnerJob'
