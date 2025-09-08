@@ -1,0 +1,140 @@
+# Manage Serverless endpoints
+
+This guide covers the essential management operations for Runpod Serverless endpoints, helping you deploy, configure, and maintain your Serverless applications effectively.
+
+## Create an endpoint
+
+<Tabs>
+  <Tab title="Web">
+    To create a new Serverless endpoint through the Runpod web interface:
+
+    1. Navigate to the [Serverless section](https://www.console.runpod.io/serverless) of the Runpod console.
+    2. Click **New Endpoint**.
+    3. On the **Deploy a New Serverless Endpoint** screen, choose your deployment source:
+       * **Import Git Repository** (if GitHub is connected) (see \[Deploy from GitHub] for details(/serverless/workers/github-integration).
+       * **Import from Docker Registry** (see [Deploy from Docker](/serverless/workers/deploy) for details.
+       * Or select a preconfigured endpoint under **Ready-to-Deploy Repos**.
+    4. Follow the UI steps to configure your selected source (Docker image, GitHub repo), then click **Next**.
+    5. Configure your endpoint settings:
+       * Set the **Endpoint Name**
+       * Choose your **Endpoint Type**: select **Queue** for traditional queue-based processing or **Load balancer** for direct HTTP access (see [Load balancing endpoints](/serverless/load-balancing/overview) for details)
+       * Under **GPU Configuration**, select the appropriate GPU types and configure worker settings
+       * Set **Environment Variables** and other options as needed. For a full list of options, see [Endpoint configurations](/serverless/endpoints/endpoint-configurations)
+    6. Click **Create Endpoint** to deploy.
+
+  </Tab>
+
+  <Tab title="REST API">
+    To create a Serverless endpoint using the REST API, send a POST request to the `/endpoints` endpoint:
+
+    ```bash
+    curl --request POST \
+      --url https://rest.runpod.io/v1/endpoints \
+      --header 'Authorization: Bearer RUNPOD_API_KEY' \
+      --header 'Content-Type: application/json' \
+      --data '{
+      "allowedCudaVersions": [
+        "12.8"
+      ],
+      "computeType": "GPU",
+      "cpuFlavorIds": [
+        "cpu3c"
+      ],
+      "dataCenterIds": [
+        "EU-RO-1",
+        "CA-MTL-1"
+      ],
+      "executionTimeoutMs": 600000,
+      "flashboot": true,
+      "gpuCount": 1,
+      "gpuTypeIds": [
+        "NVIDIA GeForce RTX 4090"
+      ],
+      "idleTimeout": 5,
+      "name": "my-endpoint",
+      "scalerType": "QUEUE_DELAY",
+      "scalerValue": 4,
+      "templateId": "30zmvf89kd",
+      "vcpuCount": 2,
+      "workersMax": 3,
+      "workersMin": 0
+    }'
+    ```
+
+    For complete API documentation and parameter details, see the [Serverless endpoint API reference](/api-reference/endpoints/POST/endpoints).
+
+  </Tab>
+</Tabs>
+
+<Tip>
+  You can optimize cost and availability by specifying GPU preferences in order of priority. Runpod attempts to allocate your first choice GPU. If unavailable, it automatically uses the next GPU in your priority list, ensuring your workloads run on the best available resources.
+
+You can enable or disable particular GPU types using the **Advanced > Enabled GPU Types** section.
+</Tip>
+
+After deployment, your endpoint takes time to initialize before it is ready to process requests. You can monitor the deployment status on the endpoint details page, which shows worker status and initialization progress. Once active, your endpoint displays a unique API URL (`https://api.runpod.ai/v2/{endpoint_id}/`) that you can use to send requests. For information on how to interact with your endpoint, see [Endpoint operations](/serverless/endpoints/operations).
+
+## Edit an endpoint
+
+You can modify your endpoint's configuration at any time:
+
+1. Navigate to the [Serverless section](https://www.console.runpod.io/serverless) in the Runpod console.
+
+2. Click the three dots in the bottom right corner of the endpoint you want to modify.
+
+3. Click **Edit Endpoint**.
+
+4. Update any [configuration parameters](/serverless/endpoints/endpoint-configurations) as needed:
+
+   - Endpoint name
+   - Worker configuration
+   - Docker configuration (container image or version)
+   - Environment variables
+   - Storage
+
+5. Click **Save Endpoint** to apply your changes.
+
+Changes take effect over time as each worker is updated to the new configuration.
+
+<Tip>
+  To force an immediate configuration update, temporarily set **Max Workers** to 0, trigger the **Release**, then restore your desired worker count and update again.
+</Tip>
+
+## Add a network volume
+
+Attach persistent storage to share data across workers:
+
+1. Navigate to the [Serverless section](https://www.console.runpod.io/serverless) in the Runpod console.
+2. Click the three dots in the bottom right corner of the endpoint you want to modify.
+3. Click **Edit Endpoint**.
+4. Expand the **Advanced** section.
+5. Select a volume from the dropdown below **Network Volume**.
+6. Click **Save Endpoint** to attach the volume to your endpoint.
+
+Network volumes are mounted to the same path on each worker, making them ideal for sharing large models, datasets, or any data that needs to persist across worker instances.
+
+## Delete an endpoint
+
+When you no longer need an endpoint, you can remove it from your account:
+
+1. Navigate to the [Serverless section](https://www.console.runpod.io/serverless) in the Runpod console.
+2. Click the three dots in the bottom right corner of the endpoint you want to delete.
+3. Click **Delete Endpoint**.
+4. Type the name of the endpoint, then click **Confirm**.
+
+After confirmation, the endpoint will be removed from your account, and you'll no longer be charged for its resources.
+
+## Best practices for endpoint management
+
+- **Start small and scale**: Begin with fewer workers and scale up as demand increases.
+- **Monitor usage**: Regularly check your endpoint metrics to optimize worker count and GPU allocation.
+- **Use GPU prioritization**: Set up fallback GPU options to balance cost and availability.
+- **Leverage network volumes** for large models or datasets rather than embedding them in your container image.
+- **Set appropriate timeouts** based on your workload's processing requirements.
+
+## Next steps
+
+- [Learn how to send requests to your endpoints.](/serverless/endpoints/send-requests)
+- [Explore advanced endpoint operations.](/serverless/endpoints/operations)
+- [Optimize your endpoints for cost and performance.](/serverless/endpoints/endpoint-configurations)
+- [Learn about endpoint job states and metrics.](/serverless/endpoints/job-states)

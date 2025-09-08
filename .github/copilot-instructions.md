@@ -15,11 +15,13 @@ When generating code for this repository:
 Before generating code, scan the codebase to identify:
 
 1. **Language Versions**:
+
    - TypeScript 5.x with strict mode enabled (see tsconfig.json)
    - ES2017 target with modern ESNext modules
    - Node.js 18+ (20+ recommended per README.md)
 
 2. **Framework Versions**:
+
    - Next.js 15.5.2 with App Router architecture
    - React 19.1.0 with React DOM 19.1.0
    - TailwindCSS 4.x with PostCSS configuration
@@ -80,6 +82,36 @@ Before generating code, scan the codebase to identify:
 - Document environment variables and their purposes in configuration modules
 - Use descriptive commit messages and maintain clear file organization
 
+## RunPod Documentation Reference
+
+This project includes comprehensive RunPod documentation in the `docs/runpod/` directory. Familiarize yourself with these resources when working with RunPod-related functionality:
+
+### Core Documentation Structure
+
+- **`docs/runpod/glossary.md`** — Key terminology for serverless, workers, endpoints, handlers, and infrastructure concepts
+- **`docs/runpod/serverless/`** — Complete serverless endpoint documentation including configuration, operations, job states, and management
+- **`docs/runpod/storage/`** — Storage options including network volumes, S3-compatible storage, and container volumes
+- **`docs/runpod/development/`** — Development workflows, local testing, debugging, environment setup, and deployment patterns
+
+### Key Documentation Files for Development
+
+- **`docs/runpod/serverless/overview.md`** — Fundamental concepts of endpoints, execution modes (async/sync), auto-scaling, and integration options
+- **`docs/runpod/storage/s3-api.md`** — S3-compatible storage integration patterns and best practices
+- **`docs/runpod/development/test-locally.md`** — Local testing strategies using the RunPod SDK
+- **`docs/runpod/development/debugging.md`** — Debugging techniques and log level configuration
+- **`docs/runpod/development/environment-variables.md`** — Environment configuration for development and production
+- **`docs/runpod/serverless/workers/handler-functions.md`** — Handler function patterns and implementation guidelines
+
+### Documentation Usage Guidelines
+
+When implementing RunPod-related features:
+
+1. **Reference First**: Check the relevant documentation files for established patterns and best practices
+2. **Terminology Consistency**: Use terminology from `glossary.md` to maintain consistency across code and comments
+3. **Implementation Patterns**: Follow patterns documented in the development and serverless sections
+4. **Storage Integration**: Refer to storage documentation when working with S3 volumes, network volumes, or container storage
+5. **Testing Strategies**: Use local testing patterns from the development documentation before deploying
+
 ## Key Files to Read First
 
 - `src/app/w/[slug]/page.tsx` — dynamic workflow form, client-side submit & polling
@@ -87,6 +119,9 @@ Before generating code, scan the codebase to identify:
 - `src/lib/workflow.preflight.ts` — infers required models and builds `s3Key` + `workerPath` (`modelPaths`)
 - `src/lib/runpodVolume.ts` — S3 client config and required env vars
 - `src/lib/templates.fs.ts` — templates storage and schema interactions
+- `docs/runpod/` — comprehensive RunPod documentation for serverless, storage, and development patterns
+- `docs/RUNPOD_IMPROVEMENTS.md` — detailed analysis of needed RunPod integration improvements
+- `docs/RUNPOD_ROADMAP.md` — quick reference for current RunPod implementation status and next steps
 
 ## Codebase Scanning Instructions
 
