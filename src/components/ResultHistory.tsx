@@ -10,27 +10,9 @@
 
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
-
-interface HistoryItem {
-  jobId: string
-  status: string
-  output: {
-    images?: Array<{
-      base64?: string
-      url?: string
-      filename?: string
-      // RunPod format support
-      data?: string
-      type?: 'base64' | 's3_url'
-    }>
-    errors?: string[]
-  } | null
-  timestamp: number
-  slug: string
-  duration?: number
-}
+import { useResultHistory, type HistoryItem } from '@/hooks/useResultHistory'
 
 interface ResultHistoryProps {
   currentSlug: string
@@ -38,36 +20,12 @@ interface ResultHistoryProps {
 }
 
 export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProps) {
-  const [history, setHistory] = useState<HistoryItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [filter, setFilter] = useState<'all' | 'current'>('current')
   const [selectedResult, setSelectedResult] = useState<HistoryItem | null>(null)
+  
+  // Use our history hook for all data management
+  const history = useResultHistory(currentSlug)
 
-  const loadHistory = useCallback(async () => {
-    try {
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (filter === 'current') params.set('slug', currentSlug)
-
-      const response = await fetch(`/api/workflows/results?${params}`)
-      if (!response.ok) throw new Error('Failed to load history')
-
-      const data = await response.json()
-      setHistory(data.results || [])
-      setError('')
-    } catch (err) {
-      console.error('Failed to load workflow history:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load history')
-    } finally {
-      setLoading(false)
-    }
-  }, [currentSlug, filter])
-
-  useEffect(() => {
-    void loadHistory()
-  }, [loadHistory])
-
+  // Utility functions
   const formatTimeAgo = (timestamp: number): string => {
     const diff = Date.now() - timestamp
     const minutes = Math.floor(diff / 60000)
@@ -95,228 +53,246 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
     }
   }
 
-  const getThumbnail = useCallback((item: HistoryItem) => {
-    if (!item.output?.images?.[0]) {
-      return null
-    }
-
-    const img = item.output.images[0]
-    // Handle both our format and RunPod format
-    const base64Data = img.base64 || img.data
-    return base64Data ? `data:image/png;base64,${base64Data}` : img.url
-  }, [])
-
-  const downloadResult = useCallback((item: HistoryItem, imageIndex = 0) => {
-    const image = item.output?.images?.[imageIndex]
-    if (!image) return
-
-    // Handle both our format and RunPod format
-    const base64Data = image.base64 || image.data
-    if (!base64Data) return
-
-    const link = document.createElement('a')
-    link.href = `data:image/png;base64,${base64Data}`
-    link.download = image.filename || `result-${item.jobId.slice(0, 8)}-${imageIndex + 1}.png`
-    link.click()
-  }, [])
-
-  const filteredHistory = history.filter(item => {
-    if (filter === 'current') return item.slug === currentSlug
-    return true
-  })
-
-  if (loading) {
-    return (
-      <div className='mt-6 p-4 bg-gray-50 rounded-xl border'>
-        <div className='flex items-center gap-2 text-gray-600'>
-          <div className='w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin' />
-          <span className='text-sm'>Loading history...</span>
-        </div>
-      </div>
-    )
+  const handleResultClick = (item: HistoryItem) => {
+    setSelectedResult(item)
+    onSelectResult?.(item)
   }
 
-  if (error) {
-    return (
-      <div className='mt-6 p-4 bg-red-50 rounded-xl border border-red-200'>
-        <div className='text-red-600 text-sm'>
-          Failed to load history: {error}
-          <button onClick={() => void loadHistory()} className='ml-2 underline hover:no-underline'>
-            Retry
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (filteredHistory.length === 0) {
-    return (
-      <div className='mt-6 p-4 bg-gray-50 rounded-xl border'>
-        <div className='text-center text-gray-600'>
-          <span className='text-2xl mb-2 block'>📭</span>
-          <p className='text-sm'>No previous results found</p>
-          <p className='text-xs text-gray-500 mt-1'>
-            {filter === 'current' ? 'Run a workflow to see results here' : 'No workflows have been completed yet'}
-          </p>
-        </div>
-      </div>
-    )
+  const closeModal = () => {
+    setSelectedResult(null)
   }
 
   return (
-    <div className='mt-6 space-y-4'>
-      {/* Header with filters */}
-      <div className='flex items-center justify-between'>
-        <h3 className='font-medium text-gray-800'>Previous Results ({filteredHistory.length})</h3>
+    <div className='mt-6'>
+      <div className='flex items-center justify-between mb-4'>
+        <h3 className='font-medium text-gray-800'>Result History</h3>
         <div className='flex gap-2'>
           <button
-            onClick={() => setFilter('current')}
-            className={`px-3 py-1 text-xs rounded ${
-              filter === 'current' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            onClick={() => history.setFilter('current')}
+            className={`px-3 py-1 text-sm rounded ${
+              history.filter === 'current'
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            This Workflow
+            Current
           </button>
           <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1 text-xs rounded ${
-              filter === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            onClick={() => history.setFilter('all')}
+            className={`px-3 py-1 text-sm rounded ${
+              history.filter === 'all'
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            All Workflows
+            All
           </button>
           <button
-            onClick={() => void loadHistory()}
-            className='px-3 py-1 text-xs rounded bg-gray-100 text-gray-600 hover:bg-gray-200'
-            title='Refresh history'
+            onClick={history.loadHistory}
+            className='px-3 py-1 text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 rounded'
+            disabled={history.loading}
           >
-            🔄
+            🔄 Refresh
           </button>
         </div>
       </div>
 
-      {/* Results Grid */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-        {filteredHistory.map(item => (
-          <div
-            key={item.jobId}
-            className='border rounded-lg overflow-hidden bg-white hover:shadow-md transition-shadow cursor-pointer'
-            onClick={() => {
-              setSelectedResult(item)
-              onSelectResult?.(item)
-            }}
+      {history.loading && (
+        <div className='flex items-center justify-center py-8'>
+          <div className='w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin' />
+          <span className='ml-2 text-gray-600'>Loading history...</span>
+        </div>
+      )}
+
+      {history.error && (
+        <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-4'>
+          <p className='text-red-700 text-sm'>{history.error}</p>
+          <button
+            onClick={history.loadHistory}
+            className='mt-2 text-red-600 hover:text-red-800 text-sm underline'
           >
-            {/* Thumbnail */}
-            <div className='aspect-video bg-gray-100 relative'>
-              {getThumbnail(item) ? (
-                getThumbnail(item)!.startsWith('data:') ? (
-                  // Use regular img tag for base64 data URLs with better scaling for tiny images
-                  <Image
-                    src={getThumbnail(item)!}
-                    alt='Result thumbnail'
-                    className='w-full h-full object-cover'
-                    fill
-                    style={{ imageRendering: 'pixelated' }}
-                  />
-                ) : (
-                  // Use Next.js Image for external URLs
-                  <Image
-                    src={getThumbnail(item)!}
-                    alt='Result thumbnail'
-                    fill
-                    className='object-cover'
-                    sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
-                  />
-                )
-              ) : (
-                <div className='w-full h-full flex items-center justify-center text-gray-400'>
-                  {item.status === 'COMPLETED' ? '🖼️' : '❌'}
-                </div>
-              )}
+            Try again
+          </button>
+        </div>
+      )}
 
-              {/* Status badge */}
+      {!history.loading && !history.error && history.history.length === 0 && (
+        <div className='text-center py-8 text-gray-500'>
+          <p>No workflow results yet.</p>
+          <p className='text-sm mt-1'>Results will appear here after running workflows.</p>
+        </div>
+      )}
+
+      {!history.loading && history.history.length > 0 && (
+        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+          {history.history.map((item, index) => {
+            const thumbnail = history.getThumbnail(item)
+            const statusColorClass = getStatusColor(item.status)
+
+            return (
               <div
-                className={`absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium ${getStatusColor(
-                  item.status
-                )}`}
+                key={`${item.jobId}-${index}`}
+                className='relative group rounded-lg border border-gray-200 bg-white p-3 hover:shadow-md transition-shadow cursor-pointer'
+                onClick={() => handleResultClick(item)}
               >
-                {item.status}
-              </div>
-
-              {/* Image count */}
-              {item.output?.images && item.output.images.length > 1 && (
-                <div className='absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded'>
-                  +{item.output.images.length - 1}
+                {/* Thumbnail */}
+                <div className='aspect-square mb-3 bg-gray-100 rounded-lg overflow-hidden'>
+                  {thumbnail ? (
+                    <Image
+                      src={thumbnail}
+                      alt={`Result ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className='w-full h-full object-cover hover:scale-105 transition-transform'
+                    />
+                  ) : (
+                    <div className='w-full h-full flex items-center justify-center text-gray-400'>
+                      {item.status === 'COMPLETED' ? '🖼️' : '❌'}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Details */}
-            <div className='p-3'>
-              <div className='flex items-center justify-between mb-2'>
-                <span className='text-xs text-gray-500 font-mono'>{item.jobId.slice(0, 8)}...</span>
-                <span className='text-xs text-gray-500'>{formatTimeAgo(item.timestamp)}</span>
+                {/* Status Badge */}
+                <div className={`inline-block px-2 py-1 text-xs rounded ${statusColorClass} mb-2`}>
+                  {item.status}
+                </div>
+
+                {/* Metadata */}
+                <div className='text-xs text-gray-600 space-y-1'>
+                  <div>{formatTimeAgo(item.timestamp)}</div>
+                  {item.slug && history.filter === 'all' && (
+                    <div className='font-mono text-xs bg-gray-100 px-1 rounded'>
+                      {item.slug}
+                    </div>
+                  )}
+                  {item.duration && (
+                    <div>⏱️ {Math.round(item.duration / 1000)}s</div>
+                  )}
+                  {item.output?.images && (
+                    <div>🖼️ {item.output.images.length} image{item.output.images.length !== 1 ? 's' : ''}</div>
+                  )}
+                </div>
+
+                {/* Download Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    history.downloadResult(item)
+                  }}
+                  className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full p-1 shadow-md hover:bg-gray-50'
+                  title='Download result'
+                >
+                  ⬇️
+                </button>
               </div>
+            )
+          })}
+        </div>
+      )}
 
-              <div className='flex items-center justify-between'>
-                <span className='text-sm text-gray-700 truncate'>{item.slug}</span>
-                {item.duration && <span className='text-xs text-gray-500'>{Math.round(item.duration / 1000)}s</span>}
-              </div>
-
-              {/* Quick actions */}
-              <div className='flex gap-1 mt-2'>
-                {item.output?.images?.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={e => {
-                      e.stopPropagation()
-                      downloadResult(item, index)
-                    }}
-                    className='px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded'
-                    title={`Download image ${index + 1}`}
-                  >
-                    📥
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Selected Result Modal */}
+      {/* Result Detail Modal */}
       {selectedResult && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-xl max-w-4xl max-h-[90vh] overflow-auto'>
-            <div className='p-4 border-b flex items-center justify-between'>
-              <h3 className='font-medium'>Result: {selectedResult.jobId.slice(0, 8)}...</h3>
-              <button onClick={() => setSelectedResult(null)} className='text-gray-500 hover:text-gray-700'>
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
+          <div className='bg-white rounded-xl max-w-4xl max-h-[90vh] overflow-auto p-6'>
+            <div className='flex items-center justify-between mb-4'>
+              <h3 className='font-medium text-lg'>Result Details</h3>
+              <button
+                onClick={closeModal}
+                className='text-gray-400 hover:text-gray-600 text-xl'
+              >
                 ✕
               </button>
             </div>
 
-            <div className='p-4'>
-              {selectedResult.output?.images?.map((img, index) => (
-                <div key={index} className='mb-4'>
-                  {img.base64 && (
-                    <Image
-                      src={`data:image/png;base64,${img.base64}`}
-                      alt={`Result ${index + 1}`}
-                      width={800}
-                      height={600}
-                      className='max-w-full h-auto rounded border'
-                    />
-                  )}
-                  <div className='mt-2 flex gap-2'>
-                    <button
-                      onClick={() => downloadResult(selectedResult, index)}
-                      className='px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700'
-                    >
-                      📥 Download
-                    </button>
+            <div className='space-y-4'>
+              <div className='grid grid-cols-2 gap-4 text-sm'>
+                <div>
+                  <span className='font-medium'>Status:</span>
+                  <span className={`ml-2 px-2 py-1 rounded text-xs ${getStatusColor(selectedResult.status)}`}>
+                    {selectedResult.status}
+                  </span>
+                </div>
+                <div>
+                  <span className='font-medium'>Time:</span>
+                  <span className='ml-2'>{formatTimeAgo(selectedResult.timestamp)}</span>
+                </div>
+                <div>
+                  <span className='font-medium'>Job ID:</span>
+                  <span className='ml-2 font-mono text-xs'>{selectedResult.jobId}</span>
+                </div>
+                {selectedResult.duration && (
+                  <div>
+                    <span className='font-medium'>Duration:</span>
+                    <span className='ml-2'>{Math.round(selectedResult.duration / 1000)}s</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Images Grid */}
+              {selectedResult.output?.images && selectedResult.output.images.length > 0 && (
+                <div>
+                  <h4 className='font-medium mb-2'>Generated Images</h4>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    {selectedResult.output.images.map((img, imgIndex) => {
+                      const base64Data = img.base64 || img.data
+                      const imageUrl = img.url
+                      
+                      return (
+                        <div key={imgIndex} className='space-y-2'>
+                          {base64Data ? (
+                            <Image
+                              src={`data:image/png;base64,${base64Data}`}
+                              alt={`Result ${imgIndex + 1}`}
+                              width={400}
+                              height={400}
+                              className='w-full rounded-lg border'
+                            />
+                          ) : imageUrl ? (
+                            <a
+                              href={imageUrl}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='block text-blue-600 hover:underline'
+                            >
+                              🔗 {img.filename || `Image ${imgIndex + 1}`}
+                            </a>
+                          ) : (
+                            <div className='w-full h-40 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500'>
+                              No preview available
+                            </div>
+                          )}
+
+                          <div className='flex gap-2'>
+                            <button
+                              onClick={() => history.downloadResult(selectedResult, imgIndex)}
+                              className='px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200'
+                            >
+                              ⬇️ Download
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
-              ))}
+              )}
+
+              {/* Errors */}
+              {selectedResult.output?.errors && selectedResult.output.errors.length > 0 && (
+                <div>
+                  <h4 className='font-medium mb-2 text-red-700'>Errors</h4>
+                  <div className='space-y-2'>
+                    {selectedResult.output.errors.map((error, errorIndex) => (
+                      <div
+                        key={errorIndex}
+                        className='bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700 font-mono'
+                      >
+                        {error}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,133 +1,62 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
-import { z } from 'zod'
+import { use } from 'react'
 import Link from 'next/link'
-import { ExportApiWorkflowSchema, type ExportApiWorkflow } from '@/lib/workflow.infer'
-import { TemplateMetaSchema, type TemplateMeta } from '@/lib/templates.schema'
-
-const RawSchema = z.object({
-  slug: z.string(),
-  name: z.string(),
-  workflow: ExportApiWorkflowSchema
-})
-
-const PreflightRespSchema = z.object({
-  ok: z.boolean(),
-  results: z.array(
-    z.object({
-      nodeId: z.string(),
-      classType: z.string(),
-      type: z.enum(['unet', 'clip', 'clip_vision', 'vae', 'lora', 'checkpoints']),
-      name: z.string(),
-      present: z.boolean(),
-      s3Key: z.string(),
-      workerPath: z.string()
-    })
-  )
-})
-type PreflightResp = z.infer<typeof PreflightRespSchema>
+import { useWorkflowManagement } from '@/hooks/useWorkflowManagement'
+import { useWorkflowEditor } from '@/hooks/useWorkflowEditor'
+import { useManualPreflight } from '@/hooks/useManualPreflight'
 
 export default function EditWorkflowPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
 
-  const [meta, setMeta] = useState<TemplateMeta | null>(null)
-  const [rawJson, setRawJson] = useState<string>('')
-  const [name, setName] = useState<string>('')
-  const [err, setErr] = useState<string>('')
-  const [status, setStatus] = useState<'idle' | 'saving' | 'deleting' | 'checking'>('idle')
-  const [preflight, setPreflight] = useState<PreflightResp['results']>([])
+  // Use hooks for business logic
+  const management = useWorkflowManagement(slug)
+  const editor = useWorkflowEditor(management.initialName, management.initialJson)
+  const preflight = useManualPreflight()
 
-  useEffect(() => {
-    ;(async () => {
-      try {
-        const metaRes = await fetch(`/api/workflows/${slug}`)
-        const metaRaw = await metaRes.json()
-        const metaParsed = TemplateMetaSchema.safeParse(metaRaw)
-        if (!metaRes.ok || !metaParsed.success) throw new Error('Invalid template meta')
-        setMeta(metaParsed.data)
-        setName(metaParsed.data.name)
+  // Combined loading state
+  const isLoading = management.loading
+  const isBusy = management.saving || management.deleting || preflight.running
 
-        const rawRes = await fetch(`/api/workflows/${slug}/raw`)
-        const raw = await rawRes.json()
-        const rawParsed = RawSchema.safeParse(raw)
-        if (!rawRes.ok || !rawParsed.success) throw new Error('Invalid raw workflow')
-        setRawJson(JSON.stringify(rawParsed.data.workflow, null, 2))
-      } catch (e) {
-        setErr(e instanceof Error ? e.message : 'Failed to load')
-      }
-    })()
-  }, [slug])
-
-  const save = async () => {
-    setStatus('saving')
-    setErr('')
-    let wf: ExportApiWorkflow | undefined
-    try {
-      if (rawJson.trim().length > 0) {
-        const obj = JSON.parse(rawJson)
-        const v = ExportApiWorkflowSchema.parse(obj)
-        wf = v
-      }
-    } catch {
-      setStatus('idle')
-      setErr('Workflow JSON is invalid (must be Export API format)')
-      return
+  // Handle save workflow
+  const handleSave = async () => {
+    const success = await management.save(editor.name, editor.rawJson)
+    if (success) {
+      // Optional: could show success message
     }
-
-    const res = await fetch(`/api/workflows/${slug}`, {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name, workflow: wf })
-    })
-    const raw = await res.json()
-    const parsed = TemplateMetaSchema.safeParse(raw)
-    if (!res.ok || !parsed.success) {
-      setStatus('idle')
-      setErr('Update failed')
-      return
-    }
-    setMeta(parsed.data)
-    setStatus('idle')
   }
 
-  const remove = async () => {
-    setStatus('deleting')
-    setErr('')
-    const res = await fetch(`/api/workflows/${slug}`, { method: 'DELETE' })
-    const ok = res.ok
-    setStatus('idle')
-    if (!ok) {
-      setErr('Delete failed')
-      return
+  // Handle delete workflow
+  const handleDelete = async () => {
+    if (confirm('Are you sure you want to delete this workflow?')) {
+      const success = await management.remove()
+      if (success) {
+        window.location.href = '/manage'
+      }
     }
-    window.location.href = '/manage'
   }
 
-  const runPreflight = async () => {
-    setStatus('checking')
-    setErr('')
-    let payload: unknown
-    try {
-      payload = { kind: 'workflow', workflow: ExportApiWorkflowSchema.parse(JSON.parse(rawJson)) }
-    } catch {
-      setStatus('idle')
-      setErr('Invalid workflow JSON for preflight')
-      return
-    }
-    const res = await fetch('/api/workflows/preflight', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    const raw = await res.json()
-    const parsed = PreflightRespSchema.safeParse(raw)
-    setStatus('idle')
-    if (!res.ok || !parsed.success) {
-      setErr('Preflight failed')
-      return
-    }
-    setPreflight(parsed.data.results)
+  // Handle preflight check
+  const handlePreflight = async () => {
+    await preflight.runPreflight(editor.rawJson)
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <main className='mx-auto max-w-3xl p-6'>
+        <div className='text-center'>Loading workflow...</div>
+      </main>
+    )
+  }
+
+  // Show error if workflow couldn't be loaded
+  if (management.error && !management.meta) {
+    return (
+      <main className='mx-auto max-w-3xl p-6'>
+        <div className='rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700'>{management.error}</div>
+      </main>
+    )
   }
 
   return (
@@ -139,10 +68,18 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ slug: s
         </Link>
       </div>
 
-      {err && <div className='mt-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700'>{err}</div>}
+      {/* Error Messages */}
+      {management.error && (
+        <div className='mt-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700'>{management.error}</div>
+      )}
 
-      {meta && (
+      {preflight.error && (
+        <div className='mt-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700'>{preflight.error}</div>
+      )}
+
+      {management.meta && (
         <>
+          {/* Form Fields */}
           <div className='mt-4 grid grid-cols-1 gap-3 md:grid-cols-2'>
             <label className='text-sm'>
               Slug
@@ -151,63 +88,96 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ slug: s
             <label className='text-sm'>
               Name
               <input
-                value={name}
-                onChange={e => setName(e.target.value)}
+                value={editor.name}
+                onChange={e => editor.setName(e.target.value)}
                 className='mt-1 w-full rounded-md border px-3 py-2 text-sm'
+                disabled={isBusy}
               />
             </label>
           </div>
 
+          {/* Workflow JSON Editor */}
           <div className='mt-4'>
-            <label className='text-sm font-medium'>Workflow JSON (Export API)</label>
+            <label className='text-sm font-medium'>
+              Workflow JSON (Export API)
+              {!editor.isValidJson && <span className='ml-2 text-red-600 text-xs'>Invalid JSON format</span>}
+            </label>
             <textarea
-              className='mt-2 h-72 w-full rounded-md border px-3 py-2 text-sm font-mono'
-              value={rawJson}
-              onChange={e => setRawJson(e.target.value)}
+              className={`mt-2 h-72 w-full rounded-md border px-3 py-2 text-sm font-mono ${
+                !editor.isValidJson ? 'border-red-300 bg-red-50' : ''
+              }`}
+              value={editor.rawJson}
+              onChange={e => editor.setRawJson(e.target.value)}
+              disabled={isBusy}
             />
           </div>
 
+          {/* Action Buttons */}
           <div className='mt-4 flex flex-wrap gap-2'>
             <button
-              onClick={save}
-              disabled={status !== 'idle'}
+              onClick={handleSave}
+              disabled={isBusy || !editor.isValidJson}
               className='rounded bg-black px-4 py-2 text-white disabled:opacity-50'
             >
-              Save
+              {management.saving ? 'Saving...' : 'Save'}
             </button>
+
             <button
-              onClick={runPreflight}
-              disabled={status !== 'idle'}
+              onClick={handlePreflight}
+              disabled={isBusy || !editor.isValidJson || editor.rawJson.trim().length === 0}
               className='rounded border px-4 py-2 disabled:opacity-50'
             >
-              Preflight
+              {preflight.running ? 'Checking...' : 'Preflight'}
             </button>
+
             <button
-              onClick={remove}
-              disabled={status !== 'idle'}
+              onClick={handleDelete}
+              disabled={isBusy}
               className='rounded border border-red-400 px-4 py-2 text-red-600 disabled:opacity-50'
             >
-              Delete
+              {management.deleting ? 'Deleting...' : 'Delete'}
             </button>
+
+            {editor.isDirty && (
+              <button
+                onClick={editor.reset}
+                disabled={isBusy}
+                className='rounded border border-gray-400 px-4 py-2 text-gray-600 disabled:opacity-50'
+              >
+                Reset
+              </button>
+            )}
           </div>
 
-          {preflight.length > 0 && (
+          {/* Preflight Results */}
+          {preflight.hasResults && (
             <div className='mt-6'>
               <h2 className='text-lg font-semibold'>Preflight Results</h2>
-              <ul className='mt-2 space-y-2'>
-                {preflight.map((r, i) => (
-                  <li key={`${r.nodeId}-${i}`} className='rounded-xl border p-3 text-sm'>
+
+              {/* Summary */}
+              <div className='mt-2 text-sm'>
+                {preflight.allModelsPresent ? (
+                  <div className='text-green-700 font-medium'>✓ All models are present</div>
+                ) : (
+                  <div className='text-red-700 font-medium'>⚠ {preflight.missingModels.length} model(s) missing</div>
+                )}
+              </div>
+
+              {/* Detailed Results */}
+              <ul className='mt-3 space-y-2'>
+                {preflight.results.map((result, index) => (
+                  <li key={`${result.nodeId}-${index}`} className='rounded-xl border p-3 text-sm'>
                     <div className='font-medium'>
-                      {r.type}: <code>{r.name}</code>
+                      {result.type}: <code>{result.name}</code>
                     </div>
                     <div className='opacity-70'>
-                      node {r.nodeId} • {r.classType}
+                      node {result.nodeId} • {result.classType}
                     </div>
                     <div className='opacity-70'>
-                      S3 key: <code>{r.s3Key}</code>
+                      S3 key: <code>{result.s3Key}</code>
                     </div>
-                    <div className={r.present ? 'text-green-700' : 'text-red-700'}>
-                      {r.present ? 'Present' : 'Missing'} at <code>{r.workerPath}</code>
+                    <div className={result.present ? 'text-green-700' : 'text-red-700'}>
+                      {result.present ? 'Present' : 'Missing'} at <code>{result.workerPath}</code>
                     </div>
                   </li>
                 ))}
