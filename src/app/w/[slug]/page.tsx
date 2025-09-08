@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 import { useParams } from 'next/navigation'
 import { TemplateMetaSchema, type TemplateMeta } from '@/lib/templates.schema'
+import type { ExportApiWorkflow } from '@/lib/workflow.infer'
 import { WorkflowResults } from '@/components/WorkflowResults'
 import { ProgressIndicator } from '@/components/ProgressIndicator'
 import { ResultHistory } from '@/components/ResultHistory'
@@ -112,6 +113,16 @@ type PreflightItem = PreflightResp['results'][number]
 /** Local value type for form state */
 type ValueUnion = string | number | boolean | File | null
 
+// Type for workflow node with _meta information
+type WorkflowNodeWithMeta = {
+  class_type: string
+  inputs: Record<string, unknown>
+  _meta?: {
+    title?: string
+  }
+  [key: string]: unknown
+}
+
 // Status display component with enhanced job state information
 function StatusDisplay({ status, jobId }: { status: string; jobId: string }) {
   const getStatusInfo = (status: string) => {
@@ -159,6 +170,7 @@ export default function WorkflowPage() {
   const [error, setError] = useState<string>('')
 
   const [meta, setMeta] = useState<TemplateMeta | null>(null)
+  const [workflow, setWorkflow] = useState<ExportApiWorkflow | null>(null)
   const [values, setValues] = useState<Record<string, ValueUnion>>({})
 
   const [status, setStatus] = useState<string>('idle')
@@ -174,19 +186,112 @@ export default function WorkflowPage() {
 
   const pollRef = useRef<number | null>(null)
 
+  // Smart labeling function that creates user-friendly, distinctive labels
+  const getEnhancedFieldLabel = useCallback(
+    (
+      field: { nodeId: string; inputKey: string; label: string; defaultValue?: unknown },
+      allFields: Array<{ nodeId: string; inputKey: string; label: string; defaultValue?: unknown }>
+    ): string => {
+      if (!workflow || !workflow[field.nodeId]) {
+        return field.label
+      }
+
+      const node = workflow[field.nodeId] as WorkflowNodeWithMeta
+      const metaTitle = node._meta?.title
+
+      // Count how many fields have the same label to detect duplicates
+      const duplicateCount = allFields.filter(f => f.label === field.label).length
+      const hasDuplicates = duplicateCount > 1
+
+      // Helper function to extract meaningful context from meta title
+      const extractContext = (title: string): string => {
+        const lower = title.toLowerCase()
+
+        // Extract positive/negative context
+        if (lower.includes('positive')) return 'Positive'
+        if (lower.includes('negative')) return 'Negative'
+
+        // Extract specific node purposes
+        if (lower.includes('load') && lower.includes('checkpoint')) return 'Model'
+        if (lower.includes('save') && lower.includes('image')) return 'Output'
+        if (lower.includes('preview')) return 'Preview'
+        if (lower.includes('vae') && lower.includes('decode')) return 'VAE'
+        if (lower.includes('sampler')) return 'Sampling'
+        if (lower.includes('guidance')) return 'Guidance'
+
+        return ''
+      }
+
+      // If we have meta title, try to create a better label
+      if (typeof metaTitle === 'string' && metaTitle.trim()) {
+        const context = extractContext(metaTitle)
+
+        // For prompt fields, use the context to distinguish
+        if (field.label.toLowerCase().includes('prompt') && context) {
+          return `${context} Prompt`
+        }
+
+        // For other duplicated fields, add context if available
+        if (hasDuplicates && context && !field.label.toLowerCase().includes(context.toLowerCase())) {
+          return `${field.label} (${context})`
+        }
+
+        // If the meta title is much more descriptive than the label, use it
+        if (metaTitle.length > field.label.length + 5 && !metaTitle.includes('(') && !metaTitle.includes('Encode')) {
+          return metaTitle
+        }
+      }
+
+      // For duplicates without clear meta context, try to use other distinguishing factors
+      if (hasDuplicates) {
+        // Use default value patterns
+        if (field.label.toLowerCase().includes('prompt')) {
+          const defaultVal = field.defaultValue
+          if (typeof defaultVal === 'string') {
+            if (defaultVal.length > 50) {
+              return 'Positive Prompt'
+            } else if (defaultVal === '' || defaultVal.length === 0) {
+              return 'Negative Prompt'
+            }
+          }
+        }
+
+        // Use node ID as last resort for duplicates
+        return `${field.label} (Node ${field.nodeId})`
+      }
+
+      return field.label
+    },
+    [workflow]
+  )
+
   // Load template meta, init form values
   useEffect(() => {
     ;(async () => {
       try {
-        const res = await fetch(`/api/workflows/${slug}`)
-        const raw = await res.json()
-        const parsed = TemplateMetaSchema.safeParse(raw)
-        if (!res.ok || !parsed.success) throw new Error('Template not found or invalid response')
+        // Load both metadata and full workflow in parallel
+        const [metaRes, workflowRes] = await Promise.all([
+          fetch(`/api/workflows/${slug}`),
+          fetch(`/api/workflows/${slug}/raw`)
+        ])
 
-        setMeta(parsed.data)
+        const [metaRaw, workflowRaw] = await Promise.all([metaRes.json(), workflowRes.json()])
+
+        const metaParsed = TemplateMetaSchema.safeParse(metaRaw)
+        if (!metaRes.ok || !metaParsed.success) {
+          throw new Error('Template metadata not found or invalid response')
+        }
+
+        if (!workflowRes.ok) {
+          console.warn('Could not load workflow data for enhanced labeling')
+        } else {
+          setWorkflow(workflowRaw.workflow)
+        }
+
+        setMeta(metaParsed.data)
 
         const init: Record<string, ValueUnion> = {}
-        for (const f of parsed.data.fields) {
+        for (const f of metaParsed.data.fields) {
           if (f.defaultValue !== undefined) {
             init[f.id] = f.defaultValue
           } else if (f.type === 'boolean') {
@@ -582,7 +687,7 @@ export default function WorkflowPage() {
           return (
             <div key={f.id} className='rounded-xl border p-3'>
               <label className='text-sm font-medium'>
-                {f.label}
+                {getEnhancedFieldLabel(f, meta.fields)}
                 {f.required ? ' *' : ''}
               </label>
               {f.help && <div className='text-xs opacity-70'>{f.help}</div>}
@@ -652,7 +757,7 @@ export default function WorkflowPage() {
         })}
       </div>
     )
-  }, [meta, values])
+  }, [meta, values, getEnhancedFieldLabel])
 
   const preflightBanner = useMemo(() => {
     if (preflightBusy) {
