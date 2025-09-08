@@ -6,6 +6,12 @@ import { ExportApiWorkflowSchema, type ExportApiWorkflow, type ExportApiNode } f
 
 export const runtime = 'nodejs'
 
+// Note: runAsync and runSync functions now include:
+// - Automatic retry with exponential backoff for API failures
+// - Configurable timeouts to prevent hanging requests
+// - Enhanced error handling with detailed logging
+// - Support for retryable vs non-retryable error classification
+
 const PatchSpecSchema = z.object({
   nodeId: z.string(),
   inputKey: z.string(),
