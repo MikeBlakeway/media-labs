@@ -4,6 +4,42 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { z } from 'zod'
 import { useParams } from 'next/navigation'
 import { TemplateMetaSchema, type TemplateMeta } from '@/lib/templates.schema'
+import { WorkflowResults } from '@/components/WorkflowResults'
+import { ProgressIndicator } from '@/components/ProgressIndicator'
+import { ResultHistory } from '@/components/ResultHistory'
+
+// Import RunPod utilities for job state management
+type RunPodJobState = 'IN_QUEUE' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'TIMED_OUT'
+
+// Helper function to check if job is complete
+function isJobComplete(status: RunPodJobState | string): boolean {
+  return status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED' || status === 'TIMED_OUT'
+}
+
+// Map RunPod job states to client-friendly status strings
+function mapJobStatusToClientStatus(status: RunPodJobState | string): string {
+  switch (status) {
+    case 'IN_QUEUE':
+      return 'queued'
+    case 'RUNNING':
+      return 'running'
+    case 'COMPLETED':
+      return 'completed'
+    case 'FAILED':
+      return 'failed'
+    case 'CANCELLED':
+      return 'cancelled'
+    case 'TIMED_OUT':
+      return 'timed-out'
+    // Legacy status mapping
+    case 'QUEUED':
+      return 'queued'
+    case 'IN_PROGRESS':
+      return 'running'
+    default:
+      return typeof status === 'string' ? status.toLowerCase() : 'unknown'
+  }
+}
 
 /** Schemas for API responses/requests used on this page */
 const UploadResponseSchema = z.object({
@@ -27,17 +63,31 @@ const RunReqSchema = z.object({
   mode: z.enum(['auto', 'sync', 'async']).optional()
 })
 
+/** RunPod Job State Schema - Official 6 states */
+const RunPodJobStateSchema = z.enum([
+  'IN_QUEUE', // Job waiting for available worker
+  'RUNNING', // Worker actively processing job
+  'COMPLETED', // Job finished successfully
+  'FAILED', // Job encountered error during execution
+  'CANCELLED', // Job manually cancelled via /cancel/job_id
+  'TIMED_OUT' // Job expired or worker failed to report back
+])
+
 const RunAsyncRespSchema = z.object({
   id: z.string(),
-  status: z.string()
+  status: z.union([RunPodJobStateSchema, z.string()]) // Allow unknown states
 })
+
 const RunSyncRespSchema = z.object({
-  status: z.enum(['COMPLETED', 'FAILED']),
+  status: z.union([
+    z.enum(['COMPLETED', 'FAILED']), // Legacy sync states
+    RunPodJobStateSchema
+  ]),
   output: z.unknown().optional()
 })
 
 const StatusRespSchema = z.object({
-  status: z.enum(['QUEUED', 'IN_PROGRESS', 'COMPLETED', 'FAILED']),
+  status: z.union([RunPodJobStateSchema, z.string()]), // Support all states + unknown
   output: z.unknown().optional()
 })
 
@@ -62,6 +112,44 @@ type PreflightItem = PreflightResp['results'][number]
 /** Local value type for form state */
 type ValueUnion = string | number | boolean | File | null
 
+// Status display component with enhanced job state information
+function StatusDisplay({ status, jobId }: { status: string; jobId: string }) {
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'idle':
+        return { color: 'text-gray-600', icon: '⚪', label: 'Ready' }
+      case 'submitting':
+        return { color: 'text-blue-600', icon: '📤', label: 'Submitting...' }
+      case 'queued':
+        return { color: 'text-yellow-600', icon: '⏳', label: 'Queued' }
+      case 'running':
+        return { color: 'text-blue-600', icon: '⚡', label: 'Running' }
+      case 'completed':
+        return { color: 'text-green-600', icon: '✅', label: 'Completed' }
+      case 'failed':
+        return { color: 'text-red-600', icon: '❌', label: 'Failed' }
+      case 'cancelled':
+        return { color: 'text-orange-600', icon: '🚫', label: 'Cancelled' }
+      case 'timed-out':
+        return { color: 'text-red-600', icon: '⏰', label: 'Timed Out' }
+      case 'error':
+        return { color: 'text-red-600', icon: '💥', label: 'Error' }
+      default:
+        return { color: 'text-gray-600', icon: '❓', label: status }
+    }
+  }
+
+  const info = getStatusInfo(status)
+
+  return (
+    <div className={`text-sm ${info.color} flex items-center gap-2`}>
+      <span>{info.icon}</span>
+      <span className='font-medium'>{info.label}</span>
+      {jobId && <span className='opacity-70 font-mono text-xs'>({jobId.slice(0, 8)}...)</span>}
+    </div>
+  )
+}
+
 export default function WorkflowPage() {
   // ✅ Use useParams() in Client Components
   const routeParams = useParams<{ slug: string }>()
@@ -75,6 +163,10 @@ export default function WorkflowPage() {
 
   const [status, setStatus] = useState<string>('idle')
   const [jobId, setJobId] = useState<string>('')
+  const [jobResults, setJobResults] = useState<unknown>(null)
+  const [jobError, setJobError] = useState<string>('')
+  const [jobStartTime, setJobStartTime] = useState<number | undefined>(undefined)
+  const [pollAttempts, setPollAttempts] = useState<number>(0)
 
   const [preflightBusy, setPreflightBusy] = useState<boolean>(true)
   const [preflightErr, setPreflightErr] = useState<string>('')
@@ -208,9 +300,14 @@ export default function WorkflowPage() {
       return
     }
 
+    // Clear previous results when starting new job
+    setJobResults(null)
+    setJobError('')
     setStatus('submitting')
     setError('')
     setJobId('')
+    setJobStartTime(Date.now())
+    setPollAttempts(0)
 
     const patches: Array<{ nodeId: string; inputKey: string; value: string | number | boolean }> = []
 
@@ -248,43 +345,229 @@ export default function WorkflowPage() {
     })
     const runRaw = await runRes.json()
 
-    const maybeSync = RunSyncRespSchema.safeParse(runRaw)
-    if (maybeSync.success) {
-      setStatus(maybeSync.data.status.toLowerCase())
-      return
-    }
-
+    // Check ASYNC response first (more specific - requires both id and status)
     const maybeAsync = RunAsyncRespSchema.safeParse(runRaw)
     if (maybeAsync.success) {
-      setStatus('queued')
+      // Handle async response - start with initial status
+      const initialStatus = mapJobStatusToClientStatus(maybeAsync.data.status)
+      setStatus(initialStatus)
       setJobId(maybeAsync.data.id)
 
       const poll = async (): Promise<void> => {
-        const sRes = await fetch(`/api/runpod/status/${maybeAsync.data.id}`)
-        const sRaw = await sRes.json()
-        const s = StatusRespSchema.safeParse(sRaw)
-        if (!s.success) {
+        try {
+          setPollAttempts(prev => prev + 1)
+
+          const sRes = await fetch(`/api/runpod/status/${maybeAsync.data.id}`)
+
+          if (!sRes.ok) {
+            const errorText = await sRes.text()
+            console.error(`Status API failed: ${sRes.status} ${sRes.statusText}`, errorText)
+            throw new Error(`Status API failed: ${sRes.status} ${sRes.statusText}`)
+          }
+
+          const sRaw = await sRes.json()
+          const s = StatusRespSchema.safeParse(sRaw)
+
+          if (!s.success) {
+            console.error('Status schema validation failed:', s.error)
+            setStatus('error')
+            setError('Invalid status response')
+            return
+          }
+
+          const clientStatus = mapJobStatusToClientStatus(s.data.status)
+          setStatus(clientStatus)
+
+          // Check if job is complete (any terminal state)
+          if (isJobComplete(s.data.status)) {
+            // Job finished - stop polling and store results
+            if (pollRef.current) {
+              clearTimeout(pollRef.current)
+              pollRef.current = null
+            }
+
+            const duration = jobStartTime ? Date.now() - jobStartTime : undefined
+
+            // Store results for display
+            if (s.data.status === 'COMPLETED') {
+              setJobResults(s.data.output || null)
+              setJobError('')
+            } else if (s.data.status === 'FAILED') {
+              setJobResults(s.data.output || null) // May contain error details
+              setJobError('Workflow execution failed')
+            } else if (s.data.status === 'TIMED_OUT') {
+              setJobError('Workflow timed out')
+            } else if (s.data.status === 'CANCELLED') {
+              setJobError('Workflow was cancelled')
+            }
+
+            // Store result in history
+            try {
+              const historyResponse = await fetch('/api/workflows/results', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                  jobId: maybeAsync.data.id,
+                  status: s.data.status,
+                  output: s.data.output,
+                  slug,
+                  duration
+                })
+              })
+
+              if (!historyResponse.ok) {
+                console.warn('Failed to store result in history:', historyResponse.status)
+              }
+            } catch (historyError) {
+              console.warn('History storage error:', historyError)
+            }
+          } else {
+            // Continue polling for non-terminal states
+            pollRef.current = window.setTimeout(() => {
+              void poll()
+            }, 2000)
+          }
+        } catch (error) {
+          console.error('Polling error:', error)
           setStatus('error')
-          setError('Invalid status response')
-          return
-        }
-        if (s.data.status === 'COMPLETED') {
-          setStatus('completed')
-        } else if (s.data.status === 'FAILED') {
-          setStatus('failed')
-        } else {
-          pollRef.current = window.setTimeout(() => {
-            void poll()
-          }, 2000)
+          setError(error instanceof Error ? error.message : 'Polling failed')
+
+          // Don't continue polling on error
+          if (pollRef.current) {
+            clearTimeout(pollRef.current)
+            pollRef.current = null
+          }
         }
       }
+
       await poll()
       return
     }
 
+    // Check SYNC response second (less specific - only requires status)
+    const maybeSync = RunSyncRespSchema.safeParse(runRaw)
+    if (maybeSync.success) {
+      // Handle sync response - map to consistent status
+      const normalizedStatus = mapJobStatusToClientStatus(maybeSync.data.status)
+      setStatus(normalizedStatus)
+      return
+    }
+
+    // Neither schema matched
+    console.error('Response matches neither async nor sync schema:', {
+      rawResponse: runRaw,
+      responseType: typeof runRaw,
+      responseKeys: runRaw && typeof runRaw === 'object' ? Object.keys(runRaw) : 'not object'
+    })
+
     setStatus('error')
     setError('Unexpected run response')
-  }, [allPresent, coercePatchValue, meta, slug, values])
+  }, [allPresent, coercePatchValue, meta, slug, values, jobStartTime])
+
+  const forceCheckStatus = useCallback(async () => {
+    if (!jobId) return
+
+    try {
+      const sRes = await fetch(`/api/runpod/status/${jobId}`)
+
+      if (!sRes.ok) {
+        throw new Error(`Status API failed: ${sRes.status} ${sRes.statusText}`)
+      }
+
+      const sRaw = await sRes.json()
+      const s = StatusRespSchema.safeParse(sRaw)
+
+      if (!s.success) {
+        console.error('Status schema validation failed:', s.error)
+        setError('Invalid status response from force check')
+        return
+      }
+
+      const clientStatus = mapJobStatusToClientStatus(s.data.status)
+      setStatus(clientStatus)
+
+      // If job is complete, process results immediately
+      if (isJobComplete(s.data.status)) {
+        // Stop any ongoing polling
+        if (pollRef.current) {
+          clearTimeout(pollRef.current)
+          pollRef.current = null
+        }
+
+        const duration = jobStartTime ? Date.now() - jobStartTime : undefined
+
+        // Store results for display
+        if (s.data.status === 'COMPLETED') {
+          setJobResults(s.data.output || null)
+          setJobError('')
+        } else if (s.data.status === 'FAILED') {
+          setJobResults(s.data.output || null)
+          setJobError('Workflow execution failed')
+        } else if (s.data.status === 'TIMED_OUT') {
+          setJobError('Workflow timed out')
+        } else if (s.data.status === 'CANCELLED') {
+          setJobError('Workflow was cancelled')
+        }
+
+        // Store result in history
+        try {
+          const historyResponse = await fetch('/api/workflows/results', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              jobId,
+              status: s.data.status,
+              output: s.data.output,
+              slug,
+              duration
+            })
+          })
+
+          if (!historyResponse.ok) {
+            console.warn('Failed to store result in history:', historyResponse.status)
+          }
+        } catch (historyError) {
+          console.warn('History storage error:', historyError)
+        }
+      }
+    } catch (error) {
+      console.error('❌ Force check error:', error)
+      setError(error instanceof Error ? error.message : 'Force check failed')
+    }
+  }, [jobId, slug, jobStartTime])
+
+  // Cancel a running job
+  const cancelJob = useCallback(async () => {
+    if (!jobId) return
+
+    try {
+      const response = await fetch(`/api/runpod/cancel/${jobId}`, {
+        method: 'POST'
+      })
+
+      if (!response.ok) {
+        throw new Error(`Cancel failed: ${response.status}`)
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        setStatus('cancelled')
+        if (pollRef.current) {
+          clearTimeout(pollRef.current)
+          pollRef.current = null
+        }
+      } else {
+        setError(result.message || 'Failed to cancel job')
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Cancel request failed')
+    }
+  }, [jobId])
+
+  // Check if current job can be cancelled
+  const canCancelJob = useMemo(() => {
+    return jobId && (status === 'queued' || status === 'running')
+  }, [jobId, status])
 
   const form = useMemo(() => {
     if (!meta) return null
@@ -447,17 +730,58 @@ export default function WorkflowPage() {
       <div className='mt-4 flex flex-wrap items-center gap-2'>
         <button
           onClick={() => void submit()}
-          disabled={!allPresent || status === 'submitting'}
+          disabled={!allPresent || status === 'submitting' || status === 'queued' || status === 'running'}
           className='rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50'
           title={allPresent ? 'Run workflow' : 'Missing models — upload and Recheck'}
         >
           Run
         </button>
-        <div className='self-center text-sm opacity-70'>
-          Status: {status}
-          {jobId ? ` — ${jobId}` : ''}
+
+        {canCancelJob && (
+          <button
+            onClick={() => void cancelJob()}
+            className='rounded-xl bg-red-600 px-4 py-2 text-white hover:bg-red-700'
+            title='Cancel running job'
+          >
+            Cancel
+          </button>
+        )}
+
+        {jobId && (
+          <button
+            onClick={() => void forceCheckStatus()}
+            className='rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'
+            title='Force check job status'
+          >
+            🔍 Check Status
+          </button>
+        )}
+
+        <div className='self-center'>
+          <StatusDisplay status={status} jobId={jobId} />
         </div>
       </div>
+
+      {/* Progress Indicator */}
+      <ProgressIndicator status={status} jobId={jobId} startTime={jobStartTime} attempts={pollAttempts} />
+
+      {/* Display workflow results */}
+      <WorkflowResults
+        output={
+          jobResults as { images?: { base64?: string; url?: string; filename?: string }[]; errors?: string[] } | null
+        }
+        status={status}
+        error={jobError || error}
+      />
+
+      {/* Result History */}
+      <ResultHistory
+        currentSlug={slug}
+        onSelectResult={result => {
+          // Optional: populate form with previous settings or show result
+          console.log('Selected previous result:', result)
+        }}
+      />
     </main>
   )
 }

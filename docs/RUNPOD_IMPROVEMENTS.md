@@ -59,51 +59,82 @@ According to `docs/runpod/serverless/job-states.md`, RunPod defines 6 job states
 - `src/app/w/[slug]/page.tsx` - Client-side status handling
 - `src/app/api/runpod/status/[id]/route.ts` - Server-side status API
 
-### 2. Missing Timeout & Retry Logic 🚨 **HIGH PRIORITY**
+## Phase 2: Timeout & Retry Logic ✅ COMPLETED
 
-**Current State:**
+**Target**: Add robust timeout and retry mechanisms with exponential backoff
 
-- No timeout handling for long-running jobs
-- No retry mechanisms for failed requests
-- Jobs can hang indefinitely
+### Implementation Status: COMPLETED ✅
 
-**RunPod Best Practice:**
-From `docs/runpod/serverless/job-states.md` and `docs/runpod/development/debugging.md`:
+All timeout and retry logic has been successfully implemented with comprehensive configuration and production-ready functionality.
 
-- Implement configurable timeouts
-- Add exponential backoff retry logic
-- Handle network failures gracefully
+### Changes Made
 
-**Required Implementation:**
+1. **Configuration Module** (`src/lib/runpod.config.ts`) ✅
+
+   - Comprehensive timeout settings for all operation types
+   - Configurable retry policies with exponential backoff
+   - Environment-based configuration with validation
+   - Production-ready defaults with development overrides
+
+2. **Retry Utilities** (`src/lib/runpod.retry.ts`) ✅
+
+   - Exponential backoff with jitter to prevent thundering herd
+   - Intelligent error classification (retryable vs non-retryable)
+   - Comprehensive timeout wrapper functions
+   - Detailed retry metrics and error reporting
+
+3. **Enhanced RunPod Functions** (`src/lib/runpod.ts`) ✅
+   - `runSync()`: Enhanced with timeout and retry logic
+   - `runAsync()`: Added retry mechanisms for API call reliability
+   - `getStatus()`: Retry logic for status check failures
+   - `cancelJob()`: Robust cancellation with retry support
+
+### Configuration Features
 
 ```typescript
-// New: src/lib/runpod.config.ts
-export const RunPodConfig = {
-  timeouts: {
-    sync: 90000, // 90 seconds (RunPod default)
-    async: 300000, // 5 minutes for long tasks
-    status: 10000 // 10 seconds for status checks
-  },
-  retries: {
-    maxAttempts: 3,
-    backoffMs: 1000,
-    backoffMultiplier: 2
-  }
-}
+// Timeout Configuration
+SYNC_TIMEOUT_MS: 300000 // 5 minutes for sync operations
+ASYNC_TIMEOUT_MS: 30000 // 30 seconds for async job submission
+STATUS_TIMEOUT_MS: 15000 // 15 seconds for status checks
+CANCEL_TIMEOUT_MS: 10000 // 10 seconds for cancellation
 
-// Enhanced: src/lib/runpod.ts
-export async function runAsyncWithRetry(input: RunpodInput, config = RunPodConfig.retries): Promise<RunpodAsyncResponse>
+// Retry Configuration
+MAX_RETRIES: 3 // Maximum retry attempts
+BACKOFF_MS: 1000 // Initial backoff delay
+BACKOFF_MULTIPLIER: 2 // Exponential multiplier
+MAX_BACKOFF_MS: 30000 // Maximum backoff delay
 ```
 
-**Files to Create:**
+### Retry Logic Features
 
-- [ ] `src/lib/runpod.config.ts` - Configuration management
-- [ ] `src/lib/runpod.retry.ts` - Retry logic implementation
+- **Exponential Backoff**: 1s → 2s → 4s → 8s with jitter
+- **Error Classification**: Distinguishes retryable vs non-retryable errors
+- **Timeout Protection**: All operations have configurable timeouts
+- **Metrics Collection**: Tracks retry attempts and total duration
+- **Graceful Degradation**: Comprehensive error handling and logging
 
-**Files to Update:**
+### Usage Examples
 
-- [ ] `src/lib/runpod.ts` - Add timeout and retry wrappers
-- [ ] `src/app/api/workflows/run/route.ts` - Use enhanced functions
+```typescript
+// All RunPod functions now automatically include retry logic
+const result = await runAsync(workflowInput) // Auto-retry on failure
+const status = await getStatus(jobId) // Auto-retry status checks
+const syncResult = await runSync(workflowInput) // Timeout + retry for sync
+
+// Configuration can be customized via environment variables
+RUNPOD_MAX_RETRIES = 5
+RUNPOD_SYNC_TIMEOUT_MS = 600000 // 10 minutes
+```
+
+### Error Handling
+
+The implementation includes sophisticated error handling:
+
+- **Network Errors**: Automatic retry with exponential backoff
+- **API Rate Limits**: Intelligent backoff with jitter
+- **Timeout Errors**: Configurable timeouts for all operation types
+- **Server Errors**: Retry on 5xx errors, fail fast on 4xx errors
+- **Worker Failures**: Comprehensive logging and error reporting
 
 ### 3. Webhook Support for Async Jobs 🚨 **HIGH PRIORITY**
 

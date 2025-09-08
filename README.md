@@ -7,6 +7,17 @@
 
 A modern Next.js web application for AI-powered image generation using RunPod's ComfyUI serverless endpoints.
 
+## ✨ Features
+
+- **🎨 AI Image Generation**: Generate high-quality images using Flux and other AI models
+- **📊 Real-time Progress Tracking**: Live progress indicators during workflow execution
+- **📚 Result History**: View and manage previous workflow results with thumbnails
+- **⚡ Async/Sync Support**: Handles both synchronous and asynchronous RunPod endpoints
+- **🔄 Auto Model Management**: Preflight checks ensure required models are available
+- **💾 S3 Integration**: Seamless file upload to RunPod volumes
+- **🎯 TypeScript**: Full type safety with Zod schema validation
+- **📱 Responsive UI**: Modern, clean interface built with TailwindCSS
+
 ## 🚀 Quick Start
 
 ### Prerequisites
