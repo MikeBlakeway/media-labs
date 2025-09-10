@@ -58,3 +58,4 @@ coverage/
 /.cache/
 node_modules
 data/debug
+volume-worker/venv
