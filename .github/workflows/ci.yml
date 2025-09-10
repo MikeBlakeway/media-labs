@@ -9,6 +9,7 @@ on:
       - 'public/**'
   pull_request:
     branches: [main, development]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -85,14 +86,22 @@ jobs:
           path: volume-worker/test-results/
 
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
     needs: [node-test, python-test]
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Deploy to Cloud
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Deploy volume-worker to GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REF: ${{ github.ref }}
         run: ./scripts/deploy.sh
