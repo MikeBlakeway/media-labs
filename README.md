@@ -74,12 +74,12 @@ media-labs/
 │   │   ├── w/[slug]/            # Dynamic workflow pages
 │   │   ├── manage/              # Workflow management pages
 │   │   └── register/            # Workflow registration
-│   ├── components/              # UI components (22 components)
+│   ├── components/              # UI components (23 components)
 │   │   ├── FormFields.tsx       # Form input components
 │   │   ├── WorkflowRunner.tsx   # Main workflow execution
 │   │   ├── ProgressIndicator.tsx # Progress tracking UI
 │   │   └── ...                  # Other specialized components
-│   ├── hooks/                   # Custom hooks (21 hooks)
+│   ├── hooks/                   # Custom hooks (22 hooks)
 │   │   ├── useWorkflowTemplate.ts  # Template loading
 │   │   ├── useJobManagement.ts     # Job execution & polling
 │   │   ├── useFileUpload.ts        # File upload handling
@@ -142,6 +142,11 @@ make build           # Build web application
 make lint            # Lint code
 make format          # Format code
 make test            # Run tests
+
+# Testing (Node.js)
+npm test             # Run Jest tests
+npm run test:watch   # Run tests in watch mode
+npm run test:coverage # Run tests with coverage
 ```
 
 ## 📚 Documentation

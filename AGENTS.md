@@ -14,12 +14,12 @@ media-labs/
 ├── package.json                 # Next.js application configuration
 ├── next.config.ts               # Next.js configuration
 ├── tsconfig.json                # TypeScript configuration
-├── tailwind.config.ts           # Tailwind CSS configuration
+├── postcss.config.mjs           # PostCSS configuration (TailwindCSS v4)
 ├── .env.example                 # Environment variable template
 ├── src/                         # Next.js application source code
 │   ├── app/                     # App Router (pages and API routes)
-│   ├── components/              # UI components (22 components)
-│   ├── hooks/                   # Custom hooks (21 hooks)
+│   ├── components/              # UI components (23 components)
+│   ├── hooks/                   # Custom hooks (22 hooks)
 │   └── lib/                     # Utilities and libraries
 ├── public/                      # Static assets
 ├── docs/                        # Project documentation

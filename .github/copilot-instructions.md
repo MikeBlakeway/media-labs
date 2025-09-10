@@ -24,12 +24,13 @@ Before generating code, scan the codebase to identify:
 
    - Next.js 15.5.2 with App Router architecture
    - React 19.1.0 with React DOM 19.1.0
-   - TailwindCSS 4.x with PostCSS configuration
+   - TailwindCSS 4.x with PostCSS-only configuration
 
 3. **Library Versions**:
    - Zod 4.1.5 for schema validation
    - AWS SDK v3.879.0 (@aws-sdk/client-s3, @aws-sdk/s3-request-presigner)
    - ESLint 9.x with Next.js TypeScript configuration
+   - Jest 29.7.0 with ts-jest for TypeScript testing
 
 ## Architecture Overview
 
@@ -47,6 +48,7 @@ Before generating code, scan the codebase to identify:
 The application follows a comprehensive hooks-based architecture where all business logic is extracted into custom hooks:
 
 ### **Workflow Management Hooks**
+
 - `useWorkflowTemplate` - Template loading and metadata management
 - `useWorkflowsList` - Workflow list fetching with error handling
 - `useWorkflowRegistration` - Workflow registration with validation
@@ -54,17 +56,20 @@ The application follows a comprehensive hooks-based architecture where all busin
 - `useWorkflowEditor` - Workflow editing state management
 
 ### **Job & Execution Hooks**
+
 - `useJobManagement` - Job submission, polling, and result management
 - `useWorkflowRunnerJob` - Job-specific execution and status tracking
 - `useEnhancedPolling` - Robust polling with retry logic
 
 ### **Form & UI Hooks**
+
 - `useWorkflowForm` - Form state management and validation
 - `useFieldLabeling` - Enhanced field labeling for workflows
 - `useFileUpload` - File upload functionality
 - `useUploadCard` - Upload card specific state management
 
 ### **Utility & Specialized Hooks**
+
 - `useManualPreflight` - Model preflight checks
 - `useWorkflowPreflight` - Workflow-specific preflight validation
 - `useResultHistory` - Result history management with filtering
@@ -76,12 +81,15 @@ The application follows a comprehensive hooks-based architecture where all busin
 ## Component Architecture Principles
 
 ### **Separation of Concerns**
+
 - **Hooks**: Handle all business logic, API calls, and state management
 - **Components**: Focus purely on UI rendering and user interaction
 - **Lib**: Contain pure utility functions and reusable logic
 
 ### **Component Composition Pattern**
+
 Components are organized into logical groups with clear responsibilities:
+
 - **Form Components**: `FormFields.tsx`, `WorkflowRunnerForm.tsx`, `UploadForm.tsx`
 - **Display Components**: `WorkflowResults.tsx`, `ImageGallery.tsx`, `VideoDisplay.tsx`
 - **Status Components**: `JobStatus.tsx`, `PreflightStatus.tsx`, `ProgressIndicator.tsx`
@@ -280,6 +288,9 @@ function req(...names: string[]): string {
 - Build: `npm run build`
 - Start (prod): `npm run start`
 - Lint: `npm run lint`
+- Test: `npm test` (Jest with TypeScript)
+- Test watch: `npm run test:watch`
+- Test coverage: `npm run test:coverage`
 
 ## API Route Patterns
 

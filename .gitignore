@@ -59,3 +59,6 @@ coverage/
 node_modules
 data/debug
 volume-worker/venv
+volume-worker/test-results
+volume-worker/__pycache__
+volume-worker/tmp

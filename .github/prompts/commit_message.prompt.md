@@ -1,7 +1,7 @@
 ---
 mode: 'agent'
 model: GPT-4.1
-tools: ['githubRepo', 'searchResults', 'search', 'codebase']
+tools: ['codebase', 'usages', 'think', 'changes', 'terminalSelection', 'terminalLastCommand', 'searchResults', 'search', 'runCommands', 'runTasks', 'github', 'sequentialthinking', 'copilotCodingAgent', 'activePullRequest']
 description: 'Generate a Conventional Commit style commit message and a safe PR body for this repository.'
 ---
 

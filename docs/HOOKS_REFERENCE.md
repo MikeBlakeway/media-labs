@@ -216,10 +216,11 @@ export function use[Feature](): Use[Feature]Result {
 
 ### Testing
 
-- Test with `@testing-library/react-hooks`
+- Test with Jest and @testing-library/react-hooks
 - Mock API calls and external dependencies
 - Test loading states and error conditions
 - Verify cleanup on unmount
+- Run with `npm test` or `npm run test:watch`
 
 ## Common Patterns
 
