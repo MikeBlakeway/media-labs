@@ -1,0 +1,158 @@
+# templates/ci-template.yml
+# Baseline CI for weekly release branches + short-lived feature branches.
+# - PRs: full checks + preview deploy (optional)
+# - release/*: deploy to staging
+# - tags v*: release to production + changelog/notes
+#
+# TODOs:
+# - Set PREVIEW deploy step to your provider (Vercel/Render/Netlify/etc.)
+# - Configure STAGING/PROD deploy commands/secrets
+# - Choose either Changesets or semantic-release and remove the other (see jobs.release)
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+      - release/**
+    tags:
+      - 'v*'
+
+env:
+  NODE_VERSION: '20.x'
+  BRANCH_NAME_REGEX: '^(feat|fix|chore|docs|refactor|hotfix|release)\/[a-z0-9._-]+$'
+  PKG_MANAGER: npm # change to yarn/pnpm if needed
+
+jobs:
+  branch-name-check:
+    name: Validate branch naming
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || (github.ref_type == 'branch')
+    steps:
+      - name: Extract branch name
+        id: branch
+        run: echo "name=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+      - name: Check against regex
+        run: |
+          if [[ ! "${{ steps.branch.outputs.name }}" =~ $BRANCH_NAME_REGEX ]]; then
+            echo "Branch name '${{ steps.branch.outputs.name }}' does not match $BRANCH_NAME_REGEX"
+            exit 1
+          fi
+
+  build-test:
+    name: Lint / Type / Test / Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: ${{ env.PKG_MANAGER }}
+
+      - name: Install dependencies
+        run: ${{ env.PKG_MANAGER }} ci
+
+      - name: Lint
+        run: ${{ env.PKG_MANAGER }} run lint
+
+      - name: Type-check
+        run: ${{ env.PKG_MANAGER }} run type-check
+
+      - name: Unit tests
+        run: ${{ env.PKG_MANAGER }} run test
+
+      - name: Build
+        run: ${{ env.PKG_MANAGER }} run build
+
+      - name: Audit (optional)
+        if: always()
+        run: ${{ env.PKG_MANAGER }} audit --audit-level=moderate || true
+
+      - name: Bundle size check (optional)
+        if: always()
+        run: |
+          echo "TODO: add size-limit or next-bundle-analyzer command here"
+
+  preview:
+    name: PR Preview (optional)
+    needs: [build-test]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy PR Preview
+        run: |
+          echo "TODO: call your preview provider CLI here (e.g., vercel --token=$VERCEL_TOKEN --prod=false)"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} # TODO adjust for provider
+
+  staging:
+    name: Deploy to Staging (on release/*)
+    needs: [build-test]
+    if: startsWith(github.ref, 'refs/heads/release/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Staging
+        run: |
+          echo "TODO: deploy the current release branch to staging"
+          # e.g. vercel --token=$VERCEL_TOKEN --prod=false --env=STAGING
+        env:
+          STAGING_TOKEN: ${{ secrets.STAGING_TOKEN }}
+
+  release:
+    name: Production Release (on tag v*)
+    needs: [build-test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # required for changelog/version tools
+
+      - name: Use Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: ${{ env.PKG_MANAGER }}
+
+      - name: Install dependencies
+        run: ${{ env.PKG_MANAGER }} ci
+
+      # ---------- OPTION A: Changesets ----------
+      - name: Generate Release Notes (Changesets)
+        if: env.USE_CHANGESETS == 'true'
+        run: |
+          npx changeset status --verbose
+          # Typically, versioning occurs before tagging; here we assume tag already exists.
+          # You can also drive tags from changesets in a different workflow.
+      - name: Publish (Changesets)
+        if: env.USE_CHANGESETS == 'true'
+        run: |
+          echo "TODO: publish artifacts / update docs / notify"
+      # -----------------------------------------
+      # ---------- OPTION B: semantic-release ----------
+      - name: Semantic Release
+        if: env.USE_SEMANTIC_RELEASE == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # if publishing packages
+        run: npx semantic-release
+      # -----------------------------------------------
+
+      - name: Deploy to Production
+        run: |
+          echo "TODO: deploy the tagged artifact to production"
+          # e.g. vercel --token=$VERCEL_TOKEN --prod --scope ${ORG}
+        env:
+          PROD_TOKEN: ${{ secrets.PROD_TOKEN }}
