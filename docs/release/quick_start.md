@@ -1,6 +1,6 @@
 # 🚀 Quick Start: Your Release Strategy
 
-## Welcome to Your New Release Workflow!
+## Welcome to Your New Release Workflow
 
 This guide will get you up and running with your new **Weekly Release Strategy** in 30 minutes.
 
@@ -10,11 +10,13 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 
 ### Step 1: GitHub Repository Setup (10 minutes)
 
-1. **Set up Branch Protection** 
+1. **Set up Branch Protection**
+
    - Go to **Settings** → **Branches** → **Add rule**
-   - Follow instructions in [BRANCH_PROTECTION_GUIDE.md](.github/BRANCH_PROTECTION_GUIDE.md)
+   - Follow instructions in [protection_guide.md](docs/release/protection_guide.md)
 
 2. **Install Dependencies**
+
    ```bash
    cd /Users/mike.blakeway/Development/personal-projects/media-labs
    npm install
@@ -26,7 +28,7 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 
 ### Step 2: Choose Deployment Platform (10 minutes)
 
-**Recommended: Vercel** (follow [DEPLOYMENT_PLATFORMS.md](.github/DEPLOYMENT_PLATFORMS.md))
+**Recommended: Vercel** (follow [deployment_guide.md](docs/release/deployment_guide.md))
 
 1. **Sign up**: [vercel.com](https://vercel.com)
 2. **Connect Repository**: Import from GitHub
@@ -36,6 +38,7 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 ### Step 3: Test Your First Release (10 minutes)
 
 1. **Create a test feature**:
+
    ```bash
    git checkout development
    git checkout -b feature/test-release-strategy
@@ -54,12 +57,14 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 ## 📅 Your Weekly Schedule
 
 ### **Monday-Thursday**: Development Mode
+
 - Work on `feature/*` branches
 - Create PRs to `development`
 - Test on staging/preview deployments
 
 ### **Friday at 10 AM**: Release Day
-- Use [RELEASE_DAY_CHECKLIST.md](.github/RELEASE_DAY_CHECKLIST.md)
+
+- Use [checklist.md](docs/release/checklist.md)
 - Create `release/2025-wXX` branch
 - Test on staging
 - Create PR to `main`
@@ -70,6 +75,7 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 ## 🛠️ Daily Workflow Commands
 
 ### Starting New Feature
+
 ```bash
 git checkout development
 git pull origin development
@@ -81,6 +87,7 @@ git push origin feature/awesome-feature
 ```
 
 ### Weekly Release (Fridays)
+
 ```bash
 git checkout development
 git pull origin development
@@ -90,6 +97,7 @@ git push origin release/2025-w$(date +%V)
 ```
 
 ### Emergency Hotfix
+
 ```bash
 git checkout main
 git pull origin main
@@ -127,17 +135,20 @@ BREAKING CHANGE: API endpoints have changed
 ## 📊 Monitoring Your Success
 
 ### GitHub Actions Dashboard
+
 - **Monitor**: Repository → **Actions** tab
 - **Check**: All workflows should be green ✅
 - **Review**: Failed builds immediately
 
 ### Weekly Release Health
+
 - ✅ Releases deploy by Friday 4 PM
 - ✅ Zero production breaking changes
 - ✅ All tests passing before merge
 - ✅ Changelog automatically generated
 
 ### Monthly Review Questions
+
 1. Are we hitting our Friday release target?
 2. How many hotfixes did we need? (target: <2/month)
 3. Are CI builds consistently green?
@@ -148,16 +159,19 @@ BREAKING CHANGE: API endpoints have changed
 ## 🆘 When Things Go Wrong
 
 ### Build Fails in CI
+
 1. Check the **Actions** tab for error details
 2. Fix the issue in your feature branch
 3. Push the fix (CI will re-run automatically)
 
 ### Production Issue Discovered
+
 1. Assess severity (is it breaking for users?)
 2. If critical: Create hotfix branch from `main`
 3. If minor: Add to next week's release
 
 ### Deployment Fails
+
 1. Check deployment platform dashboard
 2. Verify environment variables are set
 3. Review logs for specific error messages
@@ -167,33 +181,33 @@ BREAKING CHANGE: API endpoints have changed
 
 ## 📚 Important Files Reference
 
-| File | Purpose | When to Use |
-|------|---------|-------------|
-| [RELEASE_STRATEGY.md](.github/RELEASE_STRATEGY.md) | Full strategy guide | Understanding the workflow |
-| [RELEASE_DAY_CHECKLIST.md](.github/RELEASE_DAY_CHECKLIST.md) | Friday release steps | Every Friday |
-| [DEPLOYMENT_PLATFORMS.md](.github/DEPLOYMENT_PLATFORMS.md) | Platform setup guide | Initial setup |
-| [BRANCH_PROTECTION_GUIDE.md](.github/BRANCH_PROTECTION_GUIDE.md) | GitHub settings | Initial setup |
-| `.github/workflows/ci-cd.yml` | GitHub Actions | Automated CI/CD |
-| `.releaserc.json` | Semantic release config | Automated versioning |
+| File                                                           | Purpose                 | When to Use                |
+| -------------------------------------------------------------- | ----------------------- | -------------------------- |
+| [RELEASE_STRATEGY.md](docs/release/strategy.md)                | Full strategy guide     | Understanding the workflow |
+| [RELEASE_DAY_CHECKLIST.md](docs/release/checklist.md)          | Friday release steps    | Every Friday               |
+| [DEPLOYMENT_PLATFORMS.md](docs/release/deployment_guide.md)    | Platform setup guide    | Initial setup              |
+| [BRANCH_PROTECTION_GUIDE.md](docs/release/protection_guide.md) | GitHub settings         | Initial setup              |
+| `.github/workflows/ci-cd.yml`                                  | GitHub Actions          | Automated CI/CD            |
+| `.releaserc.json`                                              | Semantic release config | Automated versioning       |
 
 ---
 
-## 🎉 You're Ready!
+## 🎉 You're Ready
 
 Your release strategy is now set up and ready to go. Here's what happens automatically:
 
-✅ **Every Push**: CI/CD runs tests and builds  
-✅ **Every PR**: Preview deployment created  
-✅ **Every Friday**: Weekly release process starts  
-✅ **Every Merge to Main**: Version tagged and deployed  
-✅ **Every Release**: Changelog generated automatically  
+✅ **Every Push**: CI/CD runs tests and builds
+✅ **Every PR**: Preview deployment created
+✅ **Every Friday**: Weekly release process starts
+✅ **Every Merge to Main**: Version tagged and deployed
+✅ **Every Release**: Changelog generated automatically
 
 ---
 
 ## 💬 Questions or Issues?
 
 - **GitHub Issues**: Use for bugs or feature requests
-- **Release Problems**: Check [RELEASE_DAY_CHECKLIST.md](.github/RELEASE_DAY_CHECKLIST.md)
-- **Deployment Issues**: See [DEPLOYMENT_PLATFORMS.md](.github/DEPLOYMENT_PLATFORMS.md)
+- **Release Problems**: Check [RELEASE_DAY_CHECKLIST.md](docs/release/checklist.md)
+- **Deployment Issues**: See [DEPLOYMENT_PLATFORMS.md](docs/release/deployment_guide.md)
 
 **Happy releasing!** 🚀

@@ -70,6 +70,6 @@ If issues are discovered post-deployment:
 
 **Ready for manual review and approval** ✅
 
-**Reviewer**: @MikeBlakeway (even for solo dev - good practice!)  
-**Estimated Deployment Time**: [TIME]  
+**Reviewer**: @MikeBlakeway (even for solo dev - good practice!)
+**Estimated Deployment Time**: [TIME]
 **Next Release**: Friday, [NEXT_FRIDAY]

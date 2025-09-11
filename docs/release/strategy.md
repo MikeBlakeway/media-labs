@@ -2,8 +2,8 @@
 
 ## 🎯 Strategy: Solo Experimental with Weekly Cadence
 
-**Designed for**: Solo developer, experimental project, manual control gates  
-**Release Frequency**: Weekly (Fridays)  
+**Designed for**: Solo developer, experimental project, manual control gates
+**Release Frequency**: Weekly (Fridays)
 **Deployment**: Platform-agnostic (ready for Vercel/Netlify)
 
 ---
@@ -17,30 +17,32 @@ graph LR
     C --> D[main]
     D --> E[v1.2.0 tag]
     E --> F[Deploy to Production]
-    
+
     G[hotfix/urgent] --> D
 ```
 
 ### Branch Types
 
-| Branch | Purpose | Lifespan | Deploy Target |
-|--------|---------|----------|---------------|
-| `main` | Stable, production-ready | Permanent | Production |
-| `development` | Integration, testing | Permanent | Staging/Preview |
-| `release/YYYY-wNN` | Weekly release prep | 3-5 days | Staging |
-| `feature/description` | New features | 1-7 days | Preview |
-| `hotfix/description` | Emergency fixes | 1-2 days | Production |
+| Branch                | Purpose                  | Lifespan  | Deploy Target   |
+| --------------------- | ------------------------ | --------- | --------------- |
+| `main`                | Stable, production-ready | Permanent | Production      |
+| `development`         | Integration, testing     | Permanent | Staging/Preview |
+| `release/YYYY-wNN`    | Weekly release prep      | 3-5 days  | Staging         |
+| `feature/description` | New features             | 1-7 days  | Preview         |
+| `hotfix/description`  | Emergency fixes          | 1-2 days  | Production      |
 
 ---
 
 ## 📅 Weekly Release Cycle
 
 ### Monday-Thursday: Development
+
 - Work on `feature/` branches from `development`
 - Create PRs to `development` for testing
 - Staging deploys automatically test changes
 
 ### Friday: Release Day
+
 1. **10 AM**: Create `release/2025-wNN` from `development`
 2. **11 AM**: Final testing on release branch
 3. **2 PM**: Create PR: `release/2025-wNN` → `main`
@@ -48,6 +50,7 @@ graph LR
 5. **4 PM**: Merge, auto-tag, deploy to production
 
 ### Weekend: Monitoring
+
 - Monitor production deployment
 - Address any critical issues with hotfixes
 
@@ -56,6 +59,7 @@ graph LR
 ## 🔄 Common Workflows
 
 ### 1. Feature Development
+
 ```bash
 # Start new feature
 git checkout development
@@ -73,6 +77,7 @@ git push origin feature/awesome-new-thing
 ```
 
 ### 2. Weekly Release
+
 ```bash
 # Friday morning - create release branch
 git checkout development
@@ -88,6 +93,7 @@ git push origin release/2025-w37
 ```
 
 ### 3. Emergency Hotfix
+
 ```bash
 # Critical bug discovered in production
 git checkout main
@@ -109,25 +115,30 @@ git push origin hotfix/critical-security-fix
 ## 🚀 Deployment Strategy
 
 ### Deployment Targets
+
 - **Staging**: `development` branch → Auto-deploy
-- **Preview**: `feature/*` branches → Auto-deploy  
+- **Preview**: `feature/*` branches → Auto-deploy
 - **Production**: `main` branch → Manual trigger
 
 ### Recommended Platforms
+
 1. **Vercel** (Recommended for Next.js)
+
    - Perfect Next.js integration
    - Automatic preview deployments
    - Edge functions support
-   
+
 2. **Netlify** (Alternative)
+
    - Good for static sites
    - Branch-based deployments
-   
+
 3. **Railway** (Backend-heavy alternative)
    - Good for full-stack apps
    - Database hosting
 
 ### Environment Variables
+
 - **Development**: Local `.env.local`
 - **Staging**: Platform environment settings
 - **Production**: Platform environment settings (encrypted)
@@ -137,14 +148,16 @@ git push origin hotfix/critical-security-fix
 ## 🎛️ Manual Control Gates
 
 ### Required Manual Approvals
+
 1. **Feature → Development**: Code review
 2. **Release → Main**: Final release approval
 3. **Production Deploy**: Manual trigger (post-merge)
 4. **Hotfix**: Expedited but still reviewed
 
 ### Automated Checks (No Manual Gate)
+
 - Unit tests pass
-- Build succeeds  
+- Build succeeds
 - TypeScript compilation
 - Linting passes
 - No security vulnerabilities
@@ -154,16 +167,18 @@ git push origin hotfix/critical-security-fix
 ## 📊 Release Notes & Versioning
 
 ### Automated Versioning
+
 - **Semantic Versioning**: Automatic based on commit messages
 - **Changelog**: Auto-generated from conventional commits
 - **Git Tags**: Created automatically on main merge
 
 ### Commit Message Format
-```
+
+```txt
 type(scope): description
 
 feat: new feature (minor version bump)
-fix: bug fix (patch version bump)  
+fix: bug fix (patch version bump)
 perf: performance improvement (patch)
 docs: documentation (no version bump)
 style: formatting (no version bump)
@@ -175,16 +190,20 @@ BREAKING CHANGE: (major version bump)
 ```
 
 ### Release Notes Template
+
 ```markdown
 ## v1.2.0 - 2025-09-13
 
 ### 🎉 New Features
+
 - feat: awesome new AI model integration
 
-### 🐛 Bug Fixes  
+### 🐛 Bug Fixes
+
 - fix: resolved upload timeout issues
 
 ### 🔧 Improvements
+
 - perf: optimized image processing pipeline
 ```
 
@@ -193,6 +212,7 @@ BREAKING CHANGE: (major version bump)
 ## 🆘 Emergency Procedures
 
 ### Production Rollback
+
 ```bash
 # Quick rollback to previous version
 git checkout main
@@ -202,8 +222,9 @@ git push origin main
 ```
 
 ### Hotfix Process
+
 1. **Assess**: Is this truly urgent?
-2. **Branch**: Create `hotfix/` from `main`  
+2. **Branch**: Create `hotfix/` from `main`
 3. **Fix**: Make minimal necessary changes
 4. **Test**: Local testing (time-critical)
 5. **Review**: Expedited PR review
@@ -215,12 +236,14 @@ git push origin main
 ## 📈 Success Metrics
 
 ### Weekly Targets
+
 - ✅ Release deployed by Friday 4 PM
 - ✅ Zero production breaking changes
 - ✅ All tests passing before merge
 - ✅ Changelog automatically generated
 
 ### Monthly Review
+
 - Release frequency consistency
 - Hotfix frequency (target: <2 per month)
 - Time from feature to production
@@ -231,6 +254,7 @@ git push origin main
 ## 🛠️ Tools & Automation
 
 ### GitHub Actions (Automated)
+
 - ✅ CI/CD pipeline
 - ✅ Automated testing
 - ✅ Version bumping
@@ -238,7 +262,8 @@ git push origin main
 - ✅ Deployment triggering
 
 ### Manual Tools
+
 - 📋 PR review checklist
-- 📋 Release day checklist  
+- 📋 Release day checklist
 - 📋 Hotfix procedure checklist
 - 📊 Weekly release dashboard

@@ -9,18 +9,21 @@ Based on your project requirements (Next.js 15, experimental/personal, solo dev)
 ## 🌟 Recommended: Vercel (Perfect Match)
 
 **Why it's perfect for your project:**
+
 - ✅ **Next.js Native**: Built by the Next.js team
 - ✅ **Zero Config**: Deploy with `git push`
 - ✅ **Preview Deployments**: Every PR gets a preview URL
 - ✅ **Edge Functions**: Perfect for your API routes
 - ✅ **Free Tier**: Generous limits for personal projects
 
-### Setup Process
+### Setup Process (Vercel)
+
 1. Connect GitHub repository
 2. Configure environment variables
 3. Push to deploy automatically
 
 ### Environment Variables Needed
+
 ```bash
 # Production Environment
 RUNPOD_VOLUME_ID=your_volume_id
@@ -48,6 +51,7 @@ B2_S3_SECRET_ACCESS_KEY=your_b2_secret_key
 ### Deployment Configuration
 
 Create `vercel.json`:
+
 ```json
 {
   "version": 2,
@@ -75,12 +79,14 @@ Create `vercel.json`:
 ## 🥈 Alternative: Netlify
 
 **Good for:**
+
 - ✅ **Great Free Tier**: Generous limits
 - ✅ **Form Handling**: Built-in form processing
 - ✅ **Split Testing**: A/B testing features
 - ✅ **Branch Deploys**: Each branch gets a URL
 
-### Setup Process
+### Setup Process (Netlify)
+
 1. Connect GitHub repository
 2. Set build command: `npm run build`
 3. Set publish directory: `.next`
@@ -92,12 +98,14 @@ Create `vercel.json`:
 ## 🥉 Alternative: Railway
 
 **Good for:**
+
 - ✅ **Database Hosting**: Built-in PostgreSQL/Redis
 - ✅ **Full-Stack**: Great for backend-heavy apps
 - ✅ **Docker Support**: Custom containers
 - ✅ **Good Performance**: Fast deployments
 
 ### Setup Process
+
 1. Connect GitHub repository
 2. Configure build settings
 3. Add environment variables
@@ -108,14 +116,16 @@ Create `vercel.json`:
 
 ## 🎯 Our Recommendation: Start with Vercel
 
-### Why Vercel for Your Release Strategy:
+### Why Vercel for Your Release Strategy?
 
 1. **Perfect GitHub Integration**
+
    - Automatic deployments on push to `main`
    - Preview deployments for all PRs
    - Deployment status in GitHub
 
 2. **Release Strategy Alignment**
+
    - `main` branch → Production
    - `development` branch → Staging (preview)
    - `feature/*` branches → Feature previews
@@ -156,18 +166,19 @@ Add to your workflow (optional, Vercel auto-deploys):
 
 ### Branch → Environment Mapping
 
-| Branch Type | Vercel Environment | Purpose |
-|-------------|-------------------|---------|
-| `main` | Production | Live application |
-| `development` | Preview | Staging environment |
-| `release/*` | Preview | Release candidate testing |
-| `feature/*` | Preview | Feature testing |
+| Branch Type   | Vercel Environment | Purpose                   |
+| ------------- | ------------------ | ------------------------- |
+| `main`        | Production         | Live application          |
+| `development` | Preview            | Staging environment       |
+| `release/*`   | Preview            | Release candidate testing |
+| `feature/*`   | Preview            | Feature testing           |
 
 ---
 
 ## 📋 Deployment Checklist
 
 ### Initial Setup (One-time)
+
 - [ ] Create Vercel account
 - [ ] Connect GitHub repository
 - [ ] Configure environment variables
@@ -175,6 +186,7 @@ Add to your workflow (optional, Vercel auto-deploys):
 - [ ] Configure team settings
 
 ### Per-Release Process
+
 - [ ] Merge to `main` triggers production deploy
 - [ ] Monitor deployment status
 - [ ] Verify production environment
@@ -182,6 +194,7 @@ Add to your workflow (optional, Vercel auto-deploys):
 - [ ] Monitor for errors/issues
 
 ### Emergency Procedures
+
 - [ ] **Rollback**: Redeploy previous version via Vercel dashboard
 - [ ] **Hotfix**: Push fix to `main`, auto-deploys
 - [ ] **Disable**: Pause deployments via settings
@@ -196,7 +209,7 @@ Add to your workflow (optional, Vercel auto-deploys):
 4. **Test deployment**: Push to `main` to trigger first deploy
 5. **Set up monitoring**: Add error tracking (Sentry recommended)
 
-**Estimated setup time**: 30 minutes  
+**Estimated setup time**: 30 minutes
 **Ongoing maintenance**: Minimal (mostly automatic)
 
 ---
