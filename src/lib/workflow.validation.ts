@@ -111,7 +111,7 @@ export function validateComfyUIWorkflow(workflow: ExportApiWorkflow): { errors: 
     }
 
     // Validate common node types
-    validateSpecificNodeType(nodeId, node, errors, warnings)
+    validateSpecificNodeType(nodeId, node, errors)
 
     // Check input references
     validateInputReferences(nodeId, node, workflow, errors)

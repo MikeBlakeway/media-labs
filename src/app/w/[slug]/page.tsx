@@ -129,7 +129,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
           allPresent,
           runPreflight,
           copyCommands,
-          buildS3CpCommands: preflight.buildS3CpCommands
+          buildS3CpCommands: () => ''
         }}
       />
 
