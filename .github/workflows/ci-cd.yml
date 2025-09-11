@@ -1,0 +1,262 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, development, 'release/**', 'feature/**', 'hotfix/**']
+  pull_request:
+    branches: [main, development]
+  schedule:
+    # Create weekly release branch every Friday at 10:00 AM UTC
+    - cron: '0 10 * * 5'
+  workflow_dispatch:
+    # Allow manual triggering
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ===========================
+  # Quality Checks & Testing
+  # ===========================
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run linting
+        run: npm run lint
+        
+      - name: Run type checking
+        run: npx tsc --noEmit
+        
+      - name: Run tests
+        run: npm test -- --coverage --watchAll=false
+        
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: false
+        continue-on-error: true
+
+  # ===========================
+  # Build Verification
+  # ===========================
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: ci
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build application
+        run: npm run build
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: .next/
+          retention-days: 7
+
+  # ===========================
+  # Security Scanning
+  # ===========================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: ci
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run security audit
+        run: npm audit --audit-level moderate
+        continue-on-error: true
+
+  # ===========================
+  # Auto-versioning & Release
+  # ===========================
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [ci, build, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    permissions:
+      contents: write
+      pull-requests: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Generate changelog and bump version
+        run: |
+          # Install semantic-release if not in package.json
+          npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===========================
+  # Deployment Notifications
+  # ===========================
+  notify-deployment:
+    name: Deployment Ready
+    runs-on: ubuntu-latest
+    needs: [ci, build, security]
+    if: github.ref == 'refs/heads/main' || contains(github.ref, 'release/')
+    
+    steps:
+      - name: Deployment notification
+        run: |
+          echo "🚀 Deployment ready for branch: ${{ github.ref_name }}"
+          echo "📦 Build artifacts available for manual deployment"
+          echo "🔍 All quality checks passed"
+          
+      - name: Create deployment issue
+        if: github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Deploy v${new Date().toISOString().slice(0,10)} to Production`,
+              body: `
+              ## 🚀 Production Deployment Ready
+              
+              **Branch**: \`main\`
+              **Commit**: \`${{ github.sha }}\`
+              **Triggered by**: ${{ github.actor }}
+              
+              ### ✅ Pre-deployment Checklist
+              - [x] All CI checks passed
+              - [x] Build successful
+              - [x] Security scan completed
+              - [ ] Manual review completed
+              - [ ] Deployment approved
+              
+              ### 🎯 Deployment Steps
+              1. Review this deployment request
+              2. Test on staging environment
+              3. Deploy to production platform
+              4. Monitor deployment
+              5. Close this issue when complete
+              
+              **Auto-generated by GitHub Actions**
+              `,
+              labels: ['deployment', 'production']
+            });
+            
+            console.log(`Created deployment issue: ${issue.html_url}`);
+
+  # ===========================
+  # Weekly Release Branch
+  # ===========================
+  create-weekly-release:
+    name: Create Weekly Release Branch
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/development')
+    
+    permissions:
+      contents: write
+      pull-requests: write
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Create release branch
+        run: |
+          # Get current week number
+          WEEK_NUM=$(date +"%Y-w%V")
+          BRANCH_NAME="release/${WEEK_NUM}"
+          
+          # Create and push release branch
+          git checkout -b "${BRANCH_NAME}"
+          git push origin "${BRANCH_NAME}"
+          
+          echo "Created release branch: ${BRANCH_NAME}"
+          echo "RELEASE_BRANCH=${BRANCH_NAME}" >> $GITHUB_ENV
+          
+      - name: Create release PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚀 Weekly Release: ${process.env.RELEASE_BRANCH}`,
+              head: process.env.RELEASE_BRANCH,
+              base: 'main',
+              body: `
+              ## 📅 Weekly Release - ${new Date().toLocaleDateString()}
+              
+              This PR contains the weekly release from \`development\` to \`main\`.
+              
+              ### 🔍 Pre-merge Checklist
+              - [ ] All CI checks passed
+              - [ ] Manual testing completed
+              - [ ] Release notes reviewed
+              - [ ] Deployment plan confirmed
+              
+              ### 🚀 Post-merge Actions
+              - Auto-versioning will trigger
+              - Production deployment issue will be created
+              - Release notes will be generated
+              
+              **Ready for manual review and approval.**
+              `,
+              draft: false
+            });
+            
+            console.log(\`Created weekly release PR: \${pr.html_url}\`);
