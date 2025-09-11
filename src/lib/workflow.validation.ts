@@ -123,8 +123,7 @@ export function validateComfyUIWorkflow(workflow: ExportApiWorkflow): { errors: 
 /**
  * Validates specific node types for common configuration issues
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function validateSpecificNodeType(nodeId: string, node: ExportApiNode, errors: string[], _warnings: string[]): void {
+function validateSpecificNodeType(nodeId: string, node: ExportApiNode, errors: string[]): void {
   const { class_type, inputs } = node
 
   switch (class_type) {
