@@ -43,6 +43,15 @@ jobs:
 
       - name: Run tests
         run: npm test -- --coverage --watchAll=false
+        env:
+          # Core RunPod Configuration (required for tests)
+          RUNPOD_VOLUME_ID: ${{ secrets.RUNPOD_VOLUME_ID }}
+          RUNPOD_S3_REGION: ${{ secrets.RUNPOD_S3_REGION }}
+          RUNPOD_S3_ENDPOINT: ${{ secrets.RUNPOD_S3_ENDPOINT }}
+          RUNPOD_S3_ACCESS_KEY_ID: ${{ secrets.RUNPOD_S3_ACCESS_KEY_ID }}
+          RUNPOD_S3_SECRET_ACCESS_KEY: ${{ secrets.RUNPOD_S3_SECRET_ACCESS_KEY }}
+          RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
+          RUNPOD_ENDPOINT_ID: ${{ secrets.RUNPOD_ENDPOINT_ID }}
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
@@ -73,7 +82,24 @@ jobs:
 
       - name: Build application
         run: npm run build
-
+        env:
+          # RunPod S3 Configuration
+          RUNPOD_VOLUME_ID: ${{ secrets.RUNPOD_VOLUME_ID }}
+          RUNPOD_S3_REGION: ${{ secrets.RUNPOD_S3_REGION }}
+          RUNPOD_S3_ENDPOINT: ${{ secrets.RUNPOD_S3_ENDPOINT }}
+          RUNPOD_S3_ACCESS_KEY_ID: ${{ secrets.RUNPOD_S3_ACCESS_KEY_ID }}
+          RUNPOD_S3_SECRET_ACCESS_KEY: ${{ secrets.RUNPOD_S3_SECRET_ACCESS_KEY }}
+          # RunPod API Configuration
+          RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
+          RUNPOD_ENDPOINT_ID: ${{ secrets.RUNPOD_ENDPOINT_ID }}
+          # RunPod Model Configuration
+          RUNPOD_MODELS_PREFIX: ${{ secrets.RUNPOD_MODELS_PREFIX }}
+          RUNPOD_MODEL_DIR_UNET: ${{ secrets.RUNPOD_MODEL_DIR_UNET }}
+          RUNPOD_MODEL_DIR_CLIP: ${{ secrets.RUNPOD_MODEL_DIR_CLIP }}
+          RUNPOD_MODEL_DIR_CLIP_VISION: ${{ secrets.RUNPOD_MODEL_DIR_CLIP_VISION }}
+          RUNPOD_MODEL_DIR_VAE: ${{ secrets.RUNPOD_MODEL_DIR_VAE }}
+          RUNPOD_MODEL_DIR_LORA: ${{ secrets.RUNPOD_MODEL_DIR_LORA }}
+          RUNPOD_MODEL_DIR_CHECKPOINTS: ${{ secrets.RUNPOD_MODEL_DIR_CHECKPOINTS }}
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
