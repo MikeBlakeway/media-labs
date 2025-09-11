@@ -444,13 +444,15 @@ def run_local_server():
     def health_check():
         return jsonify({"status": "healthy", "mode": "local"})
 
-    print("🚀 Starting local server on http://localhost:8000")
+    host = os.environ.get('FLASK_HOST', '127.0.0.1')
+    port = 8000
+    print(f"🚀 Starting local server on http://{host}:{port}")
     print("📁 ROOT:", ROOT)
     print("🏠 HF_HOME:", HF_HOME)
     print("🗑️ ALLOW_DELETE:", ALLOW_DELETE)
     print("Press Ctrl+C to stop")
 
-    app.run(host='0.0.0.0', port=8000, debug=False)
+    app.run(host=host, port=port, debug=False)
 
 
 if __name__ == "__main__":
