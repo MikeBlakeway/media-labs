@@ -2,8 +2,12 @@ name: Build and Push Volume Worker Image
 
 on:
   push:
-    branches: [main, development]
-    paths: 
+    branches:
+      - main
+      - development
+      - 'release/**'
+      - 'hotfix/**'
+    paths:
       - 'volume-worker/**'
       - '.github/workflows/build-volume-worker.yml'
   pull_request:
@@ -21,7 +25,7 @@ jobs:
   build-and-push:
     name: Build and Push Volume Worker
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
       packages: write
@@ -29,6 +33,75 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history for version detection
+
+      - name: Get app version for tagging
+        id: version
+        run: |
+          set -e
+
+          # Get the latest semantic version tag
+          LATEST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
+
+          BRANCH="${{ github.ref_name }}"
+          echo "Analyzing branch: ${BRANCH}"
+
+          # Determine version and suffix based on branch type
+          case "${BRANCH}" in
+            release/*)
+              # Extract version from release branch: release/v1.2.3 -> v1.2.3
+              RELEASE_VERSION=$(echo "${BRANCH}" | sed -n 's/release\/v\?\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/v\1/p')
+              if [[ -n "${RELEASE_VERSION}" ]]; then
+                echo "version=${RELEASE_VERSION}" >> $GITHUB_OUTPUT
+                echo "suffix=" >> $GITHUB_OUTPUT
+                echo "📦 Release version: ${RELEASE_VERSION}"
+              else
+                echo "❌ Invalid release branch format: ${BRANCH}"
+                exit 1
+              fi
+              ;;
+            hotfix/*)
+              # Extract base version from hotfix branch: hotfix/v1.2.3-fix -> v1.2.3-hotfix
+              HOTFIX_VERSION=$(echo "${BRANCH}" | sed -n 's/hotfix\/v\?\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/v\1/p')
+              if [[ -n "${HOTFIX_VERSION}" ]]; then
+                echo "version=${HOTFIX_VERSION}" >> $GITHUB_OUTPUT
+                echo "suffix=hotfix" >> $GITHUB_OUTPUT
+                echo "🔧 Hotfix version: ${HOTFIX_VERSION}-hotfix"
+              else
+                echo "❌ Invalid hotfix branch format: ${BRANCH}"
+                exit 1
+              fi
+              ;;
+            main)
+              # Main uses latest released version with -latest suffix
+              echo "version=${LATEST_TAG}" >> $GITHUB_OUTPUT
+              echo "suffix=latest" >> $GITHUB_OUTPUT
+              echo "🚀 Main version: ${LATEST_TAG}-latest"
+              ;;
+            development)
+              # Development uses next patch version with -beta suffix
+              if [[ "${LATEST_TAG}" == "v0.0.0" ]]; then
+                NEXT_VERSION="v0.1.0"
+              else
+                # Increment patch version: v1.2.3 -> v1.2.4
+                NEXT_VERSION=$(echo "${LATEST_TAG}" | awk -F. '{printf "v%d.%d.%d", $1, $2, $3+1}' | sed 's/v/v/')
+              fi
+              echo "version=${NEXT_VERSION}" >> $GITHUB_OUTPUT
+              echo "suffix=beta" >> $GITHUB_OUTPUT
+              echo "🧪 Development version: ${NEXT_VERSION}-beta"
+              ;;
+            *)
+              echo "❌ Unsupported branch: ${BRANCH}"
+              echo "Only main, development, release/*, and hotfix/* branches are allowed"
+              exit 1
+              ;;
+          esac
+
+          echo "📊 Final version info:"
+          echo "  Branch: ${BRANCH}"
+          echo "  Latest tag: ${LATEST_TAG}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -40,16 +113,61 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Generate Docker tags
+        id: tags
+        run: |
+          set -e
+
+          REGISTRY="${{ env.REGISTRY }}"
+          REPO="${{ github.repository }}"
+          IMAGE="${REGISTRY}/${REPO}/volume-worker"
+
+          VERSION="${{ steps.version.outputs.version }}"
+          SUFFIX="${{ steps.version.outputs.suffix }}"
+          BRANCH="${{ github.ref_name }}"
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+
+          echo "🏷️  Generating tags for:"
+          echo "  Version: ${VERSION}"
+          echo "  Suffix: ${SUFFIX}"
+          echo "  Branch: ${BRANCH}"
+
+          # Build tag list
+          TAGS=""
+
+          case "${BRANCH}" in
+            release/*)
+              # Release: v1.2.3, release-v1.2.3
+              TAGS="${IMAGE}:${VERSION}"
+              TAGS="${TAGS},${IMAGE}:release-${VERSION}"
+              ;;
+            hotfix/*)
+              # Hotfix: v1.2.3-hotfix, hotfix-v1.2.3
+              TAGS="${IMAGE}:${VERSION}-${SUFFIX}"
+              TAGS="${TAGS},${IMAGE}:hotfix-${VERSION}"
+              ;;
+            main)
+              # Main: v1.2.3-latest, latest, main
+              TAGS="${IMAGE}:${VERSION}-${SUFFIX}"
+              TAGS="${TAGS},${IMAGE}:${SUFFIX}"
+              TAGS="${TAGS},${IMAGE}:${BRANCH}"
+              ;;
+            development)
+              # Development: v1.2.4-beta, beta, development
+              TAGS="${IMAGE}:${VERSION}-${SUFFIX}"
+              TAGS="${TAGS},${IMAGE}:${SUFFIX}"
+              TAGS="${TAGS},${IMAGE}:${BRANCH}"
+              ;;
+          esac
+
+          # Add SHA-based tag for traceability
+          TAGS="${TAGS},${IMAGE}:${BRANCH}-${SHORT_SHA}"
+
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+
+          echo "📦 Generated tags:"
+          echo "${TAGS}" | tr ',' '\n' | sed 's/^/  - /'
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -58,8 +176,7 @@ jobs:
           file: ./volume-worker/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -67,7 +184,7 @@ jobs:
         run: |
           echo "🚀 Volume Worker image built and pushed successfully!"
           echo "📦 Image tags:"
-          echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
+          echo "${{ steps.tags.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
           echo ""
           echo "🔗 Registry URL: https://github.com/${{ github.repository_owner }}/media-labs/pkgs/container/${{ env.IMAGE_NAME }}"
 
@@ -87,11 +204,17 @@ jobs:
 
       - name: Test volume worker image
         run: |
-          # Get the image tag from the build job
-          IMAGE_TAG="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ github.sha }}"
-          
+          # Determine the image tag based on branch type
+          BRANCH="${{ github.ref_name }}"
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          BASE_IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}"
+
+          # Use the SHA-based tag for testing (always available)
+          IMAGE_TAG="${BASE_IMAGE}:${BRANCH}-${SHORT_SHA}"
+
           echo "🧪 Testing volume worker image: ${IMAGE_TAG}"
-          
+
           # Run image in test mode with timeout
           timeout 30s docker run --rm \
             -e LOCAL_MODE=true \
@@ -102,20 +225,31 @@ jobs:
             echo "⚠️  Test timed out or failed - this is expected for basic validation"
             echo "✅ Volume worker image is available and started successfully!"
           }
-          
+
           echo "✅ Volume worker image test completed!"
 
   cleanup:
-    name: Cleanup Old Images
+    name: Cleanup Old Tagged Images
     runs-on: ubuntu-latest
     needs: build-and-push
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development'
 
     steps:
-      - name: Delete old container images
+      - name: Delete old suffixed versions
         uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ env.IMAGE_NAME }}
           package-type: container
-          min-versions-to-keep: 5
-          delete-only-untagged-versions: true
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: false
+        continue-on-error: true
+
+      - name: Clean old development and latest tagged versions
+        run: |
+          echo "🧹 Cleaning up old tagged versions..."
+          echo "This ensures only the latest -latest and -beta versions remain"
+          echo "Generic tags (latest, beta) are automatically overwritten"
+
+          # Note: The delete-package-versions action above handles the cleanup
+          # We keep the 3 most recent versions to maintain some history
+          # while preventing accumulation of old -latest and -beta tags
