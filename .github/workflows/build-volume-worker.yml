@@ -134,32 +134,35 @@ jobs:
           echo "  Repository: ${REPO} → ${REPO_LOWER}"
           echo "  Version: ${VERSION}"
           echo "  Suffix: ${SUFFIX}"
-          echo "  Branch: ${BRANCH}"          # Build tag list
+          echo "  Branch: ${BRANCH}"
+
+          # Build tag list
           TAGS=""
 
           case "${BRANCH}" in
             release/*)
-              # Release: v1.2.3, release-v1.2.3
+              # Release: v1.2.3, release-v1.2.3, release-v1.2.3-abc123
               TAGS="${IMAGE}:${VERSION}"
               TAGS="${TAGS},${IMAGE}:release-${VERSION}"
+              TAGS="${TAGS},${IMAGE}:release-${VERSION}-${SHORT_SHA}"
               ;;
             hotfix/*)
-              # Hotfix: v1.2.3-hotfix, hotfix-v1.2.3
+              # Hotfix: v1.2.3-hotfix, hotfix-v1.2.3, hotfix-v1.2.3-abc123
               TAGS="${IMAGE}:${VERSION}-${SUFFIX}"
               TAGS="${TAGS},${IMAGE}:hotfix-${VERSION}"
+              TAGS="${TAGS},${IMAGE}:hotfix-${VERSION}-${SHORT_SHA}"
               ;;
             main)
-              # Main: v1.2.3-latest, latest (no redundant 'main' tag)
+              # Main: v1.2.3-latest, latest (clean, no SHA clutter)
               TAGS="${IMAGE}:${VERSION}-${SUFFIX}"
               TAGS="${TAGS},${IMAGE}:${SUFFIX}"
               ;;
             development)
-              # Development: v1.2.4-beta, beta (no redundant 'development' tag)
+              # Development: v1.2.4-beta, beta (clean, no SHA clutter)
               TAGS="${IMAGE}:${VERSION}-${SUFFIX}"
               TAGS="${TAGS},${IMAGE}:${SUFFIX}"
               ;;
-          esac          # Add SHA-based tag for traceability
-          TAGS="${TAGS},${IMAGE}:${BRANCH}-${SHORT_SHA}"
+          esac
 
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
 
@@ -206,16 +209,37 @@ jobs:
         run: |
           # Determine the image tag based on branch type
           BRANCH="${{ github.ref_name }}"
-          SHORT_SHA="${{ github.sha }}"
-          SHORT_SHA="${SHORT_SHA:0:7}"
 
           # Convert repository to lowercase for Docker compatibility
           REPO="${{ github.repository }}"
           REPO_LOWER=$(echo "${REPO}" | tr '[:upper:]' '[:lower:]')
           BASE_IMAGE="${{ env.REGISTRY }}/${REPO_LOWER}/${{ env.IMAGE_NAME }}"
 
-          # Use the SHA-based tag for testing (always available)
-          IMAGE_TAG="${BASE_IMAGE}:${BRANCH}-${SHORT_SHA}"
+          # Use appropriate tag based on branch type
+          case "${BRANCH}" in
+            release/*)
+              # Use the version tag for release branches
+              VERSION=$(echo "${BRANCH}" | sed -n 's/release\/v\?\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/v\1/p')
+              IMAGE_TAG="${BASE_IMAGE}:${VERSION}"
+              ;;
+            hotfix/*)
+              # Use the hotfix tag for hotfix branches
+              VERSION=$(echo "${BRANCH}" | sed -n 's/hotfix\/v\?\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/v\1/p')
+              IMAGE_TAG="${BASE_IMAGE}:${VERSION}-hotfix"
+              ;;
+            main)
+              # Use the generic latest tag for main
+              IMAGE_TAG="${BASE_IMAGE}:latest"
+              ;;
+            development)
+              # Use the generic beta tag for development
+              IMAGE_TAG="${BASE_IMAGE}:beta"
+              ;;
+            *)
+              echo "❌ Unsupported branch for testing: ${BRANCH}"
+              exit 1
+              ;;
+          esac
 
           echo "🧪 Testing volume worker image: ${IMAGE_TAG}"          # Run image in test mode with timeout
           timeout 30s docker run --rm \
