@@ -120,7 +120,9 @@ jobs:
 
           REGISTRY="${{ env.REGISTRY }}"
           REPO="${{ github.repository }}"
-          IMAGE="${REGISTRY}/${REPO}/volume-worker"
+          # Convert repository name to lowercase for Docker compatibility
+          REPO_LOWER=$(echo "${REPO}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="${REGISTRY}/${REPO_LOWER}/volume-worker"
 
           VERSION="${{ steps.version.outputs.version }}"
           SUFFIX="${{ steps.version.outputs.suffix }}"
@@ -129,11 +131,10 @@ jobs:
           SHORT_SHA="${SHORT_SHA:0:7}"
 
           echo "🏷️  Generating tags for:"
+          echo "  Repository: ${REPO} → ${REPO_LOWER}"
           echo "  Version: ${VERSION}"
           echo "  Suffix: ${SUFFIX}"
-          echo "  Branch: ${BRANCH}"
-
-          # Build tag list
+          echo "  Branch: ${BRANCH}"          # Build tag list
           TAGS=""
 
           case "${BRANCH}" in
@@ -186,7 +187,10 @@ jobs:
           echo "📦 Image tags:"
           echo "${{ steps.tags.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
           echo ""
-          echo "🔗 Registry URL: https://github.com/${{ github.repository_owner }}/media-labs/pkgs/container/${{ env.IMAGE_NAME }}"
+          # Convert repository owner to lowercase for URL
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_OWNER_LOWER=$(echo "${REPO_OWNER}" | tr '[:upper:]' '[:lower:]')
+          echo "🔗 Registry URL: https://github.com/${REPO_OWNER_LOWER}/media-labs/pkgs/container/${{ env.IMAGE_NAME }}"
 
   test-image:
     name: Test Volume Worker Image
@@ -208,14 +212,16 @@ jobs:
           BRANCH="${{ github.ref_name }}"
           SHORT_SHA="${{ github.sha }}"
           SHORT_SHA="${SHORT_SHA:0:7}"
-          BASE_IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}"
+
+          # Convert repository to lowercase for Docker compatibility
+          REPO="${{ github.repository }}"
+          REPO_LOWER=$(echo "${REPO}" | tr '[:upper:]' '[:lower:]')
+          BASE_IMAGE="${{ env.REGISTRY }}/${REPO_LOWER}/${{ env.IMAGE_NAME }}"
 
           # Use the SHA-based tag for testing (always available)
           IMAGE_TAG="${BASE_IMAGE}:${BRANCH}-${SHORT_SHA}"
 
-          echo "🧪 Testing volume worker image: ${IMAGE_TAG}"
-
-          # Run image in test mode with timeout
+          echo "🧪 Testing volume worker image: ${IMAGE_TAG}"          # Run image in test mode with timeout
           timeout 30s docker run --rm \
             -e LOCAL_MODE=true \
             -e HF_HOME=/tmp/hf_cache \
