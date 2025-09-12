@@ -149,20 +149,16 @@ jobs:
               TAGS="${TAGS},${IMAGE}:hotfix-${VERSION}"
               ;;
             main)
-              # Main: v1.2.3-latest, latest, main
+              # Main: v1.2.3-latest, latest (no redundant 'main' tag)
               TAGS="${IMAGE}:${VERSION}-${SUFFIX}"
               TAGS="${TAGS},${IMAGE}:${SUFFIX}"
-              TAGS="${TAGS},${IMAGE}:${BRANCH}"
               ;;
             development)
-              # Development: v1.2.4-beta, beta, development
+              # Development: v1.2.4-beta, beta (no redundant 'development' tag)
               TAGS="${IMAGE}:${VERSION}-${SUFFIX}"
               TAGS="${TAGS},${IMAGE}:${SUFFIX}"
-              TAGS="${TAGS},${IMAGE}:${BRANCH}"
               ;;
-          esac
-
-          # Add SHA-based tag for traceability
+          esac          # Add SHA-based tag for traceability
           TAGS="${TAGS},${IMAGE}:${BRANCH}-${SHORT_SHA}"
 
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
