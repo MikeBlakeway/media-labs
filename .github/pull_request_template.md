@@ -7,7 +7,7 @@
 
 - [ ] 🚀 **Feature** (`feature/*` → `development`)
 - [ ] 🐛 **Hotfix** (`hotfix/*` → `main`) - Emergency fix
-- [ ] 📦 **Release** (`release/YYYY-wNN` → `main`) - Weekly release
+- [ ] 📦 **Release** (`release/vX.Y.Z` → `main`) - Semantic version release
 - [ ] 🔧 **Chore** (`feature/*` → `development`) - Maintenance/refactor
 
 ## Pre-Merge Checklist
@@ -23,7 +23,11 @@
 ### ✅ **Valid Flows:**
 
 - `feature/description` → `development`
+<<<<<<< HEAD
 - `release/2025-w37` → `main`
+=======
+- `release/v1.2.3` → `main`
+>>>>>>> origin/main
 - `hotfix/description` → `main`
 
 ### ❌ **Blocked Flows:**
