@@ -1,178 +1,138 @@
 'use client'
 
-import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import { JobStatusDisplay } from '@/components/JobStatus'
+import { WorkflowRunnerForm } from '@/components/WorkflowRunnerForm'
+import { WorkflowRunnerResults } from '@/components/WorkflowRunnerResults'
+import { useWorkflowRunner, useWorkflowRunnerJob } from '@/hooks'
 
-type Mode = 'auto' | 'sync' | 'async'
-
-interface OutputImage {
-  filename: string
-  type: 'base64' | 's3_url'
-  data: string
-}
-
+/**
+ * Workflow Runner Component
+ *
+ * Refactored to use hooks-based architecture for better separation of concerns.
+ * Uses useWorkflowRunner for form state and useWorkflowRunnerJob for job management.
+ */
 export default function WorkflowRunner() {
-  const [workflow, setWorkflow] = useState<Record<string, unknown> | null>(null)
-  const [nodeId, setNodeId] = useState('') // e.g. '12'
-  const [inputKey, setInputKey] = useState('path') // e.g. 'path' | 'image_path' | 'url_or_path'
-  const [workerPath, setWorkerPath] = useState('') // paste from Upload step
-  const [mode, setMode] = useState<Mode>('auto')
+  const [error, setError] = useState<string>('')
 
-  const [status, setStatus] = useState('idle')
-  const [jobId, setJobId] = useState<string | null>(null)
-  const [images, setImages] = useState<OutputImage[] | null>(null)
-  const pollRef = useRef<number | null>(null)
+  // Form state and workflow management
+  const runner = useWorkflowRunner()
 
-  useEffect(() => {
-    return () => {
-      if (pollRef.current) window.clearTimeout(pollRef.current)
+  // Job management
+  const job = useWorkflowRunnerJob()
+
+  // Handle workflow file upload with error handling
+  const handleWorkflowFile = async (file: File) => {
+    try {
+      setError('')
+      await runner.handleWorkflowFile(file)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load workflow file'
+      setError(message)
+      alert(message)
     }
-  }, [])
-
-  const onWorkflowFile = async (f: File) => {
-    const text = await f.text()
-    setWorkflow(JSON.parse(text))
   }
 
-  const submit = async () => {
-    setStatus('submitting')
-    setImages(null)
-    setJobId(null)
-
-    if (!workflow) {
-      setStatus('No workflow uploaded')
-      return
-    }
-    if (!nodeId || !inputKey || !workerPath) {
-      setStatus('Missing nodeId/inputKey/workerPath')
+  // Handle form submission
+  const handleSubmit = async () => {
+    if (!runner.isValid) {
+      alert('Please fill in all required fields and upload a workflow.')
       return
     }
 
-    const body = {
-      workflow,
-      patches: [{ nodeId, inputKey, value: workerPath }],
-      mode
-    }
+    if (!runner.workflow) return
 
-    const res = await fetch('/api/workflows/patch-run', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body)
-    })
-    const data = await res.json()
-
-    // If sync completed
-    if (data?.status === 'COMPLETED' && data?.output) {
-      setStatus('completed')
-      setImages(data.output.images ?? null)
-      return
-    }
-
-    // If async: poll
-    if (data?.id) {
-      setStatus('queued')
-      setJobId(data.id)
-      const poll = async () => {
-        const sres = await fetch(`/api/runpod/status/${data.id}`)
-        const s = await sres.json()
-        if (s.status === 'COMPLETED') {
-          setStatus('completed')
-          setImages(s.output?.images ?? null)
-        } else if (s.status === 'FAILED') {
-          setStatus('failed')
-        } else {
-          pollRef.current = window.setTimeout(poll, 2000)
-        }
-      }
-      poll()
-      return
-    }
-
-    setStatus(`unexpected: ${JSON.stringify(data)}`)
+    setError('')
+    await job.submitWorkflow(runner.workflow, runner.patches, runner.mode)
   }
+
+  // Create a job object compatible with JobStatusDisplay
+  const jobForDisplay = {
+    jobId: job.jobId,
+    status: job.status,
+    jobResults: job.jobResults,
+    jobError: job.jobError,
+    submitting: job.submitting,
+    jobStartTime: job.jobStartTime,
+    pollAttempts: job.pollAttempts,
+    submitJob: handleSubmit,
+    cancelJob: job.cancelJob,
+    forceCheckStatus: job.forceCheckStatus,
+    resetJob: () => {
+      job.resetJob()
+      setError('')
+    },
+    isTerminal: job.isTerminal,
+    isSuccess: job.isSuccess,
+    duration: job.duration
+  }
+
+  const isFormDisabled = job.submitting || job.status === 'queued' || job.status === 'running'
 
   return (
     <div className='rounded-2xl border p-4'>
       <h2 className='text-lg font-semibold'>Run ComfyUI Workflow</h2>
 
       <div className='mt-3 grid gap-3'>
-        <label className='block text-sm'>
-          Workflow JSON
-          <input
-            type='file'
-            accept='application/json'
-            className='mt-1 block'
-            onChange={e => e.target.files?.[0] && onWorkflowFile(e.target.files[0])}
-          />
-        </label>
+        {/* Workflow Configuration Form */}
+        <WorkflowRunnerForm
+          workflow={runner.workflow}
+          nodeId={runner.nodeId}
+          inputKey={runner.inputKey}
+          workerPath={runner.workerPath}
+          mode={runner.mode}
+          setNodeId={runner.setNodeId}
+          setInputKey={runner.setInputKey}
+          setWorkerPath={runner.setWorkerPath}
+          setMode={runner.setMode}
+          onWorkflowFile={handleWorkflowFile}
+          disabled={isFormDisabled}
+        />
 
-        <label className='block text-sm'>
-          Loader node id (e.g., 12)
-          <input
-            value={nodeId}
-            onChange={e => setNodeId(e.target.value)}
-            className='mt-1 w-full rounded-md border px-3 py-2 text-sm'
-          />
-        </label>
+        {/* Error Display */}
+        {error && (
+          <div className='p-3 rounded-xl bg-red-50 border border-red-200'>
+            <div className='text-sm text-red-600'>{error}</div>
+          </div>
+        )}
 
-        <label className='block text-sm'>
-          Loader input key (e.g., path, image_path, url_or_path)
-          <input
-            value={inputKey}
-            onChange={e => setInputKey(e.target.value)}
-            className='mt-1 w-full rounded-md border px-3 py-2 text-sm'
-          />
-        </label>
-
-        <label className='block text-sm'>
-          workerPath (paste from upload)
-          <input
-            value={workerPath}
-            onChange={e => setWorkerPath(e.target.value)}
-            className='mt-1 w-full rounded-md border px-3 py-2 text-sm'
-            placeholder='/runpod-volume/inputs/<jobId>/<file>'
-          />
-        </label>
-
-        <label className='block text-sm'>
-          Mode
-          <select
-            value={mode}
-            onChange={e => setMode(e.target.value as Mode)}
-            className='mt-1 w-full rounded-md border px-3 py-2 text-sm'
+        {/* Submit and Control Buttons */}
+        <div className='flex gap-2'>
+          <button
+            onClick={handleSubmit}
+            disabled={!runner.isValid || isFormDisabled}
+            className='rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50'
           >
-            <option value='auto'>auto</option>
-            <option value='sync'>sync</option>
-            <option value='async'>async</option>
-          </select>
-        </label>
+            {job.submitting ? 'Running...' : 'Run'}
+          </button>
 
-        <button onClick={submit} className='rounded-xl bg-black px-4 py-2 text-white'>
-          Run
-        </button>
+          {job.canCancel && (
+            <button
+              onClick={job.cancelJob}
+              className='rounded-xl bg-red-600 px-4 py-2 text-white hover:bg-red-700'
+              title='Cancel running job'
+            >
+              Cancel
+            </button>
+          )}
 
-        <div className='text-sm opacity-70'>
-          Status: {status}
-          {jobId ? ` — ${jobId}` : ''}
+          {job.jobId && (
+            <button
+              onClick={job.forceCheckStatus}
+              className='rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'
+              title='Force check job status'
+            >
+              🔍 Check
+            </button>
+          )}
         </div>
+
+        {/* Enhanced Job Status Display */}
+        <JobStatusDisplay job={jobForDisplay} />
       </div>
 
-      {images && images.length > 0 && (
-        <div className='mt-4 space-y-3'>
-          {images.map((im, i) => (
-            <div key={i} className='rounded-xl border p-3'>
-              <div className='text-xs opacity-70 mb-1'>{im.filename}</div>
-              {im.type === 'base64' ? (
-                <Image alt='result' src={`data:image/png;base64,${im.data}`} className='max-w-full rounded' />
-              ) : (
-                <a className='underline' target='_blank' href={im.data}>
-                  Open result
-                </a>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Display workflow results */}
+      <WorkflowRunnerResults jobResults={job.jobResults} duration={job.duration} />
     </div>
   )
 }

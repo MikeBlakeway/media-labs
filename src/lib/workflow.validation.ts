@@ -111,7 +111,7 @@ export function validateComfyUIWorkflow(workflow: ExportApiWorkflow): { errors: 
     }
 
     // Validate common node types
-    validateSpecificNodeType(nodeId, node, errors, warnings)
+    validateSpecificNodeType(nodeId, node, errors)
 
     // Check input references
     validateInputReferences(nodeId, node, workflow, errors)
@@ -123,7 +123,7 @@ export function validateComfyUIWorkflow(workflow: ExportApiWorkflow): { errors: 
 /**
  * Validates specific node types for common configuration issues
  */
-function validateSpecificNodeType(nodeId: string, node: ExportApiNode, errors: string[], _warnings: string[]): void {
+function validateSpecificNodeType(nodeId: string, node: ExportApiNode, errors: string[]): void {
   const { class_type, inputs } = node
 
   switch (class_type) {

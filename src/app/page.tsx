@@ -1,27 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { TemplatesListSchema, type TemplatesList } from '@/lib/templates.schema'
+import { useWorkflowsList } from '@/hooks'
 
 export default function Home() {
-  const [items, setItems] = useState<TemplatesList>([])
-  const [err, setErr] = useState<string>('')
-
-  useEffect(() => {
-    ;(async () => {
-      try {
-        const res = await fetch('/api/workflows/list')
-        const raw = await res.json()
-        const parsed = TemplatesListSchema.safeParse(raw)
-        if (!res.ok || !parsed.success) throw new Error('Invalid list response')
-        setItems(parsed.data)
-      } catch (e) {
-        setErr(e instanceof Error ? e.message : 'Failed to load workflows')
-        setItems([])
-      }
-    })()
-  }, [])
+  const { items, error } = useWorkflowsList()
 
   return (
     <main className='mx-auto max-w-2xl p-6'>
@@ -39,7 +22,7 @@ export default function Home() {
 
       <p className='mt-2 text-sm opacity-70'>Choose a registered workflow</p>
 
-      {err && <div className='mt-3 text-sm text-red-600'>{err}</div>}
+      {error && <div className='mt-3 text-sm text-red-600'>{error}</div>}
 
       <div className='mt-4 grid gap-2'>
         {items.map(i => (
@@ -47,7 +30,7 @@ export default function Home() {
             {i.name} <span className='opacity-60 text-xs'>/w/{i.slug}</span>
           </Link>
         ))}
-        {items.length === 0 && !err && (
+        {items.length === 0 && !error && (
           <div className='rounded-xl border p-3 text-sm opacity-70'>
             No workflows yet.{' '}
             <Link href='/register' className='underline'>
