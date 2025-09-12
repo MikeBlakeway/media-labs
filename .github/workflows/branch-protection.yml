@@ -1,0 +1,54 @@
+name: Branch Protection Check
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name pattern
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          echo "Checking branch name: $BRANCH_NAME"
+
+          # Allow release branches (release/YYYY-wNN format)
+          if [[ "$BRANCH_NAME" =~ ^release/20[0-9]{2}-w[0-9]{1,2}$ ]]; then
+            echo "✅ Valid release branch: $BRANCH_NAME"
+            exit 0
+          fi
+
+          # Allow hotfix branches (hotfix/*)
+          if [[ "$BRANCH_NAME" =~ ^hotfix/.+ ]]; then
+            echo "✅ Valid hotfix branch: $BRANCH_NAME"
+            exit 0
+          fi
+
+          # Block all other branches (including development)
+          echo "❌ Invalid branch name for main merge: $BRANCH_NAME"
+          echo ""
+          echo "🚫 Direct merges from 'development' to 'main' are not allowed."
+          echo ""
+          echo "✅ Allowed branch patterns for main merges:"
+          echo "   • release/YYYY-wNN (e.g., release/2025-w37)"
+          echo "   • hotfix/description (e.g., hotfix/critical-security-fix)"
+          echo ""
+          echo "📋 Correct workflow:"
+          echo "   1. Create release branch from development:"
+          echo "      git checkout development"
+          echo "      git checkout -b release/$(date +'%Y-w%V')"
+          echo "   2. Create PR: release/$(date +'%Y-w%V') → main"
+          echo ""
+          echo "📖 See: release/docs/strategy.md for full workflow"
+          exit 1
+
+  validate-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Workflow validation message
+        run: |
+          echo "🔍 Validating branch workflow compliance..."
+          echo "📋 This check ensures our weekly release strategy is followed."
+          echo "📖 Reference: release/docs/strategy.md"
