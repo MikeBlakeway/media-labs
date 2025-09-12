@@ -71,4 +71,5 @@ This directory structure is referenced in:
 - [Release Strategy](docs/strategy.md) - Complete release strategy overview
 - [Quick Start Guide](docs/quick_start.md) - Get started with releases
 - [Release Checklist](docs/checklist.md) - Pre-release preparation
+- [Branch Enforcement](docs/branch_enforcement.md) - Workflow enforcement rules
 - [Latest Release Notes](notes/) - View recent releases
