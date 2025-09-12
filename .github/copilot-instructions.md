@@ -179,6 +179,7 @@ When implementing RunPod-related features:
 - `docs/runpod/` — comprehensive RunPod documentation for serverless, storage, and development patterns
 - `docs/RUNPOD_IMPROVEMENTS.md` — detailed analysis of needed RunPod integration improvements
 - `docs/RUNPOD_ROADMAP.md` — quick reference for current RunPod implementation status and next steps
+- `release/` — complete release documentation and notes (see release/README.md for structure)
 
 ## Codebase Scanning Instructions
 

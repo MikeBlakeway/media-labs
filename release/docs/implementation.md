@@ -58,11 +58,11 @@
 
 ### Documentation
 
-- `docs/release/strategy.md` - Complete strategy guide
-- `docs/release/checklist.md` - Friday release checklist
-- `docs/release/deployment_guide.md` - Platform recommendations
-- `docs/release/protection_guide.md` - GitHub setup guide
-- `docs/release/quick_start.md` - 30-minute setup guide
+- `release/docs/strategy.md` - Complete strategy guide
+- `release/docs/checklist.md` - Friday release checklist
+- `release/docs/deployment_guide.md` - Platform recommendations
+- `release/docs/protection_guide.md` - GitHub setup guide
+- `release/docs/quick_start.md` - 30-minute setup guide
 
 ### Templates
 

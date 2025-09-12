@@ -24,6 +24,9 @@ media-labs/
 ├── public/                      # Static assets
 ├── docs/                        # Project documentation
 ├── data/                        # Workflow templates
+├── release/                     # Release documentation and notes
+│   ├── docs/                    # Release process documentation
+│   └── notes/                   # Individual release notes ({version}.release.md)
 └── .github/                     # GitHub configuration and AI prompts
 ```
 

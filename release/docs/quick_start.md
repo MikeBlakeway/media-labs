@@ -13,7 +13,7 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 1. **Set up Branch Protection**
 
    - Go to **Settings** → **Branches** → **Add rule**
-   - Follow instructions in [protection_guide.md](docs/release/protection_guide.md)
+   - Follow instructions in [protection_guide.md](protection_guide.md)
 
 2. **Install Dependencies**
 
@@ -28,7 +28,7 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 
 ### Step 2: Choose Deployment Platform (10 minutes)
 
-**Recommended: Vercel** (follow [deployment_guide.md](docs/release/deployment_guide.md))
+**Recommended: Vercel** (follow [deployment_guide.md](deployment_guide.md))
 
 1. **Sign up**: [vercel.com](https://vercel.com)
 2. **Connect Repository**: Import from GitHub
@@ -64,7 +64,7 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 
 ### **Friday at 10 AM**: Release Day
 
-- Use [checklist.md](docs/release/checklist.md)
+- Use [checklist.md](checklist.md)
 - Create `release/2025-wXX` branch
 - Test on staging
 - Create PR to `main`
@@ -181,14 +181,14 @@ BREAKING CHANGE: API endpoints have changed
 
 ## 📚 Important Files Reference
 
-| File                                                           | Purpose                 | When to Use                |
-| -------------------------------------------------------------- | ----------------------- | -------------------------- |
-| [RELEASE_STRATEGY.md](docs/release/strategy.md)                | Full strategy guide     | Understanding the workflow |
-| [RELEASE_DAY_CHECKLIST.md](docs/release/checklist.md)          | Friday release steps    | Every Friday               |
-| [DEPLOYMENT_PLATFORMS.md](docs/release/deployment_guide.md)    | Platform setup guide    | Initial setup              |
-| [BRANCH_PROTECTION_GUIDE.md](docs/release/protection_guide.md) | GitHub settings         | Initial setup              |
-| `.github/workflows/ci-cd.yml`                                  | GitHub Actions          | Automated CI/CD            |
-| `.releaserc.json`                                              | Semantic release config | Automated versioning       |
+| File                                              | Purpose                 | When to Use                |
+| ------------------------------------------------- | ----------------------- | -------------------------- |
+| [RELEASE_STRATEGY.md](strategy.md)                | Full strategy guide     | Understanding the workflow |
+| [RELEASE_DAY_CHECKLIST.md](checklist.md)          | Friday release steps    | Every Friday               |
+| [DEPLOYMENT_PLATFORMS.md](deployment_guide.md)    | Platform setup guide    | Initial setup              |
+| [BRANCH_PROTECTION_GUIDE.md](protection_guide.md) | GitHub settings         | Initial setup              |
+| `.github/workflows/ci-cd.yml`                     | GitHub Actions          | Automated CI/CD            |
+| `.releaserc.json`                                 | Semantic release config | Automated versioning       |
 
 ---
 
@@ -207,7 +207,7 @@ Your release strategy is now set up and ready to go. Here's what happens automat
 ## 💬 Questions or Issues?
 
 - **GitHub Issues**: Use for bugs or feature requests
-- **Release Problems**: Check [RELEASE_DAY_CHECKLIST.md](docs/release/checklist.md)
-- **Deployment Issues**: See [DEPLOYMENT_PLATFORMS.md](docs/release/deployment_guide.md)
+- **Release Problems**: Check [RELEASE_DAY_CHECKLIST.md](checklist.md)
+- **Deployment Issues**: See [DEPLOYMENT_PLATFORMS.md](deployment_guide.md)
 
 **Happy releasing!** 🚀
