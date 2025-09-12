@@ -23,11 +23,7 @@
 ### ✅ **Valid Flows:**
 
 - `feature/description` → `development`
-<<<<<<< HEAD
-- `release/2025-w37` → `main`
-=======
 - `release/v1.2.3` → `main`
->>>>>>> origin/main
 - `hotfix/description` → `main`
 
 ### ❌ **Blocked Flows:**
