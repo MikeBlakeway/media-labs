@@ -28,6 +28,8 @@ ghcr.io/user/media-labs/volume-worker:release-v1.2.3-abc123
 
 **Purpose**: Latest stable release with production suffix
 
+**Trigger**: Runs via `workflow_run` after CI/CD Pipeline completes (ensures semantic-release has created new tags)
+
 **Tags Generated**:
 
 - `v1.2.3-latest` - Versioned latest tag
@@ -266,6 +268,12 @@ docker pull ghcr.io/user/media-labs/volume-worker:main-abc123
 - Check if branch is allowed to trigger builds
 - Verify workflow permissions for registry access
 - Check cleanup job hasn't removed needed versions
+
+**Garbled version tags on main** (e.g., `v1.0.0-beta.1-latest`):
+
+- Main builds now run via `workflow_run` trigger after CI/CD Pipeline
+- This ensures semantic-release creates new tags before volume worker builds
+- If issue persists, check CI/CD Pipeline completion status
 
 ### Debug Commands
 

@@ -1,9 +1,12 @@
 name: Build and Push Volume Worker Image
 
+# This workflow builds and pushes Docker images for the volume worker component.
+# For main branch builds, it runs via workflow_run trigger after CI/CD Pipeline
+# completes to ensure semantic-release has created the new version tag.
+
 on:
   push:
     branches:
-      - main
       - development
       - 'release/**'
       - 'hotfix/**'
@@ -16,6 +19,10 @@ on:
       - 'volume-worker/**'
   workflow_dispatch:
     # Allow manual triggering
+  workflow_run:
+    workflows: ['CI/CD Pipeline']
+    types: [completed]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
@@ -25,6 +32,10 @@ jobs:
   build-and-push:
     name: Build and Push Volume Worker
     runs-on: ubuntu-latest
+    # Only run on main if CI/CD Pipeline completed successfully
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
 
     permissions:
       contents: read
@@ -75,7 +86,8 @@ jobs:
               fi
               ;;
             main)
-              # Main uses latest released version with -latest suffix
+              # Main builds are triggered via workflow_run after CI/CD Pipeline completes
+              # This ensures semantic-release has already created the new tag
               echo "version=${LATEST_TAG}" >> $GITHUB_OUTPUT
               echo "suffix=latest" >> $GITHUB_OUTPUT
               echo "🚀 Main version: ${LATEST_TAG}-latest"
