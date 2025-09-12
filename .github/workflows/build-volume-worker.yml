@@ -122,7 +122,9 @@ jobs:
           REPO="${{ github.repository }}"
           # Convert repository name to lowercase for Docker compatibility
           REPO_LOWER=$(echo "${REPO}" | tr '[:upper:]' '[:lower:]')
-          IMAGE="${REGISTRY}/${REPO_LOWER}/volume-worker"
+          # Extract just the owner for cleaner package naming
+          REPO_OWNER=$(echo "${REPO_LOWER}" | cut -d'/' -f1)
+          IMAGE="${REGISTRY}/${REPO_OWNER}/volume-worker"
 
           VERSION="${{ steps.version.outputs.version }}"
           SUFFIX="${{ steps.version.outputs.suffix }}"
@@ -131,7 +133,7 @@ jobs:
           SHORT_SHA="${SHORT_SHA:0:7}"
 
           echo "🏷️  Generating tags for:"
-          echo "  Repository: ${REPO} → ${REPO_LOWER}"
+          echo "  Repository: ${REPO} → ${REPO_OWNER}/volume-worker"
           echo "  Version: ${VERSION}"
           echo "  Suffix: ${SUFFIX}"
           echo "  Branch: ${BRANCH}"
@@ -213,7 +215,9 @@ jobs:
           # Convert repository to lowercase for Docker compatibility
           REPO="${{ github.repository }}"
           REPO_LOWER=$(echo "${REPO}" | tr '[:upper:]' '[:lower:]')
-          BASE_IMAGE="${{ env.REGISTRY }}/${REPO_LOWER}/${{ env.IMAGE_NAME }}"
+          # Extract just the owner for cleaner package naming
+          REPO_OWNER=$(echo "${REPO_LOWER}" | cut -d'/' -f1)
+          BASE_IMAGE="${{ env.REGISTRY }}/${REPO_OWNER}/${{ env.IMAGE_NAME }}"
 
           # Use appropriate tag based on branch type
           case "${BRANCH}" in
