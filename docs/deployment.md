@@ -142,8 +142,8 @@ on:
         default: 'development'
         type: choice
         options:
-        - development
-        - production
+          - development
+          - production
 
 jobs:
   deploy:
@@ -167,10 +167,10 @@ const deployToVercel = async (environment = 'development') => {
     development: 'https://api.vercel.com/v1/integrations/deploy/prj_cVVM0NdlMfqsKoNSRuWgrZPwKZEd/u0wCKFj5fF',
     production: 'https://api.vercel.com/v1/integrations/deploy/prj_cVVM0NdlMfqsKoNSRuWgrZPwKZEd/KXEBf6r9Jk'
   }
-  
+
   const response = await fetch(hooks[environment], { method: 'POST' })
   const result = await response.json()
-  
+
   console.log(`Deployment triggered: ${result.job.id}`)
   return result.job
 }

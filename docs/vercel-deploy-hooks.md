@@ -49,9 +49,12 @@ echo "Deployment started: $job_id"
 
 ```javascript
 const deployDev = async () => {
-  const response = await fetch('https://api.vercel.com/v1/integrations/deploy/prj_cVVM0NdlMfqsKoNSRuWgrZPwKZEd/u0wCKFj5fF', {
-    method: 'POST'
-  })
+  const response = await fetch(
+    'https://api.vercel.com/v1/integrations/deploy/prj_cVVM0NdlMfqsKoNSRuWgrZPwKZEd/u0wCKFj5fF',
+    {
+      method: 'POST'
+    }
+  )
   const result = await response.json()
   console.log('Development deployment:', result.job.id)
 }
