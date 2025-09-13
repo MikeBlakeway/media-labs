@@ -46,7 +46,7 @@
     [
       "@semantic-release/github",
       {
-        "successComment": "🎉 This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version} which has been released! 🎉\n\nThe release is available on [GitHub release](${releases.filter(release => release.name === 'GitHub')[0].url})",
+        "successComment": "🎉 This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version} which has been released! 🎉\n\nThe release is available on [GitHub](${nextRelease.gitHead ? `https://github.com/MikeBlakeway/media-labs/releases/tag/v${nextRelease.version}` : 'GitHub'})",
         "failComment": "❌ The release from branch ${branch.name} had failed due to the following errors:\n- ${errors.map(err => err.message).join('\\n- ')}",
         "releasedLabels": ["released"],
         "addReleases": "bottom"
