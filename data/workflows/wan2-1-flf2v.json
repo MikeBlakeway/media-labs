@@ -1,6 +1,7 @@
 {
   "slug": "wan2-1-flf2v",
-  "name": "Image to Video (Wan2.1)",
+  "name": "First & Last Frame to Video (Wan 2.1 FLF2V)",
+  "outputType": "video",
   "workflow": {
     "6": {
       "class_type": "CLIPTextEncode",
@@ -282,6 +283,5 @@
       "inputKey": "filename_prefix"
     }
   ],
-  "createdAt": 1757374665338,
-  "outputType": "video"
+  "createdAt": 1757374665338
 }
