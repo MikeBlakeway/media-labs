@@ -15,11 +15,7 @@ interface ProgressStagesProps {
   className?: string
 }
 
-export function ProgressStages({
-  currentStageIndex,
-  isTerminalState,
-  className = ''
-}: ProgressStagesProps) {
+export function ProgressStages({ currentStageIndex, isTerminalState, className = '' }: ProgressStagesProps) {
   return (
     <div className={`space-y-2 ${className}`}>
       {WORKFLOW_STAGES.slice(0, -1).map((stage, index) => (

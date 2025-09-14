@@ -217,7 +217,6 @@ Use these strategies to reduce worker startup times:
 4. **Extend idle timeouts:** Configure longer idle periods to preserve worker availability between requests. This strategy prevents premature worker shutdown during temporary traffic lulls, ensuring no cold starts for subsequent requests.
 
 5. **Optimize scaling parameters:** Fine-tune your auto-scaling configuration for more responsive worker provisioning:
-
    - Lower queue delay thresholds to 2-3 seconds (default 4).
    - Decrease request count thresholds to 2-3 (default 4).
 

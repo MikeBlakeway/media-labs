@@ -70,7 +70,6 @@ WARNING:  You must pass the application as an import string to enable 'reload' o
 This error occurs because the Runpod SDK integrates with FastAPI to create the local server, and FastAPI has certain expectations about how the application is structured and named.
 
 7. To resolve this issue, we need to understand a bit more about the FastAPI integration:
-
    - The Runpod SDK uses FastAPI to create an ASGI application that simulates the serverless environment.
    - FastAPI's underlying server, Uvicorn, expects the main application to be in a file named `main.py` by default.
    - When you use the `--rp_api_concurrency` flag to specify multiple workers, Uvicorn tries to spawn separate processes, each running your application.

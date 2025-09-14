@@ -18,7 +18,8 @@ const VolumeRequestSchema = z.object({
     'gc_cache',
     'ping',
     'status',
-    'logs'
+    'logs',
+    'b2_download'
   ]),
   args: z.record(z.string(), z.unknown()).optional(),
   endpointId: z.string().optional()

@@ -86,7 +86,6 @@ Using a Network Volume is primarily useful if you want to manage **models** sepa
 1. **Create a Network Volume**:
    - Follow the [RunPod Network Volumes guide](https://docs.runpod.io/pods/storage/create-network-volumes) to create a volume in the same region as your endpoint.
 2. **Populate the Volume with Models**:
-
    - Use one of the methods described in the RunPod guide (e.g., temporary Pod + `wget`, direct upload) to place your model files into the correct ComfyUI directory structure **within the volume**. The root of the volume corresponds to `/workspace` inside the container.
 
      ```bash

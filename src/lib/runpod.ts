@@ -7,9 +7,6 @@ export type RunPodJobState =
   | 'CANCELLED' // Job manually cancelled via /cancel/job_id
   | 'TIMED_OUT' // Job expired or worker failed to report back
 
-// Legacy type for backward compatibility - will be deprecated
-export type RunStatus = 'QUEUED' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED'
-
 // Import timeout and retry utilities
 import { withRetryAndTimeout } from './runpod.retry'
 import { getRetryConfig, getTimeout } from './runpod.config'
@@ -235,22 +232,6 @@ export function isJobCancellable(status: RunPodJobState | string): boolean {
 
 export function shouldRetryJob(status: RunPodJobState | string): boolean {
   return status === 'FAILED' || status === 'TIMED_OUT'
-}
-
-// Map legacy status to new RunPod states for backward compatibility
-export function mapLegacyStatus(legacyStatus: RunStatus): RunPodJobState {
-  switch (legacyStatus) {
-    case 'QUEUED':
-      return 'IN_QUEUE'
-    case 'IN_PROGRESS':
-      return 'RUNNING'
-    case 'COMPLETED':
-      return 'COMPLETED'
-    case 'FAILED':
-      return 'FAILED'
-    default:
-      return 'FAILED' // Safe fallback
-  }
 }
 
 /**

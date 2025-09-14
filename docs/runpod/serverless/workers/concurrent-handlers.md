@@ -124,7 +124,6 @@ def adjust_concurrency(current_concurrency):
 Let's break down how this function works:
 
 1. **Control parameters**:
-
    - `max_concurrency = 10`: Sets an upper limit on concurrency to prevent resource exhaustion.
    - `min_concurrency = 1`: Ensures at least one request can be processed at a time.
    - `high_request_rate_threshold = 50`: Defines when to consider traffic "high".
@@ -140,7 +139,6 @@ Let's break down how this function works:
    ```
 
    This increases concurrency by 1 when:
-
    - The request rate exceeds our threshold (50 requests).
    - We haven't reached our maximum concurrency limit.
 
@@ -153,7 +151,6 @@ Let's break down how this function works:
    ```
 
    This decreases concurrency by 1 when:
-
    - The request rate is at or below our threshold.
    - We're above our minimum concurrency level.
 

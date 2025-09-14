@@ -16,7 +16,14 @@ export const MAX_UPLOAD_BYTES = 200 * 1024 * 1024 // 200MB default cap; adjust a
 export function isAllowedMime(type: string): boolean {
   // Extend as needed - includes both image and video formats for V2V workflows
   return [
-    'image/png', 'image/jpeg', 'image/webp', 'image/gif',
-    'video/mp4', 'video/webm', 'video/quicktime', 'video/avi', 'video/x-msvideo'
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+    'image/gif',
+    'video/mp4',
+    'video/webm',
+    'video/quicktime',
+    'video/avi',
+    'video/x-msvideo'
   ].includes(type)
 }

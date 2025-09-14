@@ -24,12 +24,14 @@ const WorkflowStatusSchema = z.object({
   readyNow: z.boolean(),
   estimatedReadyTime: z.string().nullable(),
   pendingModels: z.array(z.string()),
-  requiredModels: z.array(ModelStatusSchema.extend({
-    nodeId: z.string(),
-    classType: z.string(),
-    type: z.enum(['unet', 'clip', 'clip_vision', 'vae', 'lora', 'checkpoints']),
-    name: z.string()
-  })),
+  requiredModels: z.array(
+    ModelStatusSchema.extend({
+      nodeId: z.string(),
+      classType: z.string(),
+      type: z.enum(['unet', 'clip', 'clip_vision', 'vae', 'lora', 'checkpoints']),
+      name: z.string()
+    })
+  ),
   queueSummary: z.object({
     totalActive: z.number(),
     totalQueued: z.number(),
@@ -68,13 +70,13 @@ export interface UseModelPreloadingResult {
   error: string
   workflowStatus: WorkflowStatus | null
   queueStatus: QueueStatus | null
-  
+
   // Actions
   preloadWorkflow: (workflowSlug: string, trigger?: string) => Promise<void>
   preloadModels: (models: Array<{ modelName: string; modelType: string; priority?: number }>) => Promise<void>
   cancelPreload: (modelNames?: string[]) => Promise<void>
   refreshStatus: () => Promise<void>
-  
+
   // Computed values
   isWorkflowReady: boolean
   workflowReadyTime: string | null
@@ -88,7 +90,7 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
   const [error, setError] = useState('')
   const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(null)
   const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null)
-  
+
   // Refresh status from API
   const refreshStatus = useCallback(async () => {
     try {
@@ -96,15 +98,15 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
       if (workflowSlug) {
         params.append('workflowSlug', workflowSlug)
       }
-      
+
       const response = await fetch(`/api/models/status?${params}`)
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch status')
       }
-      
+
       const data = await response.json()
-      
+
       if (workflowSlug && data.workflowSlug) {
         // Parse workflow-specific status
         const workflowResult = WorkflowStatusSchema.safeParse(data)
@@ -124,163 +126,168 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
           setError('Invalid status data format')
         }
       }
-      
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to refresh status'
       console.error('Refresh status error:', err)
       setError(message)
     }
   }, [workflowSlug])
-  
+
   // Preload models for a specific workflow
-  const preloadWorkflow = useCallback(async (slug: string, trigger = 'manual_request') => {
-    try {
-      setLoading(true)
-      setError('')
-      
-      const response = await fetch('/api/models/preload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'workflow',
-          workflowSlug: slug,
-          trigger
+  const preloadWorkflow = useCallback(
+    async (slug: string, trigger = 'manual_request') => {
+      try {
+        setLoading(true)
+        setError('')
+
+        const response = await fetch('/api/models/preload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'workflow',
+            workflowSlug: slug,
+            trigger
+          })
         })
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to start preloading')
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to start preloading')
+        }
+
+        const result = await response.json()
+        console.log('Preloading started:', result)
+
+        // Refresh status after preloading starts
+        await refreshStatus()
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to start preloading'
+        console.error('Preload workflow error:', err)
+        setError(message)
+      } finally {
+        setLoading(false)
       }
-      
-      const result = await response.json()
-      console.log('Preloading started:', result)
-      
-      // Refresh status after preloading starts
-      await refreshStatus()
-      
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to start preloading'
-      console.error('Preload workflow error:', err)
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [refreshStatus])
-  
+    },
+    [refreshStatus]
+  )
+
   // Preload specific models
-  const preloadModels = useCallback(async (models: Array<{ modelName: string; modelType: string; priority?: number }>) => {
-    try {
-      setLoading(true)
-      setError('')
-      
-      const response = await fetch('/api/models/preload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'models',
-          models: models.map(m => ({
-            modelName: m.modelName,
-            modelType: m.modelType,
-            priority: m.priority || 0.5
-          })),
-          trigger: 'manual_request'
+  const preloadModels = useCallback(
+    async (models: Array<{ modelName: string; modelType: string; priority?: number }>) => {
+      try {
+        setLoading(true)
+        setError('')
+
+        const response = await fetch('/api/models/preload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'models',
+            models: models.map(m => ({
+              modelName: m.modelName,
+              modelType: m.modelType,
+              priority: m.priority || 0.5
+            })),
+            trigger: 'manual_request'
+          })
         })
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to start preloading')
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to start preloading')
+        }
+
+        const result = await response.json()
+        console.log('Model preloading started:', result)
+
+        // Refresh status after preloading starts
+        await refreshStatus()
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to start preloading'
+        console.error('Preload models error:', err)
+        setError(message)
+      } finally {
+        setLoading(false)
       }
-      
-      const result = await response.json()
-      console.log('Model preloading started:', result)
-      
-      // Refresh status after preloading starts
-      await refreshStatus()
-      
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to start preloading'
-      console.error('Preload models error:', err)
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [refreshStatus])
-  
+    },
+    [refreshStatus]
+  )
+
   // Cancel preloading
-  const cancelPreload = useCallback(async (modelNames?: string[]) => {
-    try {
-      setLoading(true)
-      setError('')
-      
-      const response = await fetch('/api/models/preload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'cancel',
-          modelNames
+  const cancelPreload = useCallback(
+    async (modelNames?: string[]) => {
+      try {
+        setLoading(true)
+        setError('')
+
+        const response = await fetch('/api/models/preload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'cancel',
+            modelNames
+          })
         })
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to cancel preloading')
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to cancel preloading')
+        }
+
+        const result = await response.json()
+        console.log('Preloading cancelled:', result)
+
+        // Refresh status after cancellation
+        await refreshStatus()
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to cancel preloading'
+        console.error('Cancel preload error:', err)
+        setError(message)
+      } finally {
+        setLoading(false)
       }
-      
-      const result = await response.json()
-      console.log('Preloading cancelled:', result)
-      
-      // Refresh status after cancellation
-      await refreshStatus()
-      
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to cancel preloading'
-      console.error('Cancel preload error:', err)
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [refreshStatus])
-  
+    },
+    [refreshStatus]
+  )
+
   // Auto-refresh status periodically
   useEffect(() => {
     // Initial load
     void refreshStatus()
-    
+
     // Set up polling for active downloads
     const interval = setInterval(() => {
-      const hasActiveDownloads = (workflowStatus?.queueSummary.totalActive || 0) > 0 || 
-                                 (queueStatus?.summary.activeDownloads || 0) > 0
-      
+      const hasActiveDownloads =
+        (workflowStatus?.queueSummary.totalActive || 0) > 0 || (queueStatus?.summary.activeDownloads || 0) > 0
+
       if (hasActiveDownloads) {
         void refreshStatus()
       }
     }, 2000) // Poll every 2 seconds when there are active downloads
-    
+
     return () => clearInterval(interval)
   }, [refreshStatus, workflowStatus?.queueSummary.totalActive, queueStatus?.summary.activeDownloads])
-  
+
   // Computed values
   const isWorkflowReady = workflowStatus?.readyNow || false
   const workflowReadyTime = workflowStatus?.estimatedReadyTime || null
   const activeDownloads = queueStatus?.summary.activeDownloads || workflowStatus?.queueSummary.totalActive || 0
   const queuedDownloads = queueStatus?.summary.queuedDownloads || workflowStatus?.queueSummary.totalQueued || 0
   const overallProgress = queueStatus?.summary.overallProgress || workflowStatus?.queueSummary.totalProgress || 0
-  
+
   return {
     // State
     loading,
     error,
     workflowStatus,
     queueStatus,
-    
+
     // Actions
     preloadWorkflow,
     preloadModels,
     cancelPreload,
     refreshStatus,
-    
+
     // Computed values
     isWorkflowReady,
     workflowReadyTime,

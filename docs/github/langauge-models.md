@@ -139,7 +139,6 @@ To configure a custom OpenAI endpoint and model:
 1. Select **Manage API Key** to set the API key for your custom endpoint, if required.
 
 1. Select **Configure Models** > **Add New Model** and follow the prompts to add the details for your model:
-
    - Unique identifier for the model
    - Display name for the model in the language model picker
    - Full API endpoint URL

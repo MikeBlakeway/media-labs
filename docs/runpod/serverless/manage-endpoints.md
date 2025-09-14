@@ -85,7 +85,6 @@ You can modify your endpoint's configuration at any time:
 3. Click **Edit Endpoint**.
 
 4. Update any [configuration parameters](/serverless/endpoints/endpoint-configurations) as needed:
-
    - Endpoint name
    - Worker configuration
    - Docker configuration (container image or version)

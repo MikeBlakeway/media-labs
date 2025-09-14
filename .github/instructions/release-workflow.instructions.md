@@ -21,13 +21,11 @@ Follow the documented weekly release strategy with Friday releases and proper br
 When creating or modifying release-related files, ensure:
 
 1. **Morning Preparation (10:00 AM)**
-
    - Create release branch from `development`
    - Verify CI passes on release branch
    - Confirm all tests are green
 
 2. **Testing Phase (11:00 AM - 1:00 PM)**
-
    - Manual testing checklist completion
    - Core features verification (workflow upload, file processing, result display)
    - UI/UX validation (responsive design, no broken links)
@@ -35,7 +33,6 @@ When creating or modifying release-related files, ensure:
    - Integration testing (RunPod, S3 storage)
 
 3. **Documentation Review (1:00 PM - 2:00 PM)**
-
    - Changelog accuracy verification
    - Breaking changes documentation
    - Release notes preparation

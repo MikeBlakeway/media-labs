@@ -25,7 +25,11 @@ export type ModelRequirement = z.infer<typeof ModelRequirementSchema>
 export const ModelPresenceSchema = ModelRequirementSchema.extend({
   present: z.boolean(),
   s3Key: z.string(),
-  workerPath: z.string()
+  workerPath: z.string(),
+  // B2 cold storage information
+  b2Available: z.boolean().optional(),
+  requiresColdStart: z.boolean().optional(),
+  estimatedColdStartTime: z.number().optional() // seconds
 })
 export type ModelPresence = z.infer<typeof ModelPresenceSchema>
 

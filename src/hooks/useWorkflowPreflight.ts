@@ -36,7 +36,7 @@ export interface UseWorkflowPreflightResult {
 
   // Actions
   runPreflight: () => Promise<void>
-  
+
   // Preloading actions
   startPreloading: () => Promise<void>
 
@@ -150,10 +150,9 @@ export function useWorkflowPreflight(slug: string): UseWorkflowPreflightResult {
 
       const result = await response.json()
       console.log('Preloading started for workflow:', slug, result)
-      
+
       // Show success message
       alert(`Started preloading ${result.queued.length} models. Check the status panel for progress.`)
-      
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to start preloading'
       console.error('Preloading error:', error)

@@ -22,7 +22,7 @@ description: Defines our branching model, release process, and CI/CD enforcement
 | Trunk-Based                        | Fast, simple                         | Needs strong flags    | ☐          |
 | GitHub Flow                        | Simple PRs                           | No formal staging     | ☐          |
 | GitFlow                            | Clear roles                          | Heavy, slow           | ☐          |
-| **Release Branches (Recommended)** | Stabilization window, staging parity | Slightly more process | **☑**      |
+| **Release Branches (Recommended)** | Stabilization window, staging parity | Slightly more process | **☑**     |
 
 ### Decision Summary Table
 

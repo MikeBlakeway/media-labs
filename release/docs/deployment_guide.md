@@ -119,13 +119,11 @@ Create `vercel.json`:
 ### Why Vercel for Your Release Strategy?
 
 1. **Perfect GitHub Integration**
-
    - Automatic deployments on push to `main`
    - Preview deployments for all PRs
    - Deployment status in GitHub
 
 2. **Release Strategy Alignment**
-
    - `main` branch → Production
    - `development` branch → Staging (preview)
    - `feature/*` branches → Feature previews

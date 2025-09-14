@@ -39,7 +39,6 @@ Using environment variables securely passes the necessary credentials and config
 1. **Accessing Environment Variables Setting**: In the template creation/editing interface of your pod, navigate to the bottom section where you can set environment variables.
 
 2. **Configuring S3 Variables**: Set the following key variables for your S3 bucket:
-
    - `BUCKET_ENDPOINT_URL`
    - `BUCKET_ACCESS_KEY_ID`
    - `BUCKET_SECRET_ACCESS_KEY`

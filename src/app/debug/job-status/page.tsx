@@ -126,10 +126,10 @@ export default function JobStatusDebugPage() {
                     result.statusMapping.isSuccessful
                       ? 'text-green-600'
                       : result.statusMapping.isFailed
-                      ? 'text-red-600'
-                      : result.statusMapping.isComplete
-                      ? 'text-gray-600'
-                      : 'text-blue-600'
+                        ? 'text-red-600'
+                        : result.statusMapping.isComplete
+                          ? 'text-gray-600'
+                          : 'text-blue-600'
                   }`}
                 >
                   {result.status.status}

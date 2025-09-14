@@ -19,12 +19,10 @@ You can configure custom instructions to apply automatically to all chat request
 VS Code supports multiple types of Markdown-based instructions files. If you have multiple types of instructions files in your project, VS Code combines and adds them to the chat context, no specific order is guaranteed.
 
 - A single [`.github/copilot-instructions.md`](#use-a-githubcopilot-instructionsmd-file) file
-
   - Automatically applies to all chat requests in the workspace
   - Stored within the workspace
 
 - One or more [`.instructions.md`](#use-instructionsmd-files) files
-
   - Created for specific tasks or files
   - Use `applyTo` frontmatter to define what files the instructions should be applied to
   - Stored in the workspace or user profile
@@ -160,7 +158,6 @@ Alternatively, you can manually attach an instructions file to a specific chat p
 Instructions files use the `.instructions.md` extension and have this structure:
 
 - **Header** (optional): YAML frontmatter
-
   - `description`: Description shown on hover in Chat view
   - `applyTo`: Glob pattern for automatic application (use `**` for all files)
 
@@ -195,7 +192,6 @@ To create an instructions file:
    Alternatively, use the **Chat: New Instructions File** command from the Command Palette (`kb(workbench.action.showCommands)`).
 
 1. Choose the location where to create the instructions file.
-
    - **Workspace**: By default, workspace instructions files are stored in the `.github/instructions` folder of your workspace. Add more instruction folders for your workspace with the `setting(chat.instructionsFilesLocations)` setting.
 
    - **User profile**: User instructions files are stored in the [current profile folder](/docs/configure/profiles.md). You can sync your user instructions files across multiple devices by using [Settings Sync](/docs/configure/settings-sync.md).

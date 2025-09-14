@@ -43,7 +43,6 @@ You can reference instructions files and tools (sets) in your custom chat mode f
 Chat mode files are Markdown files and use the `.chatmode.md` extension and have this structure:
 
 - **Header** (optional): YAML frontmatter
-
   - `description`: A brief description of the chat mode. This description is displayed as placeholder text in the chat input field and when you hover the mode in the chat mode dropdown list.
   - `tools`: A list of tool or tool set names that are available for this chat mode. This can include built-in tools, tool sets, MCP tools, or tools contributed by extensions. Use the **Configure Tools** action to select the tools from the list of available tools in your workspace.
   - `model`: The AI model to use when running the prompt. If not specified, the currently selected model in model picker is used.
@@ -89,7 +88,6 @@ You can create a chat mode file in your workspace or user profile.
    Alternatively, use the **Chat: New Mode File** command in the Command Palette (`kb(workbench.action.showCommands)`).
 
 1. Choose the location where the chat mode file should be created.
-
    - **Workspace**: By default, workspace chat mode files are stored in the `.github/chatmodes` folder of your workspace. Add more prompt folders for your workspace with the `setting(chat.modeFilesLocations)` setting.
 
    - **User profile**: User chat mode files are stored in the [current profile folder](/docs/configure/profiles.md). You can sync your user chat mode files across multiple devices by using [Settings Sync](/docs/configure/settings-sync.md).
@@ -97,7 +95,6 @@ You can create a chat mode file in your workspace or user profile.
 1. Enter a name for the chat mode. This name is used in the chat mode dropdown list in the Chat view.
 
 1. Provide the details for the chat mode in the newly created `.chatmode.md` file.
-
    - Provide the description and configure the list of available tools or tool sets in the Front Matter metadata.
    - Add instructions for the chat mode in the body of the file.
 

@@ -96,6 +96,133 @@ def op_seed(args: Dict[str, Any]) -> Dict[str, Any]:
     return {"ok": True, "results": results}
 
 
+def op_b2_download(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Download models from B2 storage to RunPod volume"""
+    import boto3
+    from botocore.exceptions import ClientError
+
+    models: List[Dict[str, Any]] = args.get("models", [])
+    dry = bool(args.get("dryRun", False))
+    results = []
+
+    # B2 configuration from environment
+    b2_config = {
+        'endpoint_url': os.environ.get('BUCKET_ENDPOINT_URL'),
+        'region_name': os.environ.get('BUCKET_REGION', 'auto'),
+        'aws_access_key_id': os.environ.get('BUCKET_ACCESS_KEY_ID'),
+        'aws_secret_access_key': os.environ.get('BUCKET_SECRET_ACCESS_KEY')
+    }
+
+    bucket_name = os.environ.get('BUCKET_NAME')
+
+    if not all([b2_config['endpoint_url'], b2_config['aws_access_key_id'],
+                b2_config['aws_secret_access_key'], bucket_name]):
+        return {
+            "ok": False,
+            "error": "B2 configuration incomplete. Required: BUCKET_ENDPOINT_URL, BUCKET_ACCESS_KEY_ID, BUCKET_SECRET_ACCESS_KEY, BUCKET_NAME"
+        }
+
+    try:
+        s3_client = boto3.client('s3', **b2_config)
+    except Exception as ex:
+        return {"ok": False, "error": f"Failed to create B2 client: {str(ex)}"}
+
+    for model in models:
+        s3_key = model["s3Key"]
+        # Support both destPath and workerPath for backward compatibility
+        dest_path_str = model.get("destPath", model.get("workerPath"))
+        if not dest_path_str:
+            return {
+                "ok": False,
+                "error": f"Model object missing 'destPath' and 'workerPath': {model}",
+                "failedModel": model,
+                "results": results
+            }
+        dest_path = within_root(dest_path_str)
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        required = bool(model.get("required", True))
+
+        # Check if file already exists
+        if dest_path.exists():
+            results.append({
+                "status": "skipped",
+                "dest": str(dest_path),
+                "bytes": dest_path.stat().st_size,
+                "sha256": sha256(dest_path),
+                "s3Key": s3_key
+            })
+            continue
+
+        if dry:
+            results.append({
+                "status": "would-download",
+                "dest": str(dest_path),
+                "s3Key": s3_key
+            })
+            continue
+
+        try:
+            # Download from B2
+            print(f"Downloading {s3_key} from B2 to {dest_path}")
+            s3_client.download_file(bucket_name, s3_key, str(dest_path))
+
+            results.append({
+                "status": "downloaded",
+                "dest": str(dest_path),
+                "bytes": dest_path.stat().st_size,
+                "sha256": sha256(dest_path),
+                "s3Key": s3_key
+            })
+
+            log_event({
+                "op": "b2_download",
+                "status": "success",
+                "s3Key": s3_key,
+                "dest": str(dest_path),
+                "bytes": dest_path.stat().st_size
+            })
+
+        except ClientError as ex:
+            error_code = ex.response.get('Error', {}).get('Code', 'Unknown')
+            if error_code == 'NoSuchKey':
+                error_msg = f"Model not found in B2 storage: {s3_key}"
+            else:
+                error_msg = f"B2 download failed: {str(ex)}"
+
+            if required:
+                return {
+                    "ok": False,
+                    "error": error_msg,
+                    "failedModel": model,
+                    "results": results
+                }
+
+            results.append({
+                "status": "failed-optional",
+                "error": error_msg,
+                "s3Key": s3_key
+            })
+
+        except Exception as ex:
+            error_msg = f"Unexpected error downloading {s3_key}: {str(ex)}"
+
+            if required:
+                return {
+                    "ok": False,
+                    "error": error_msg,
+                    "failedModel": model,
+                    "results": results
+                }
+
+            results.append({
+                "status": "failed-optional",
+                "error": error_msg,
+                "s3Key": s3_key
+            })
+
+    return {"ok": True, "results": results}
+
+
 def op_verify(args: Dict[str, Any]) -> Dict[str, Any]:
     """Verify presence of models without downloading"""
     manifest = args.get("manifest", [])
@@ -368,6 +495,7 @@ def op_logs(args: Dict[str, Any]) -> Dict[str, Any]:
 
 OPS = {
     "seed": op_seed,
+    "b2_download": op_b2_download,
     "verify": op_verify,
     "ls": op_ls,
     "stat": op_stat,
