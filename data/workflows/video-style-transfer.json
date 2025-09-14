@@ -1,0 +1,262 @@
+{
+  "slug": "video-style-transfer",
+  "name": "Video Style Transfer (V2V)",
+  "workflow": {
+    "1": {
+      "class_type": "LoadVideo",
+      "inputs": {
+        "video": "input_video.mp4"
+      },
+      "_meta": {
+        "title": "Load Input Video"
+      }
+    },
+    "2": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": "style_reference.jpg"
+      },
+      "_meta": {
+        "title": "Load Style Reference"
+      }
+    },
+    "3": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "vae-ft-mse-840000-ema-pruned.safetensors"
+      },
+      "_meta": {
+        "title": "Load VAE"
+      }
+    },
+    "4": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "sd_xl_base_1.0.safetensors"
+      },
+      "_meta": {
+        "title": "Load Style Transfer Model"
+      }
+    },
+    "5": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "artistic style transfer, high quality, detailed",
+        "clip": ["4", 1]
+      },
+      "_meta": {
+        "title": "Style Prompt"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "blurry, low quality, artifacts, distorted",
+        "clip": ["4", 1]
+      },
+      "_meta": {
+        "title": "Negative Prompt"
+      }
+    },
+    "7": {
+      "class_type": "VideoFrameExtractor",
+      "inputs": {
+        "video": ["1", 0],
+        "frame_rate": 12,
+        "max_frames": 120
+      },
+      "_meta": {
+        "title": "Extract Video Frames"
+      }
+    },
+    "8": {
+      "class_type": "VAEEncode",
+      "inputs": {
+        "pixels": ["7", 0],
+        "vae": ["3", 0]
+      },
+      "_meta": {
+        "title": "Encode Frames to Latent"
+      }
+    },
+    "9": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 42,
+        "steps": 15,
+        "cfg": 7.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 0.6,
+        "model": ["4", 0],
+        "positive": ["5", 0],
+        "negative": ["6", 0],
+        "latent_image": ["8", 0]
+      },
+      "_meta": {
+        "title": "Apply Style Transfer"
+      }
+    },
+    "10": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": ["9", 0],
+        "vae": ["3", 0]
+      },
+      "_meta": {
+        "title": "Decode Styled Frames"
+      }
+    },
+    "11": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "fps": 24,
+        "images": ["10", 0]
+      },
+      "_meta": {
+        "title": "Reassemble Video"
+      }
+    },
+    "12": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "filename_prefix": "video/styled_",
+        "format": "mp4",
+        "codec": "h264",
+        "video": ["11", 0]
+      },
+      "_meta": {
+        "title": "Save Styled Video"
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "file_1_video",
+      "label": "Input Video",
+      "type": "file",
+      "required": true,
+      "nodeId": "1",
+      "inputKey": "video",
+      "help": "Upload the video you want to apply style transfer to"
+    },
+    {
+      "id": "file_2_image",
+      "label": "Style Reference Image",
+      "type": "file",
+      "required": true,
+      "nodeId": "2",
+      "inputKey": "image",
+      "help": "Upload an image that represents the artistic style you want to apply"
+    },
+    {
+      "id": "text_5_text",
+      "label": "Style Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "artistic style transfer, high quality, detailed",
+      "nodeId": "5",
+      "inputKey": "text"
+    },
+    {
+      "id": "text_6_text",
+      "label": "Negative Prompt",
+      "type": "text",
+      "required": false,
+      "defaultValue": "blurry, low quality, artifacts, distorted",
+      "nodeId": "6",
+      "inputKey": "text"
+    },
+    {
+      "id": "ckpt_4_ckpt_name",
+      "label": "Style Transfer Model",
+      "type": "string",
+      "required": true,
+      "defaultValue": "sd_xl_base_1.0.safetensors",
+      "nodeId": "4",
+      "inputKey": "ckpt_name"
+    },
+    {
+      "id": "vae_3_vae_name",
+      "label": "VAE Model",
+      "type": "string",
+      "required": true,
+      "defaultValue": "vae-ft-mse-840000-ema-pruned.safetensors",
+      "nodeId": "3",
+      "inputKey": "vae_name"
+    },
+    {
+      "id": "ks_9_seed",
+      "label": "Seed",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 42,
+      "nodeId": "9",
+      "inputKey": "seed"
+    },
+    {
+      "id": "ks_9_steps",
+      "label": "Steps",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 15,
+      "nodeId": "9",
+      "inputKey": "steps"
+    },
+    {
+      "id": "ks_9_cfg",
+      "label": "CFG Scale",
+      "type": "number",
+      "required": true,
+      "defaultValue": 7.0,
+      "nodeId": "9",
+      "inputKey": "cfg"
+    },
+    {
+      "id": "ks_9_denoise",
+      "label": "Denoise Strength",
+      "type": "number",
+      "required": true,
+      "defaultValue": 0.6,
+      "nodeId": "9",
+      "inputKey": "denoise"
+    },
+    {
+      "id": "video_7_frame_rate",
+      "label": "Processing Frame Rate",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 12,
+      "nodeId": "7",
+      "inputKey": "frame_rate"
+    },
+    {
+      "id": "video_7_max_frames",
+      "label": "Max Frames to Process",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 120,
+      "nodeId": "7",
+      "inputKey": "max_frames"
+    },
+    {
+      "id": "create_11_fps",
+      "label": "Output Video FPS",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 24,
+      "nodeId": "11",
+      "inputKey": "fps"
+    },
+    {
+      "id": "save_12_prefix",
+      "label": "Filename Prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "video/styled_",
+      "nodeId": "12",
+      "inputKey": "filename_prefix"
+    }
+  ],
+  "createdAt": 1757377200000
+}

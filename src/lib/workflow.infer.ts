@@ -42,6 +42,23 @@ export function inferFieldsFromExportApi(workflow: ExportApiWorkflow): FieldSpec
       continue
     }
 
+    // 1b) Video loaders (V2V support)
+    if (classType === 'LoadVideo' || classType.includes('LoadVideo') || classType.includes('VideoLoader')) {
+      // Prefer a path-like key if present; otherwise fall back to 'video'
+      const candidateKeys = ['video', 'path', 'video_path', 'url_or_path']
+      const key = candidateKeys.find(k => k in inputs) ?? 'video'
+      fields.push({
+        id: `file_${nodeId}_${key}`,
+        label: 'Input video',
+        type: 'file',
+        required: true,
+        nodeId,
+        inputKey: key,
+        help: 'Upload the video file to process'
+      })
+      continue
+    }
+
     // 2) Prompt encoders
     if (classType === 'CLIPTextEncode') {
       const def = inputs['text']

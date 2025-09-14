@@ -1,0 +1,284 @@
+{
+  "slug": "video-upscaling",
+  "name": "Video Upscaling (V2V)",
+  "workflow": {
+    "1": {
+      "class_type": "LoadVideo",
+      "inputs": {
+        "video": "input_video.mp4"
+      },
+      "_meta": {
+        "title": "Load Input Video"
+      }
+    },
+    "2": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "realesrgan_x4plus.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Load Upscaling Model"
+      }
+    },
+    "3": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "vae-ft-mse-840000-ema-pruned.safetensors"
+      },
+      "_meta": {
+        "title": "Load VAE"
+      }
+    },
+    "4": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "clip_l.safetensors",
+        "type": "stable_diffusion",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "Load CLIP"
+      }
+    },
+    "5": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "high resolution, sharp details, enhanced quality, 4k, crisp",
+        "clip": ["4", 0]
+      },
+      "_meta": {
+        "title": "Upscaling Prompt"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "blurry, pixelated, low quality, compression artifacts, noise",
+        "clip": ["4", 0]
+      },
+      "_meta": {
+        "title": "Negative Prompt"
+      }
+    },
+    "7": {
+      "class_type": "VideoFrameExtractor",
+      "inputs": {
+        "video": ["1", 0],
+        "frame_rate": 24,
+        "max_frames": 300
+      },
+      "_meta": {
+        "title": "Extract Video Frames"
+      }
+    },
+    "8": {
+      "class_type": "UpscaleModelLoader",
+      "inputs": {
+        "model_name": "RealESRGAN_x4plus.pth"
+      },
+      "_meta": {
+        "title": "Load Real-ESRGAN Upscaler"
+      }
+    },
+    "9": {
+      "class_type": "ImageUpscaleWithModel",
+      "inputs": {
+        "upscale_model": ["8", 0],
+        "image": ["7", 0]
+      },
+      "_meta": {
+        "title": "Upscale Frames with Real-ESRGAN"
+      }
+    },
+    "10": {
+      "class_type": "VAEEncode",
+      "inputs": {
+        "pixels": ["9", 0],
+        "vae": ["3", 0]
+      },
+      "_meta": {
+        "title": "Encode Upscaled Frames"
+      }
+    },
+    "11": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 12345,
+        "steps": 8,
+        "cfg": 2.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 0.3,
+        "model": ["2", 0],
+        "positive": ["5", 0],
+        "negative": ["6", 0],
+        "latent_image": ["10", 0]
+      },
+      "_meta": {
+        "title": "Refine Upscaled Frames"
+      }
+    },
+    "12": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": ["11", 0],
+        "vae": ["3", 0]
+      },
+      "_meta": {
+        "title": "Decode Enhanced Frames"
+      }
+    },
+    "13": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "fps": 24,
+        "images": ["12", 0]
+      },
+      "_meta": {
+        "title": "Reassemble Upscaled Video"
+      }
+    },
+    "14": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "filename_prefix": "video/upscaled_",
+        "format": "mp4",
+        "codec": "h264",
+        "video": ["13", 0]
+      },
+      "_meta": {
+        "title": "Save Upscaled Video"
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "file_1_video",
+      "label": "Input Video",
+      "type": "file",
+      "required": true,
+      "nodeId": "1",
+      "inputKey": "video",
+      "help": "Upload the video you want to upscale"
+    },
+    {
+      "id": "text_5_text",
+      "label": "Enhancement Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "high resolution, sharp details, enhanced quality, 4k, crisp",
+      "nodeId": "5",
+      "inputKey": "text"
+    },
+    {
+      "id": "text_6_text",
+      "label": "Negative Prompt",
+      "type": "text",
+      "required": false,
+      "defaultValue": "blurry, pixelated, low quality, compression artifacts, noise",
+      "nodeId": "6",
+      "inputKey": "text"
+    },
+    {
+      "id": "unet_2_unet_name",
+      "label": "Enhancement Model",
+      "type": "string",
+      "required": true,
+      "defaultValue": "realesrgan_x4plus.safetensors",
+      "nodeId": "2",
+      "inputKey": "unet_name"
+    },
+    {
+      "id": "upscale_8_model_name",
+      "label": "Upscaling Model",
+      "type": "string",
+      "required": true,
+      "defaultValue": "RealESRGAN_x4plus.pth",
+      "nodeId": "8",
+      "inputKey": "model_name"
+    },
+    {
+      "id": "vae_3_vae_name",
+      "label": "VAE Model",
+      "type": "string",
+      "required": true,
+      "defaultValue": "vae-ft-mse-840000-ema-pruned.safetensors",
+      "nodeId": "3",
+      "inputKey": "vae_name"
+    },
+    {
+      "id": "ks_11_seed",
+      "label": "Seed",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 12345,
+      "nodeId": "11",
+      "inputKey": "seed"
+    },
+    {
+      "id": "ks_11_steps",
+      "label": "Refinement Steps",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 8,
+      "nodeId": "11",
+      "inputKey": "steps"
+    },
+    {
+      "id": "ks_11_cfg",
+      "label": "CFG Scale",
+      "type": "number",
+      "required": true,
+      "defaultValue": 2.0,
+      "nodeId": "11",
+      "inputKey": "cfg"
+    },
+    {
+      "id": "ks_11_denoise",
+      "label": "Refinement Strength",
+      "type": "number",
+      "required": true,
+      "defaultValue": 0.3,
+      "nodeId": "11",
+      "inputKey": "denoise"
+    },
+    {
+      "id": "video_7_frame_rate",
+      "label": "Processing Frame Rate",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 24,
+      "nodeId": "7",
+      "inputKey": "frame_rate"
+    },
+    {
+      "id": "video_7_max_frames",
+      "label": "Max Frames to Process",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 300,
+      "nodeId": "7",
+      "inputKey": "max_frames"
+    },
+    {
+      "id": "create_13_fps",
+      "label": "Output Video FPS",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 24,
+      "nodeId": "13",
+      "inputKey": "fps"
+    },
+    {
+      "id": "save_14_prefix",
+      "label": "Filename Prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "video/upscaled_",
+      "nodeId": "14",
+      "inputKey": "filename_prefix"
+    }
+  ],
+  "createdAt": 1757377260000
+}

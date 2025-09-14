@@ -1,0 +1,296 @@
+{
+  "slug": "video-interpolation",
+  "name": "Video Frame Interpolation (V2V)",
+  "workflow": {
+    "1": {
+      "class_type": "LoadVideo",
+      "inputs": {
+        "video": "input_video.mp4"
+      },
+      "_meta": {
+        "title": "Load Input Video"
+      }
+    },
+    "2": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "animatediff_interpolation.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Load Interpolation Model"
+      }
+    },
+    "3": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "vae-ft-mse-840000-ema-pruned.safetensors"
+      },
+      "_meta": {
+        "title": "Load VAE"
+      }
+    },
+    "4": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "clip_l.safetensors",
+        "type": "stable_diffusion",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "Load CLIP"
+      }
+    },
+    "5": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "smooth motion, fluid movement, high frame rate, temporal consistency",
+        "clip": ["4", 0]
+      },
+      "_meta": {
+        "title": "Motion Prompt"
+      }
+    },
+    "6": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "choppy motion, temporal artifacts, flickering, inconsistent movement",
+        "clip": ["4", 0]
+      },
+      "_meta": {
+        "title": "Negative Prompt"
+      }
+    },
+    "7": {
+      "class_type": "VideoFrameExtractor",
+      "inputs": {
+        "video": ["1", 0],
+        "frame_rate": 12,
+        "max_frames": 240
+      },
+      "_meta": {
+        "title": "Extract Video Frames"
+      }
+    },
+    "8": {
+      "class_type": "VideoFrameInterpolator",
+      "inputs": {
+        "frames": ["7", 0],
+        "interpolation_factor": 2,
+        "method": "optical_flow"
+      },
+      "_meta": {
+        "title": "Interpolate Between Frames"
+      }
+    },
+    "9": {
+      "class_type": "VAEEncode",
+      "inputs": {
+        "pixels": ["8", 0],
+        "vae": ["3", 0]
+      },
+      "_meta": {
+        "title": "Encode Interpolated Frames"
+      }
+    },
+    "10": {
+      "class_type": "ModelSamplingDiscrete",
+      "inputs": {
+        "sampling": "lcm",
+        "zsnr": false,
+        "model": ["2", 0]
+      },
+      "_meta": {
+        "title": "Set Temporal Sampling"
+      }
+    },
+    "11": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 98765,
+        "steps": 12,
+        "cfg": 4.0,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 0.4,
+        "model": ["10", 0],
+        "positive": ["5", 0],
+        "negative": ["6", 0],
+        "latent_image": ["9", 0]
+      },
+      "_meta": {
+        "title": "Refine Temporal Consistency"
+      }
+    },
+    "12": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": ["11", 0],
+        "vae": ["3", 0]
+      },
+      "_meta": {
+        "title": "Decode Smooth Frames"
+      }
+    },
+    "13": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "fps": 48,
+        "images": ["12", 0]
+      },
+      "_meta": {
+        "title": "Create High Frame Rate Video"
+      }
+    },
+    "14": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "filename_prefix": "video/interpolated_",
+        "format": "mp4",
+        "codec": "h264",
+        "video": ["13", 0]
+      },
+      "_meta": {
+        "title": "Save Interpolated Video"
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "file_1_video",
+      "label": "Input Video",
+      "type": "file",
+      "required": true,
+      "nodeId": "1",
+      "inputKey": "video",
+      "help": "Upload the video you want to interpolate for higher frame rate"
+    },
+    {
+      "id": "text_5_text",
+      "label": "Motion Enhancement Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "smooth motion, fluid movement, high frame rate, temporal consistency",
+      "nodeId": "5",
+      "inputKey": "text"
+    },
+    {
+      "id": "text_6_text",
+      "label": "Negative Prompt",
+      "type": "text",
+      "required": false,
+      "defaultValue": "choppy motion, temporal artifacts, flickering, inconsistent movement",
+      "nodeId": "6",
+      "inputKey": "text"
+    },
+    {
+      "id": "unet_2_unet_name",
+      "label": "Interpolation Model",
+      "type": "string",
+      "required": true,
+      "defaultValue": "animatediff_interpolation.safetensors",
+      "nodeId": "2",
+      "inputKey": "unet_name"
+    },
+    {
+      "id": "vae_3_vae_name",
+      "label": "VAE Model",
+      "type": "string",
+      "required": true,
+      "defaultValue": "vae-ft-mse-840000-ema-pruned.safetensors",
+      "nodeId": "3",
+      "inputKey": "vae_name"
+    },
+    {
+      "id": "interp_8_interpolation_factor",
+      "label": "Interpolation Factor",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 2,
+      "nodeId": "8",
+      "inputKey": "interpolation_factor"
+    },
+    {
+      "id": "interp_8_method",
+      "label": "Interpolation Method",
+      "type": "string",
+      "required": true,
+      "defaultValue": "optical_flow",
+      "nodeId": "8",
+      "inputKey": "method"
+    },
+    {
+      "id": "ks_11_seed",
+      "label": "Seed",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 98765,
+      "nodeId": "11",
+      "inputKey": "seed"
+    },
+    {
+      "id": "ks_11_steps",
+      "label": "Refinement Steps",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 12,
+      "nodeId": "11",
+      "inputKey": "steps"
+    },
+    {
+      "id": "ks_11_cfg",
+      "label": "CFG Scale",
+      "type": "number",
+      "required": true,
+      "defaultValue": 4.0,
+      "nodeId": "11",
+      "inputKey": "cfg"
+    },
+    {
+      "id": "ks_11_denoise",
+      "label": "Temporal Refinement",
+      "type": "number",
+      "required": true,
+      "defaultValue": 0.4,
+      "nodeId": "11",
+      "inputKey": "denoise"
+    },
+    {
+      "id": "video_7_frame_rate",
+      "label": "Input Frame Rate",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 12,
+      "nodeId": "7",
+      "inputKey": "frame_rate"
+    },
+    {
+      "id": "video_7_max_frames",
+      "label": "Max Frames to Process",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 240,
+      "nodeId": "7",
+      "inputKey": "max_frames"
+    },
+    {
+      "id": "create_13_fps",
+      "label": "Output Frame Rate",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 48,
+      "nodeId": "13",
+      "inputKey": "fps"
+    },
+    {
+      "id": "save_14_prefix",
+      "label": "Filename Prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "video/interpolated_",
+      "nodeId": "14",
+      "inputKey": "filename_prefix"
+    }
+  ],
+  "createdAt": 1757377320000
+}

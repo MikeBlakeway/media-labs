@@ -1,0 +1,328 @@
+{
+  "slug": "video-effects",
+  "name": "Video Effects & Transformation (V2V)",
+  "workflow": {
+    "1": {
+      "class_type": "LoadVideo",
+      "inputs": {
+        "video": "input_video.mp4"
+      },
+      "_meta": {
+        "title": "Load Input Video"
+      }
+    },
+    "2": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "sd_xl_base_1.0.safetensors"
+      },
+      "_meta": {
+        "title": "Load Base Model"
+      }
+    },
+    "3": {
+      "class_type": "LoraLoader",
+      "inputs": {
+        "model": ["2", 0],
+        "clip": ["2", 1],
+        "lora_name": "temporal_effects_lora.safetensors",
+        "strength_model": 0.8,
+        "strength_clip": 1.0
+      },
+      "_meta": {
+        "title": "Load Effects LoRA"
+      }
+    },
+    "4": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "cinematic effects, dramatic lighting, color grading, film look, atmospheric",
+        "clip": ["3", 1]
+      },
+      "_meta": {
+        "title": "Effects Prompt"
+      }
+    },
+    "5": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "flat lighting, washed out colors, amateur look, overprocessed",
+        "clip": ["3", 1]
+      },
+      "_meta": {
+        "title": "Negative Prompt"
+      }
+    },
+    "6": {
+      "class_type": "VideoFrameExtractor",
+      "inputs": {
+        "video": ["1", 0],
+        "frame_rate": 24,
+        "max_frames": 360
+      },
+      "_meta": {
+        "title": "Extract Video Frames"
+      }
+    },
+    "7": {
+      "class_type": "ColorCorrection",
+      "inputs": {
+        "images": ["6", 0],
+        "brightness": 1.1,
+        "contrast": 1.2,
+        "saturation": 1.15,
+        "gamma": 1.0
+      },
+      "_meta": {
+        "title": "Color Correction"
+      }
+    },
+    "8": {
+      "class_type": "TemporalStabilizer",
+      "inputs": {
+        "images": ["7", 0],
+        "strength": 0.7,
+        "window_size": 5
+      },
+      "_meta": {
+        "title": "Temporal Stabilization"
+      }
+    },
+    "9": {
+      "class_type": "VAEEncode",
+      "inputs": {
+        "pixels": ["8", 0],
+        "vae": ["2", 2]
+      },
+      "_meta": {
+        "title": "Encode Enhanced Frames"
+      }
+    },
+    "10": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 24680,
+        "steps": 20,
+        "cfg": 6.5,
+        "sampler_name": "dpmpp_sde",
+        "scheduler": "karras",
+        "denoise": 0.35,
+        "model": ["3", 0],
+        "positive": ["4", 0],
+        "negative": ["5", 0],
+        "latent_image": ["9", 0]
+      },
+      "_meta": {
+        "title": "Apply Cinematic Effects"
+      }
+    },
+    "11": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": ["10", 0],
+        "vae": ["2", 2]
+      },
+      "_meta": {
+        "title": "Decode Processed Frames"
+      }
+    },
+    "12": {
+      "class_type": "FilmGrain",
+      "inputs": {
+        "images": ["11", 0],
+        "strength": 0.15,
+        "type": "35mm"
+      },
+      "_meta": {
+        "title": "Add Film Grain"
+      }
+    },
+    "13": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "fps": 24,
+        "images": ["12", 0]
+      },
+      "_meta": {
+        "title": "Create Enhanced Video"
+      }
+    },
+    "14": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "filename_prefix": "video/effects_",
+        "format": "mp4",
+        "codec": "h264",
+        "video": ["13", 0]
+      },
+      "_meta": {
+        "title": "Save Enhanced Video"
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "file_1_video",
+      "label": "Input Video",
+      "type": "file",
+      "required": true,
+      "nodeId": "1",
+      "inputKey": "video",
+      "help": "Upload the video you want to apply cinematic effects to"
+    },
+    {
+      "id": "text_4_text",
+      "label": "Effects Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "cinematic effects, dramatic lighting, color grading, film look, atmospheric",
+      "nodeId": "4",
+      "inputKey": "text"
+    },
+    {
+      "id": "text_5_text",
+      "label": "Negative Prompt",
+      "type": "text",
+      "required": false,
+      "defaultValue": "flat lighting, washed out colors, amateur look, overprocessed",
+      "nodeId": "5",
+      "inputKey": "text"
+    },
+    {
+      "id": "ckpt_2_ckpt_name",
+      "label": "Base Model",
+      "type": "string",
+      "required": true,
+      "defaultValue": "sd_xl_base_1.0.safetensors",
+      "nodeId": "2",
+      "inputKey": "ckpt_name"
+    },
+    {
+      "id": "lora_3_name",
+      "label": "Effects LoRA",
+      "type": "string",
+      "required": true,
+      "defaultValue": "temporal_effects_lora.safetensors",
+      "nodeId": "3",
+      "inputKey": "lora_name"
+    },
+    {
+      "id": "lora_3_strength_model",
+      "label": "LoRA Strength (Model)",
+      "type": "number",
+      "required": true,
+      "defaultValue": 0.8,
+      "nodeId": "3",
+      "inputKey": "strength_model"
+    },
+    {
+      "id": "color_7_brightness",
+      "label": "Brightness",
+      "type": "number",
+      "required": true,
+      "defaultValue": 1.1,
+      "nodeId": "7",
+      "inputKey": "brightness"
+    },
+    {
+      "id": "color_7_contrast",
+      "label": "Contrast",
+      "type": "number",
+      "required": true,
+      "defaultValue": 1.2,
+      "nodeId": "7",
+      "inputKey": "contrast"
+    },
+    {
+      "id": "color_7_saturation",
+      "label": "Saturation",
+      "type": "number",
+      "required": true,
+      "defaultValue": 1.15,
+      "nodeId": "7",
+      "inputKey": "saturation"
+    },
+    {
+      "id": "temporal_8_strength",
+      "label": "Temporal Stabilization",
+      "type": "number",
+      "required": true,
+      "defaultValue": 0.7,
+      "nodeId": "8",
+      "inputKey": "strength"
+    },
+    {
+      "id": "ks_10_seed",
+      "label": "Seed",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 24680,
+      "nodeId": "10",
+      "inputKey": "seed"
+    },
+    {
+      "id": "ks_10_steps",
+      "label": "Processing Steps",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 20,
+      "nodeId": "10",
+      "inputKey": "steps"
+    },
+    {
+      "id": "ks_10_cfg",
+      "label": "CFG Scale",
+      "type": "number",
+      "required": true,
+      "defaultValue": 6.5,
+      "nodeId": "10",
+      "inputKey": "cfg"
+    },
+    {
+      "id": "ks_10_denoise",
+      "label": "Effects Strength",
+      "type": "number",
+      "required": true,
+      "defaultValue": 0.35,
+      "nodeId": "10",
+      "inputKey": "denoise"
+    },
+    {
+      "id": "grain_12_strength",
+      "label": "Film Grain Strength",
+      "type": "number",
+      "required": true,
+      "defaultValue": 0.15,
+      "nodeId": "12",
+      "inputKey": "strength"
+    },
+    {
+      "id": "video_6_max_frames",
+      "label": "Max Frames to Process",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 360,
+      "nodeId": "6",
+      "inputKey": "max_frames"
+    },
+    {
+      "id": "create_13_fps",
+      "label": "Output Frame Rate",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 24,
+      "nodeId": "13",
+      "inputKey": "fps"
+    },
+    {
+      "id": "save_14_prefix",
+      "label": "Filename Prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "video/effects_",
+      "nodeId": "14",
+      "inputKey": "filename_prefix"
+    }
+  ],
+  "createdAt": 1757377380000
+}
