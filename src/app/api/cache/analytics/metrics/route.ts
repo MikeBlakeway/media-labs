@@ -30,14 +30,13 @@ export async function GET() {
     if (!response.ok) {
       throw new Error('Failed to get cache status')
     }
-    
+
     const data = await response.json()
     const models: ModelData[] = data.models || []
 
     // Calculate average heat score
-    const averageHeatScore = models.length > 0 
-      ? models.reduce((sum: number, model: ModelData) => sum + model.heatScore, 0) / models.length
-      : 0
+    const averageHeatScore =
+      models.length > 0 ? models.reduce((sum: number, model: ModelData) => sum + model.heatScore, 0) / models.length : 0
 
     // Calculate hit/miss ratios
     const totalRequests = metricsData.cacheHits + metricsData.cacheMisses
@@ -56,11 +55,11 @@ export async function GET() {
 
     // Heat score distribution
     const heatScoreRanges = {
-      'very_low': models.filter((m: ModelData) => m.heatScore < 0.2).length,
-      'low': models.filter((m: ModelData) => m.heatScore >= 0.2 && m.heatScore < 0.5).length,
-      'medium': models.filter((m: ModelData) => m.heatScore >= 0.5 && m.heatScore < 0.8).length,
-      'high': models.filter((m: ModelData) => m.heatScore >= 0.8 && m.heatScore < 1.2).length,
-      'very_high': models.filter((m: ModelData) => m.heatScore >= 1.2).length
+      very_low: models.filter((m: ModelData) => m.heatScore < 0.2).length,
+      low: models.filter((m: ModelData) => m.heatScore >= 0.2 && m.heatScore < 0.5).length,
+      medium: models.filter((m: ModelData) => m.heatScore >= 0.5 && m.heatScore < 0.8).length,
+      high: models.filter((m: ModelData) => m.heatScore >= 0.8 && m.heatScore < 1.2).length,
+      very_high: models.filter((m: ModelData) => m.heatScore >= 1.2).length
     }
 
     const metrics = {
@@ -83,9 +82,10 @@ export async function GET() {
       efficiency: {
         storageUtilization: data.cacheStatus?.volumeStats?.usagePercent || 0,
         cacheEfficiency: hitRatio,
-        evictionEfficiency: metricsData.totalEvictions > 0 ? 
-          (metricsData.totalReclaimed / 1024 / 1024 / 1024).toFixed(2) + 'GB per eviction cycle' : 
-          'No evictions yet'
+        evictionEfficiency:
+          metricsData.totalEvictions > 0
+            ? (metricsData.totalReclaimed / 1024 / 1024 / 1024).toFixed(2) + 'GB per eviction cycle'
+            : 'No evictions yet'
       },
       lastUpdated: metricsData.lastUpdated
     }
@@ -107,7 +107,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    
+
     // Validate metrics update
     const updates = {
       cacheHits: typeof body.cacheHits === 'number' ? body.cacheHits : undefined,

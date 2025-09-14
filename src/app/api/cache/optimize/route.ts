@@ -26,7 +26,7 @@ async function getCacheData() {
   if (!response.ok) {
     throw new Error('Failed to get cache status')
   }
-  
+
   const data = await response.json()
   return {
     volumeStats: data.cacheStatus.volumeStats,
@@ -69,15 +69,20 @@ export async function POST(req: NextRequest) {
     const parsed = OptimizeRequestSchema.safeParse(body)
 
     if (!parsed.success) {
-      return NextResponse.json({
-        error: 'Invalid request format',
-        details: parsed.error.flatten()
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'Invalid request format',
+          details: parsed.error.flatten()
+        },
+        { status: 400 }
+      )
     }
 
     const { force, targetPercent, dryRun } = parsed.data
 
-    console.log(`[cache-optimize] Starting optimization cycle (force=${force}, target=${targetPercent}%, dryRun=${dryRun})`)
+    console.log(
+      `[cache-optimize] Starting optimization cycle (force=${force}, target=${targetPercent}%, dryRun=${dryRun})`
+    )
 
     // Get current cache state
     const { volumeStats, models } = await getCacheData()
@@ -125,10 +130,14 @@ export async function POST(req: NextRequest) {
     // Execute evictions (unless dry run)
     if (!dryRun) {
       for (const model of modelsToEvict) {
-        console.log(`[cache-optimize] Evicting model: ${model.modelName} (${(model.size / 1024 / 1024 / 1024).toFixed(2)}GB, heat: ${model.heatScore.toFixed(3)})`)
+        console.log(
+          `[cache-optimize] Evicting model: ${model.modelName} (${(model.size / 1024 / 1024 / 1024).toFixed(
+            2
+          )}GB, heat: ${model.heatScore.toFixed(3)})`
+        )
 
         const success = await evictModelFromVolume(model.filePath)
-        
+
         if (success) {
           evictedModels.push(model.modelName)
           reclaimedBytes += model.size
@@ -156,7 +165,14 @@ export async function POST(req: NextRequest) {
       errors: errors.length > 0 ? errors : undefined
     })
 
-    console.log(`[cache-optimize] Optimization complete: evicted ${evictedModels.length} models, reclaimed ${(reclaimedBytes / 1024 / 1024 / 1024).toFixed(2)}GB`)
+    console.log(
+      `[cache-optimize] Optimization complete: evicted ${evictedModels.length} models, reclaimed ${(
+        reclaimedBytes /
+        1024 /
+        1024 /
+        1024
+      ).toFixed(2)}GB`
+    )
 
     return NextResponse.json({
       ...result,
@@ -193,17 +209,21 @@ export async function GET() {
     // Analyze current state
     const protectedModels = models.filter((m: ModelCacheEntry) => isModelProtected(m))
     const evictableModels = models.filter((m: ModelCacheEntry) => !isModelProtected(m))
-    
+
     // Calculate what would be evicted if triggered now
     const targetBytes = calculateEvictionTarget(volumeStats, CACHE_CONFIG.LOW_WATER_MARK)
     const wouldEvict = selectModelsForEviction(models, targetBytes)
 
     const recommendations: string[] = []
-    
+
     if (shouldTriggerEviction(volumeStats)) {
-      recommendations.push(`Volume usage (${volumeStats.usagePercent.toFixed(1)}%) exceeds threshold (${CACHE_CONFIG.HIGH_WATER_MARK}%)`)
+      recommendations.push(
+        `Volume usage (${volumeStats.usagePercent.toFixed(1)}%) exceeds threshold (${CACHE_CONFIG.HIGH_WATER_MARK}%)`
+      )
       if (wouldEvict.length > 0) {
-        recommendations.push(`${wouldEvict.length} models could be evicted to reclaim ${(targetBytes / 1024 / 1024 / 1024).toFixed(2)}GB`)
+        recommendations.push(
+          `${wouldEvict.length} models could be evicted to reclaim ${(targetBytes / 1024 / 1024 / 1024).toFixed(2)}GB`
+        )
       } else {
         recommendations.push('No models available for eviction - consider unpinning or adjusting protection settings')
       }

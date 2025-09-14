@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { 
-  ModelCacheEntrySchema, 
+import {
+  ModelCacheEntrySchema,
   VolumeStatsSchema,
   CacheStatusSchema,
   calculateHeatScore,
@@ -14,7 +14,10 @@ export const runtime = 'nodejs'
 // In-memory cache storage for model tracking
 // In production, this would be replaced with a persistent database
 const modelCache = new Map<string, ModelCacheEntry>()
-let volumeStatsHistory: Array<{ timestamp: Date; stats: { totalBytes: number; usedBytes: number; freeBytes: number; usagePercent: number } }> = []
+let volumeStatsHistory: Array<{
+  timestamp: Date
+  stats: { totalBytes: number; usedBytes: number; freeBytes: number; usagePercent: number }
+}> = []
 
 /**
  * Get current volume statistics from volume worker
@@ -24,9 +27,9 @@ async function getVolumeStats() {
     // Note: In server-side API routes, we need to call the volume worker directly
     // rather than making HTTP calls to our own API endpoints
     // For now, we'll return mock data and let the actual implementation call volume worker
-    
+
     console.log('[cache-status] Using fallback volume stats - integrate with volume worker directly')
-    
+
     // Return default stats - in production this would call volume worker directly
     return VolumeStatsSchema.parse({
       totalBytes: 64424509440, // 60GB default
@@ -52,7 +55,7 @@ async function getVolumeStats() {
 async function getModelsFromVolume() {
   try {
     console.log('[cache-status] Using mock model data - integrate with volume worker directly')
-    
+
     // For demo purposes, create some sample model data
     const sampleModels = [
       {
@@ -91,8 +94,8 @@ async function getModelsFromVolume() {
       // Get or create cache entry
       let cacheEntry = modelCache.get(model.modelName)
       if (!cacheEntry) {
-        cacheEntry = { 
-          ...model, 
+        cacheEntry = {
+          ...model,
           heatScore: 0, // Will be calculated below
           type: model.type as ModelCacheEntry['type']
         }
@@ -100,13 +103,13 @@ async function getModelsFromVolume() {
         // Update cache entry with current data
         Object.assign(cacheEntry, { ...model, type: model.type as ModelCacheEntry['type'] })
       }
-      
+
       // Calculate heat score
       cacheEntry.heatScore = calculateHeatScore(cacheEntry)
-      
+
       // Update cache
       modelCache.set(model.modelName, cacheEntry)
-      
+
       return ModelCacheEntrySchema.parse(cacheEntry)
     })
 
@@ -124,13 +127,13 @@ export async function GET() {
   try {
     const volumeStats = await getVolumeStats()
     const models = await getModelsFromVolume()
-    
+
     // Store volume stats in history
     volumeStatsHistory.push({
       timestamp: new Date(),
       stats: volumeStats
     })
-    
+
     // Keep only last 24 hours of history
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
     volumeStatsHistory = volumeStatsHistory.filter(entry => entry.timestamp > oneDayAgo)
@@ -173,7 +176,7 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json()
-    
+
     // Validate configuration updates
     const ConfigUpdateSchema = z.object({
       highWaterMark: z.number().min(1).max(100).optional(),
@@ -184,10 +187,13 @@ export async function PATCH(req: NextRequest) {
 
     const parsed = ConfigUpdateSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ 
-        error: 'Invalid configuration', 
-        details: parsed.error.flatten() 
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'Invalid configuration',
+          details: parsed.error.flatten()
+        },
+        { status: 400 }
+      )
     }
 
     const updates = parsed.data
@@ -197,9 +203,12 @@ export async function PATCH(req: NextRequest) {
     const newLowWaterMark = updates.lowWaterMark ?? CACHE_CONFIG.LOW_WATER_MARK
 
     if (newHighWaterMark <= newLowWaterMark) {
-      return NextResponse.json({ 
-        error: 'High water mark must be greater than low water mark' 
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'High water mark must be greater than low water mark'
+        },
+        { status: 400 }
+      )
     }
 
     // In production, these would be saved to environment/config store

@@ -37,10 +37,13 @@ export async function POST(req: NextRequest) {
     const parsed = TrackAccessRequestSchema.safeParse(body)
 
     if (!parsed.success) {
-      return NextResponse.json({
-        error: 'Invalid request format',
-        details: parsed.error.flatten()
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'Invalid request format',
+          details: parsed.error.flatten()
+        },
+        { status: 400 }
+      )
     }
 
     const { modelName, modelType, workflowId, userId } = parsed.data
@@ -81,7 +84,11 @@ export async function POST(req: NextRequest) {
       accessHistory = accessHistory.slice(-1000)
     }
 
-    console.log(`[cache-track] Updated ${modelName}: accessCount=${updatedEntry.accessCount}, heatScore=${updatedEntry.heatScore.toFixed(3)}`)
+    console.log(
+      `[cache-track] Updated ${modelName}: accessCount=${
+        updatedEntry.accessCount
+      }, heatScore=${updatedEntry.heatScore.toFixed(3)}`
+    )
 
     return NextResponse.json({
       success: true,
@@ -113,15 +120,16 @@ export async function GET(req: NextRequest) {
       // Get specific model access data
       const cacheEntry = modelAccessData.get(modelName)
       if (!cacheEntry) {
-        return NextResponse.json({
-          error: `Model ${modelName} not found in access tracking`
-        }, { status: 404 })
+        return NextResponse.json(
+          {
+            error: `Model ${modelName} not found in access tracking`
+          },
+          { status: 404 }
+        )
       }
 
       // Get recent access history for this model
-      const modelHistory = accessHistory
-        .filter(entry => entry.modelName === modelName)
-        .slice(-50) // Last 50 accesses
+      const modelHistory = accessHistory.filter(entry => entry.modelName === modelName).slice(-50) // Last 50 accesses
 
       return NextResponse.json({
         success: true,
@@ -136,9 +144,7 @@ export async function GET(req: NextRequest) {
     const allModels = Array.from(modelAccessData.values())
     const totalAccesses = accessHistory.length
     const uniqueModels = allModels.length
-    const mostAccessed = allModels
-      .sort((a, b) => b.accessCount - a.accessCount)
-      .slice(0, 10)
+    const mostAccessed = allModels.sort((a, b) => b.accessCount - a.accessCount).slice(0, 10)
 
     // Calculate access frequency by hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)

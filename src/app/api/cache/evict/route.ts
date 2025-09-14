@@ -17,14 +17,14 @@ async function getModelInfo(modelName: string) {
   if (!response.ok) {
     throw new Error('Failed to get cache status')
   }
-  
+
   const data = await response.json()
   const model = data.models.find((m: ModelCacheEntry) => m.modelName === modelName)
-  
+
   if (!model) {
     throw new Error(`Model ${modelName} not found`)
   }
-  
+
   return model
 }
 
@@ -63,10 +63,13 @@ export async function DELETE(req: NextRequest) {
     const parsed = EvictRequestSchema.safeParse(body)
 
     if (!parsed.success) {
-      return NextResponse.json({
-        error: 'Invalid request format',
-        details: parsed.error.flatten()
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'Invalid request format',
+          details: parsed.error.flatten()
+        },
+        { status: 400 }
+      )
     }
 
     const { modelName, force } = parsed.data
@@ -81,29 +84,35 @@ export async function DELETE(req: NextRequest) {
       const reasons = []
       if (model.isPinned) reasons.push('pinned')
       if (model.isInUse) reasons.push('in use')
-      
+
       const now = new Date()
       const hoursSinceAccess = (now.getTime() - new Date(model.lastAccessed).getTime()) / (1000 * 60 * 60)
       if (hoursSinceAccess < 24) reasons.push('recently accessed')
-      
-      return NextResponse.json({
-        success: false,
-        error: 'Model is protected from eviction',
-        modelName,
-        protectionReasons: reasons,
-        hint: 'Use force=true to override protection, or unpin the model first'
-      }, { status: 403 })
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Model is protected from eviction',
+          modelName,
+          protectionReasons: reasons,
+          hint: 'Use force=true to override protection, or unpin the model first'
+        },
+        { status: 403 }
+      )
     }
 
     // Execute eviction
     const success = await evictModelFromVolume(model.filePath)
 
     if (!success) {
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to evict model from volume',
-        modelName
-      }, { status: 500 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to evict model from volume',
+          modelName
+        },
+        { status: 500 }
+      )
     }
 
     console.log(`[cache-evict] Successfully evicted model: ${modelName}`)
@@ -137,10 +146,13 @@ export async function POST(req: NextRequest) {
     const parsed = z.object({ modelName: z.string() }).safeParse(body)
 
     if (!parsed.success) {
-      return NextResponse.json({
-        error: 'Invalid request format',
-        details: parsed.error.flatten()
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: 'Invalid request format',
+          details: parsed.error.flatten()
+        },
+        { status: 400 }
+      )
     }
 
     const { modelName } = parsed.data
@@ -151,10 +163,10 @@ export async function POST(req: NextRequest) {
     // Check protection status
     const isProtected = isModelProtected(model)
     const protectionReasons = []
-    
+
     if (model.isPinned) protectionReasons.push('Model is pinned')
     if (model.isInUse) protectionReasons.push('Model is currently in use')
-    
+
     const now = new Date()
     const hoursSinceAccess = (now.getTime() - new Date(model.lastAccessed).getTime()) / (1000 * 60 * 60)
     if (hoursSinceAccess < 24) protectionReasons.push('Model was accessed recently')

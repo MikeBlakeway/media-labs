@@ -68,23 +68,25 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
       }
 
       setCacheStatus(statusData.cacheStatus)
-      
+
       // Transform model data
-      const modelsData = statusData.models?.map((model: ModelCacheEntry) => ({
-        ...model,
-        lastAccessed: new Date(model.lastAccessed)
-      })) || []
-      
+      const modelsData =
+        statusData.models?.map((model: ModelCacheEntry) => ({
+          ...model,
+          lastAccessed: new Date(model.lastAccessed)
+        })) || []
+
       setModels(modelsData)
 
       // Fetch volume history
       const historyResponse = await fetch('/api/cache/analytics/volume-history')
       if (historyResponse.ok) {
         const historyData = await historyResponse.json()
-        const transformedHistory = historyData.history?.map((entry: { timestamp: string; stats: VolumeStats }) => ({
-          timestamp: new Date(entry.timestamp),
-          stats: entry.stats
-        })) || []
+        const transformedHistory =
+          historyData.history?.map((entry: { timestamp: string; stats: VolumeStats }) => ({
+            timestamp: new Date(entry.timestamp),
+            stats: entry.stats
+          })) || []
         setVolumeHistory(transformedHistory)
       }
 
@@ -94,7 +96,6 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
         const metricsData = await metricsResponse.json()
         setMetrics(metricsData.metrics || metrics)
       }
-
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load cache data'
       setError(message)
@@ -104,26 +105,29 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
     }
   }, [metrics])
 
-  const trackModelAccess = useCallback(async (modelName: string, modelType: string) => {
-    try {
-      const response = await fetch('/api/cache/track-access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modelName, modelType })
-      })
+  const trackModelAccess = useCallback(
+    async (modelName: string, modelType: string) => {
+      try {
+        const response = await fetch('/api/cache/track-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modelName, modelType })
+        })
 
-      if (!response.ok) {
-        throw new Error(`Failed to track model access: ${response.statusText}`)
+        if (!response.ok) {
+          throw new Error(`Failed to track model access: ${response.statusText}`)
+        }
+
+        // Refresh data to get updated stats
+        await refreshData()
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to track model access'
+        setError(message)
+        console.error('Model access tracking error:', err)
       }
-
-      // Refresh data to get updated stats
-      await refreshData()
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to track model access'
-      setError(message)
-      console.error('Model access tracking error:', err)
-    }
-  }, [refreshData])
+    },
+    [refreshData]
+  )
 
   const pinModel = useCallback(async (modelName: string) => {
     try {
@@ -138,11 +142,7 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
       }
 
       // Update local state immediately
-      setModels(prev => prev.map(model => 
-        model.modelName === modelName 
-          ? { ...model, isPinned: true }
-          : model
-      ))
+      setModels(prev => prev.map(model => (model.modelName === modelName ? { ...model, isPinned: true } : model)))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to pin model'
       setError(message)
@@ -163,11 +163,7 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
       }
 
       // Update local state immediately
-      setModels(prev => prev.map(model => 
-        model.modelName === modelName 
-          ? { ...model, isPinned: false }
-          : model
-      ))
+      setModels(prev => prev.map(model => (model.modelName === modelName ? { ...model, isPinned: false } : model)))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to unpin model'
       setError(message)
@@ -195,29 +191,32 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
     }
   }, [refreshData])
 
-  const evictModel = useCallback(async (modelName: string) => {
-    try {
-      const response = await fetch('/api/cache/evict', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modelName })
-      })
+  const evictModel = useCallback(
+    async (modelName: string) => {
+      try {
+        const response = await fetch('/api/cache/evict', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modelName })
+        })
 
-      if (!response.ok) {
-        throw new Error(`Failed to evict model: ${response.statusText}`)
+        if (!response.ok) {
+          throw new Error(`Failed to evict model: ${response.statusText}`)
+        }
+
+        // Remove from local state immediately
+        setModels(prev => prev.filter(model => model.modelName !== modelName))
+
+        // Refresh to get updated volume stats
+        await refreshData()
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to evict model'
+        setError(message)
+        console.error('Model eviction error:', err)
       }
-
-      // Remove from local state immediately
-      setModels(prev => prev.filter(model => model.modelName !== modelName))
-      
-      // Refresh to get updated volume stats
-      await refreshData()
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to evict model'
-      setError(message)
-      console.error('Model eviction error:', err)
-    }
-  }, [refreshData])
+    },
+    [refreshData]
+  )
 
   // Initial data load
   useEffect(() => {
@@ -269,7 +268,7 @@ export function useCacheMetrics() {
       if (!response.ok) {
         throw new Error(`Failed to fetch metrics: ${response.statusText}`)
       }
-      
+
       const data = await response.json()
       setMetrics(data.metrics)
     } catch (err) {
@@ -283,7 +282,7 @@ export function useCacheMetrics() {
 
   useEffect(() => {
     fetchMetrics()
-    
+
     // Refresh metrics every 5 minutes
     const interval = setInterval(fetchMetrics, 5 * 60 * 1000)
     return () => clearInterval(interval)
