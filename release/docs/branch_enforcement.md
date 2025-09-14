@@ -122,7 +122,7 @@ git checkout -b release/2025-w37
 
 ### PR Templates
 
-Create `.github/pull_request_template.md`:
+Create `.github/ISSUE_TEMPLATE/pull_request.template.md`:
 
 ```markdown
 ## Type of Change

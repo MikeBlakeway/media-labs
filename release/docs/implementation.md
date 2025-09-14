@@ -66,7 +66,7 @@
 
 ### Templates
 
-- `.github/ISSUE_TEMPLATE/pull_request_template.md` - PR template
+- `.github/ISSUE_TEMPLATE/pull_request.template.md` - PR template
 - `.github/ISSUE_TEMPLATE/weekly_release.md` - Release PR template
 
 ---

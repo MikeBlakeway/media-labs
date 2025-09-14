@@ -1,0 +1,92 @@
+name: Spike follow-ups
+description: Decompose spike outcomes into actionable, well-scoped issues that follow our standards.
+title: "[{type}] {short title}"
+labels:
+  - spike-followup
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Purpose**: Convert spike findings into clear, testable work items.
+        Fill out all required fields. Keep each issue **small and independently valuable**.
+  - type: dropdown
+    id: type
+    attributes:
+      label: Issue type
+      options:
+        - feat
+        - fix
+        - chore
+        - docs
+        - spike
+    validations:
+      required: true
+  - type: input
+    id: short-title
+    attributes:
+      label: Short title
+      placeholder: e.g., Implement serverless preflight validation API
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / background
+      description: Link to the spike report and summarize the decision rationale.
+      placeholder: Why are we doing this? What did the spike determine?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Describe the scope and boundaries. List impacted areas and out-of-scope items.
+      placeholder: What this issue will cover vs. not cover.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria (Given/When/Then)
+      description: Provide testable criteria.
+      placeholder: |
+        - [ ] GIVEN ..., WHEN ..., THEN ...
+        - [ ] GIVEN ..., WHEN ..., THEN ...
+    validations:
+      required: true
+  - type: textarea
+    id: implementation-notes
+    attributes:
+      label: Implementation notes / approach
+      description: Optional hints from the spike (links to POCs, docs, files).
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks & mitigation
+  - type: input
+    id: dependencies
+    attributes:
+      label: Dependencies
+      placeholder: Link related issues/PRs, services, or teams.
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Effort (t-shirt size)
+      options:
+        - XS
+        - S
+        - M
+        - L
+        - XL
+    validations:
+      required: true
+  - type: checkboxes
+    id: quality
+    attributes:
+      label: Quality gates
+      options:
+        - label: Tests updated/added
+        - label: Docs updated
+        - label: Security & privacy reviewed
+        - label: Observability added/updated
+        - label: Rollback plan defined
