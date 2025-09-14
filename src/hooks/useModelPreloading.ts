@@ -5,7 +5,7 @@
  * Provides functionality to trigger preloading and monitor progress.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 
 // Status response schemas
@@ -91,12 +91,17 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
   const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(null)
   const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null)
 
+  // Use ref to track workflowSlug without causing refreshStatus to be recreated
+  const workflowSlugRef = useRef(workflowSlug)
+  workflowSlugRef.current = workflowSlug
+
   // Refresh status from API
   const refreshStatus = useCallback(async () => {
     try {
+      const currentWorkflowSlug = workflowSlugRef.current
       const params = new URLSearchParams()
-      if (workflowSlug) {
-        params.append('workflowSlug', workflowSlug)
+      if (currentWorkflowSlug) {
+        params.append('workflowSlug', currentWorkflowSlug)
       }
 
       const response = await fetch(`/api/models/status?${params}`)
@@ -107,7 +112,7 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
 
       const data = await response.json()
 
-      if (workflowSlug && data.workflowSlug) {
+      if (currentWorkflowSlug && data.workflowSlug) {
         // Parse workflow-specific status
         const workflowResult = WorkflowStatusSchema.safeParse(data)
         if (workflowResult.success) {
@@ -131,7 +136,7 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
       console.error('Refresh status error:', err)
       setError(message)
     }
-  }, [workflowSlug])
+  }, []) // Remove workflowSlug dependency to prevent refreshStatus from being recreated
 
   // Preload models for a specific workflow
   const preloadWorkflow = useCallback(
@@ -255,18 +260,13 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
     // Initial load
     void refreshStatus()
 
-    // Set up polling for active downloads
+    // Set up polling for active downloads using a stable reference
     const interval = setInterval(() => {
-      const hasActiveDownloads =
-        (workflowStatus?.queueSummary.totalActive || 0) > 0 || (queueStatus?.summary.activeDownloads || 0) > 0
-
-      if (hasActiveDownloads) {
-        void refreshStatus()
-      }
-    }, 2000) // Poll every 2 seconds when there are active downloads
+      void refreshStatus()
+    }, 5000) // Poll every 5 seconds (reduced frequency to prevent excessive API calls)
 
     return () => clearInterval(interval)
-  }, [refreshStatus, workflowStatus?.queueSummary.totalActive, queueStatus?.summary.activeDownloads])
+  }, [refreshStatus]) // Only depend on refreshStatus, not on reactive state
 
   // Computed values
   const isWorkflowReady = workflowStatus?.readyNow || false
