@@ -63,6 +63,7 @@ volume-worker/test-results
 volume-worker/__pycache__
 volume-worker/tmp
 .vercel
+tsconfig.tsbuildinfo
 
 .env*
 .flaskenv*
