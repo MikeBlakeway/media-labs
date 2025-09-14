@@ -69,7 +69,15 @@ export async function GET(req: NextRequest) {
       const modelStatuses = requirements.map(req => {
         const status = service.getModelStatus(req.name, req.type)
         return {
-          ...req,
+          // Fields from ModelRequirement
+          nodeId: req.nodeId,
+          classType: req.classType,
+          type: req.type,
+          name: req.name,
+          // Fields for ModelStatusSchema compatibility
+          modelName: req.name,
+          modelType: req.type,
+          // Status fields
           status: status?.status || 'not_queued',
           progress: status?.progress || 0,
           estimatedTimeRemaining: status?.estimatedTimeRemaining,
