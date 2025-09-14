@@ -7,6 +7,7 @@
 
 import { useMemo } from 'react'
 import type { TemplateMeta } from '@/lib/templates.schema'
+import type { WorkflowTemplate } from '@/lib/templates.types'
 import type { ExportApiWorkflow } from '@/lib/workflow.infer'
 
 export type WorkflowOutputType = 'image' | 'video' | 'unknown'
@@ -22,7 +23,7 @@ export interface UseWorkflowOutputTypeResult {
  * Determines workflow output type from template metadata or workflow analysis
  */
 export function useWorkflowOutputType(
-  meta: TemplateMeta | null,
+  meta: TemplateMeta | WorkflowTemplate | null,
   workflow: ExportApiWorkflow | null
 ): UseWorkflowOutputTypeResult {
   const outputType = useMemo((): WorkflowOutputType => {
@@ -34,6 +35,11 @@ export function useWorkflowOutputType(
     // Fall back to workflow analysis
     if (workflow) {
       return detectOutputTypeFromWorkflow(workflow)
+    }
+
+    // If we have a WorkflowTemplate, we can also analyze its embedded workflow
+    if (meta && 'workflow' in meta && meta.workflow) {
+      return detectOutputTypeFromWorkflow(meta.workflow)
     }
 
     return 'unknown'
@@ -76,4 +82,18 @@ function detectOutputTypeFromWorkflow(workflow: ExportApiWorkflow): WorkflowOutp
 
   // Default to unknown if we can't determine
   return 'unknown'
+}
+
+/**
+ * Simple version that just returns the output type string
+ * @param meta - The workflow template metadata
+ * @param workflow - Optional workflow definition
+ * @returns The determined output type
+ */
+export function useWorkflowOutputTypeSimple(
+  meta: TemplateMeta | WorkflowTemplate | null,
+  workflow: ExportApiWorkflow | null = null
+): WorkflowOutputType {
+  const { outputType } = useWorkflowOutputType(meta, workflow)
+  return outputType
 }
