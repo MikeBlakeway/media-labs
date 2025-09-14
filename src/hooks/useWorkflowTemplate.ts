@@ -2,6 +2,7 @@
  * useWorkflowTemplate Hook
  *
  * Manages workflow template loading, validation, and caching.
+ * Enhanced with intelligent model preloading on template selection.
  * Extracts template-related logic from the main workflow component.
  */
 
@@ -17,6 +18,7 @@ export interface UseWorkflowTemplateResult {
   // Loading states
   loading: boolean
   error: string
+  preloadingStarted: boolean
 
   // Actions
   refetch: () => Promise<void>
@@ -30,6 +32,7 @@ export function useWorkflowTemplate(slug: string): UseWorkflowTemplateResult {
   const [workflow, setWorkflow] = useState<ExportApiWorkflow | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
+  const [preloadingStarted, setPreloadingStarted] = useState<boolean>(false)
 
   const loadTemplate = useCallback(async (): Promise<void> => {
     if (!slug) {
@@ -68,6 +71,10 @@ export function useWorkflowTemplate(slug: string): UseWorkflowTemplateResult {
       // Store validated data
       setMeta(metaValidation.data)
       setWorkflow(workflowData as ExportApiWorkflow)
+      
+      // Trigger intelligent preloading for this template
+      await triggerPreloading(slug)
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load template'
       console.error('Template loading error:', err)
@@ -77,12 +84,44 @@ export function useWorkflowTemplate(slug: string): UseWorkflowTemplateResult {
     } finally {
       setLoading(false)
     }
-  }, [slug])
+  }, [slug, triggerPreloading])
+
+  // Trigger preloading for workflow models
+  const triggerPreloading = useCallback(async (workflowSlug: string) => {
+    if (preloadingStarted) return // Avoid duplicate preloading requests
+    
+    try {
+      setPreloadingStarted(true)
+      
+      const response = await fetch('/api/models/preload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'workflow',
+          workflowSlug,
+          trigger: 'template_selection'
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log(`Preloading started for template ${workflowSlug}:`, result)
+      } else {
+        console.warn(`Failed to start preloading for template ${workflowSlug}`)
+      }
+    } catch (err) {
+      console.warn('Preloading request failed:', err)
+      // Don't throw error - preloading is optional
+    }
+  }, [preloadingStarted])
 
   // Load template on mount and slug change
   useEffect(() => {
-    void loadTemplate()
-  }, [loadTemplate])
+    if (slug) {
+      setPreloadingStarted(false) // Reset preloading flag for new slug
+      void loadTemplate()
+    }
+  }, [loadTemplate, slug])
 
   // Computed values
   const isReady = Boolean(meta && workflow && !loading && !error)
@@ -92,6 +131,7 @@ export function useWorkflowTemplate(slug: string): UseWorkflowTemplateResult {
     workflow,
     loading,
     error,
+    preloadingStarted,
     refetch: loadTemplate,
     isReady
   }
