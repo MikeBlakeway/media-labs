@@ -1,97 +1,99 @@
 /**
  * useWorkflowOutputType Hook
  *
- * Determines the expected output type (image/video) from workflow metadata
- * with intelligent fallback heuristics for workflows without explicit outputType.
+ * Detects and returns the output type of a workflow template.
+ * Used for conditional rendering of video vs image components.
  */
 
 import { useMemo } from 'react'
 import type { TemplateMeta } from '@/lib/templates.schema'
 import type { WorkflowTemplate } from '@/lib/templates.types'
+import type { ExportApiWorkflow } from '@/lib/workflow.infer'
 
-export type OutputType = 'image' | 'video'
+export type WorkflowOutputType = 'image' | 'video' | 'unknown'
 
 export interface UseWorkflowOutputTypeResult {
-  outputType: OutputType
-  confidence: 'high' | 'medium' | 'low'
-  reason: string
+  outputType: WorkflowOutputType
+  isVideo: boolean
+  isImage: boolean
+  isUnknown: boolean
 }
 
 /**
- * Hook to determine output type from workflow metadata
- * @param workflowMeta - The workflow template metadata
- * @returns Object with outputType, confidence level, and reasoning
+ * Determines workflow output type from template metadata or workflow analysis
  */
 export function useWorkflowOutputType(
-  workflowMeta: TemplateMeta | WorkflowTemplate | null
+  meta: TemplateMeta | WorkflowTemplate | null,
+  workflow: ExportApiWorkflow | null
 ): UseWorkflowOutputTypeResult {
-  return useMemo(() => {
-    if (!workflowMeta) {
-      return {
-        outputType: 'image',
-        confidence: 'low',
-        reason: 'No workflow metadata available, defaulting to image'
-      }
+  const outputType = useMemo((): WorkflowOutputType => {
+    // First check explicit outputType in metadata
+    if (meta && 'outputType' in meta && meta.outputType) {
+      return meta.outputType as WorkflowOutputType
     }
 
-    // Use explicit outputType if provided (high confidence)
-    if ('outputType' in workflowMeta && workflowMeta.outputType) {
-      return {
-        outputType: workflowMeta.outputType,
-        confidence: 'high',
-        reason: 'Explicit outputType specified in workflow metadata'
-      }
+    // Fall back to workflow analysis
+    if (workflow) {
+      return detectOutputTypeFromWorkflow(workflow)
     }
 
-    // Fallback to heuristics based on workflow name and slug
-    const name = workflowMeta.name?.toLowerCase() || ''
-    const slug = workflowMeta.slug?.toLowerCase() || ''
-    const combined = `${name} ${slug}`
-
-    // Video workflow patterns (medium confidence)
-    const videoPatterns = [
-      'video',
-      'i2v',
-      'image-to-video',
-      'image2video',
-      'text-to-video',
-      'text2video',
-      't2v',
-      'animation',
-      'animate',
-      'motion',
-      'movie',
-      'clip',
-      'sequence',
-      'frames',
-      'temporal'
-    ]
-
-    const matchedVideoPattern = videoPatterns.find(pattern => combined.includes(pattern))
-
-    if (matchedVideoPattern) {
-      return {
-        outputType: 'video',
-        confidence: 'medium',
-        reason: `Inferred from workflow name/slug containing "${matchedVideoPattern}"`
-      }
+    // If we have a WorkflowTemplate, we can also analyze its embedded workflow
+    if (meta && 'workflow' in meta && meta.workflow) {
+      return detectOutputTypeFromWorkflow(meta.workflow)
     }
 
-    // Default to image (low confidence when relying on default)
-    return {
-      outputType: 'image',
-      confidence: 'low',
-      reason: 'No video indicators found, defaulting to image'
-    }
-  }, [workflowMeta])
+    return 'unknown'
+  }, [meta, workflow])
+
+  return {
+    outputType,
+    isVideo: outputType === 'video',
+    isImage: outputType === 'image',
+    isUnknown: outputType === 'unknown'
+  }
 }
 
 /**
- * Simple version that just returns the output type
- * @param workflowMeta - The workflow template metadata
+ * Analyzes workflow nodes to detect output type
+ */
+function detectOutputTypeFromWorkflow(workflow: ExportApiWorkflow): WorkflowOutputType {
+  const nodeTypes = Object.values(workflow).map(node => node.class_type)
+
+  // Video indicators
+  const videoNodes = [
+    'SaveVideo',
+    'CreateVideo',
+    'StableVideoDiffusion_Sampler',
+    'WanTextToVideo',
+    'WanFirstLastFrameToVideo',
+    'SVD_img2vid_Conditioning'
+  ]
+
+  // Check for video-specific nodes
+  if (nodeTypes.some(type => videoNodes.includes(type))) {
+    return 'video'
+  }
+
+  // Image indicators (most common)
+  const imageNodes = ['SaveImage', 'PreviewImage']
+  if (nodeTypes.some(type => imageNodes.includes(type))) {
+    return 'image'
+  }
+
+  // Default to unknown if we can't determine
+  return 'unknown'
+}
+
+/**
+ * Simple version that just returns the output type string
+ * @param meta - The workflow template metadata
+ * @param workflow - Optional workflow definition
  * @returns The determined output type
  */
-export function useWorkflowOutputTypeSimple(workflowMeta: TemplateMeta | WorkflowTemplate | null): OutputType {
-  const { outputType } = useWorkflowOutputType(workflowMeta)
+export function useWorkflowOutputTypeSimple(
+  meta: TemplateMeta | WorkflowTemplate | null,
+  workflow: ExportApiWorkflow | null = null
+): WorkflowOutputType {
+  const { outputType } = useWorkflowOutputType(meta, workflow)
   return outputType
 }
