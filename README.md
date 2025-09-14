@@ -15,10 +15,12 @@ A modern Next.js web application for AI-powered image generation using RunPod's 
 - **📚 Result History**: View and manage previous workflow results with thumbnails
 - **⚡ Async/Sync Support**: Handles both synchronous and asynchronous RunPod endpoints
 - **🔄 Auto Model Management**: Preflight checks ensure required models are available
+- **🧠 Intelligent Model Caching**: LRU eviction algorithm with smart heat scores for optimal volume utilization
 - **💾 S3 Integration**: Seamless file upload to RunPod volumes
 - **🎯 TypeScript**: Full type safety with Zod schema validation
 - **📱 Responsive UI**: Modern, clean interface built with TailwindCSS
 - **🔧 Component Composition**: Modular UI components with clear separation of concerns
+- **📈 Cache Analytics**: Real-time monitoring and analytics for model usage patterns
 
 ## 🚀 Quick Start
 
@@ -161,6 +163,35 @@ npm run test:coverage # Run tests with coverage
 
 - [**AGENTS.md**](./AGENTS.md) - AI agent development guide
 - [**docs/**](./docs/) - Project documentation
+- [**docs/cache-management.md**](./docs/cache-management.md) - Model cache management system
+
+## 🧠 Model Cache Management
+
+Media Labs includes an intelligent model caching system for optimal RunPod volume utilization:
+
+### Key Features
+- **LRU Eviction Algorithm**: Smart model selection based on usage patterns
+- **Heat Score Calculation**: Dynamic scoring combining access frequency, recency, and size
+- **Protection Mechanisms**: Safeguards for pinned, in-use, and recently accessed models
+- **Real-time Analytics**: Volume monitoring and usage pattern analysis
+- **Administrative Dashboard**: Manual cache management at `/admin/cache`
+
+### Configuration
+```bash
+# Cache management settings
+CACHE_HIGH_WATER_MARK=90          # Trigger eviction at 90% usage
+CACHE_LOW_WATER_MARK=75           # Stop eviction at 75% usage
+CACHE_MIN_HEAT_SCORE=0.1          # Minimum score to keep model
+CACHE_PROTECTION_HOURS=24         # Protect recently accessed models
+```
+
+### API Endpoints
+- `GET /api/cache/status` - Current cache state and metrics
+- `POST /api/cache/optimize` - Trigger optimization cycle
+- `POST /api/cache/pin` - Pin/unpin models for protection
+- `DELETE /api/cache/evict` - Manual model eviction
+
+See [cache management documentation](./docs/cache-management.md) for detailed information.
 
 ## 🔧 Workflow System
 
