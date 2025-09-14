@@ -77,6 +77,7 @@ The application follows a comprehensive hooks-based architecture where all busin
 - `useProgressTimer` - Progress timing functionality
 - `useOutputProcessor` - Output processing logic
 - `useResultsDisplay` - Results display state management
+- `useWorkflowOutputType` - Determines the output type (image or video) for a given workflow
 
 ## Component Architecture Principles
 
@@ -91,7 +92,7 @@ The application follows a comprehensive hooks-based architecture where all busin
 Components are organized into logical groups with clear responsibilities:
 
 - **Form Components**: `FormFields.tsx`, `WorkflowRunnerForm.tsx`, `UploadForm.tsx`
-- **Display Components**: `WorkflowResults.tsx`, `ImageGallery.tsx`, `VideoDisplay.tsx`
+- **Display Components**: `WorkflowResults.tsx`, `ImageGallery.tsx`, `VideoDisplay.tsx`, `MediaDisplay.tsx`
 - **Status Components**: `JobStatus.tsx`, `PreflightStatus.tsx`, `ProgressIndicator.tsx`
 - **Container Components**: `WorkflowRunner.tsx`, `UploadCard.tsx`, `ResultHistory.tsx`
 
@@ -441,3 +442,68 @@ expect(body).toMatchObject({ expected: 'response' })
 
 **As of September 2025, all model files must be stored under `models/<type>/...` at the root of your S3 bucket.**
 If you previously used `ComfyUI/models/`, move your files to `models/` and update all references and worker configuration accordingly.
+
+## Video Workflow Support
+
+### Overview
+
+The Media Labs application now supports workflows that generate video outputs. This enhancement includes the following updates:
+
+- **New Components**:
+  - `VideoPlayer.tsx`: A robust video player for rendering video outputs.
+  - `MediaDisplay.tsx`: A unified component for displaying both images and videos.
+
+- **Updated Hooks**:
+  - `useWorkflowOutputType`: Determines the output type (image or video) for a given workflow.
+
+- **Workflow Templates**:
+  - Example video workflow templates are stored in `data/workflows/`.
+
+### Development Workflow
+
+1. **Adding Video Workflows**:
+   - Create a new JSON file in `data/workflows/`.
+   - Ensure the `outputType` field is set to `video`.
+   - Validate the workflow using the preflight endpoint.
+
+2. **Testing Video Components**:
+   - Unit tests for `VideoPlayer.tsx` are located in `src/components/__tests__/`.
+   - Integration tests ensure proper rendering of video workflows.
+
+3. **Updating Documentation**:
+   - Update relevant sections in `AGENTS.md` and `.github/copilot-instructions.md`.
+
+### Key Commands
+
+```bash
+# Run tests for video components
+make test
+
+# Validate video workflow templates
+make validate-workflows
+```
+
+## Mandatory Documentation Review
+
+### AI Assistant Standards
+
+To ensure all changes and tasks align with project standards and requirements, AI assistants must adhere to the following:
+
+1. **Documentation Review**:
+   - Before interacting with the codebase, AI assistants must read and understand the application documentation, including:
+     - `AGENTS.md`
+     - `.github/copilot-instructions.md`
+     - Any other relevant project-specific documentation.
+
+2. **Compliance Verification**:
+   - All generated code, edits, and tasks must strictly follow the standards outlined in the documentation.
+   - This includes adhering to architectural principles, coding conventions, and testing requirements.
+
+3. **Session Enforcement**:
+   - This review process is mandatory for every chat session.
+   - AI assistants must confirm compliance with the documentation before proceeding with any tasks.
+
+4. **Error Reporting**:
+   - If any ambiguity or conflict arises in the documentation, it must be flagged and clarified before making changes.
+
+By enforcing these standards, we ensure consistency, maintainability, and quality across the project.
