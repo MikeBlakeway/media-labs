@@ -1,0 +1,255 @@
+{
+  "slug": "wan2-1-text-to-video",
+  "name": "Text to Video (Wan 2.1 T2V)",
+  "outputType": "video",
+  "workflow": {
+    "1": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "a majestic eagle soaring through a dramatic mountain landscape with golden sunset lighting, cinematic, high quality",
+        "clip": ["8", 0]
+      },
+      "_meta": {
+        "title": "CLIP Text Encode (Positive Prompt)"
+      }
+    },
+    "2": {
+      "class_type": "CLIPTextEncode",
+      "inputs": {
+        "text": "blurry, low quality, static, motionless, bad anatomy, distorted, artifacts",
+        "clip": ["8", 0]
+      },
+      "_meta": {
+        "title": "CLIP Text Encode (Negative Prompt)"
+      }
+    },
+    "3": {
+      "class_type": "KSampler",
+      "inputs": {
+        "seed": 12345,
+        "steps": 25,
+        "cfg": 8.0,
+        "sampler_name": "uni_pc",
+        "scheduler": "simple",
+        "denoise": 1.0,
+        "model": ["9", 0],
+        "positive": ["1", 0],
+        "negative": ["2", 0],
+        "latent_image": ["4", 0]
+      },
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "4": {
+      "class_type": "WanTextToVideo",
+      "inputs": {
+        "width": 720,
+        "height": 480,
+        "length": 25,
+        "batch_size": 1,
+        "positive": ["1", 0],
+        "negative": ["2", 0],
+        "vae": ["7", 0]
+      },
+      "_meta": {
+        "title": "Wan Text To Video"
+      }
+    },
+    "5": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": ["3", 0],
+        "vae": ["7", 0]
+      },
+      "_meta": {
+        "title": "VAE Decode"
+      }
+    },
+    "6": {
+      "class_type": "UNETLoader",
+      "inputs": {
+        "unet_name": "wan2.1_t2v_1.3B_fp16.safetensors",
+        "weight_dtype": "default"
+      },
+      "_meta": {
+        "title": "Load T2V Model"
+      }
+    },
+    "7": {
+      "class_type": "VAELoader",
+      "inputs": {
+        "vae_name": "wan_2.1_vae.safetensors"
+      },
+      "_meta": {
+        "title": "Load VAE"
+      }
+    },
+    "8": {
+      "class_type": "CLIPLoader",
+      "inputs": {
+        "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "type": "wan",
+        "device": "default"
+      },
+      "_meta": {
+        "title": "Load CLIP"
+      }
+    },
+    "9": {
+      "class_type": "ModelSamplingSD3",
+      "inputs": {
+        "shift": 8,
+        "model": ["6", 0]
+      },
+      "_meta": {
+        "title": "Model Sampling"
+      }
+    },
+    "10": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "fps": 16,
+        "images": ["5", 0]
+      },
+      "_meta": {
+        "title": "Create Video"
+      }
+    },
+    "11": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "filename_prefix": "t2v/MediaLabs",
+        "format": "mp4",
+        "codec": "h264",
+        "video": ["10", 0]
+      },
+      "_meta": {
+        "title": "Save Video"
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "text_1_text",
+      "label": "Positive Prompt",
+      "type": "text",
+      "required": true,
+      "defaultValue": "a majestic eagle soaring through a dramatic mountain landscape with golden sunset lighting, cinematic, high quality",
+      "nodeId": "1",
+      "inputKey": "text",
+      "help": "Describe the video content you want to generate"
+    },
+    {
+      "id": "text_2_text",
+      "label": "Negative Prompt",
+      "type": "text",
+      "required": false,
+      "defaultValue": "blurry, low quality, static, motionless, bad anatomy, distorted, artifacts",
+      "nodeId": "2",
+      "inputKey": "text",
+      "help": "Describe what you want to avoid in the video"
+    },
+    {
+      "id": "t2v_4_width",
+      "label": "Width",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 720,
+      "nodeId": "4",
+      "inputKey": "width",
+      "help": "Video width in pixels (recommended: 720)"
+    },
+    {
+      "id": "t2v_4_height",
+      "label": "Height",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 480,
+      "nodeId": "4",
+      "inputKey": "height",
+      "help": "Video height in pixels (recommended: 480)"
+    },
+    {
+      "id": "t2v_4_length",
+      "label": "Frame Count",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 25,
+      "nodeId": "4",
+      "inputKey": "length",
+      "help": "Number of frames to generate (25 = ~1.5 seconds at 16 FPS)"
+    },
+    {
+      "id": "ks_3_seed",
+      "label": "Seed",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 12345,
+      "nodeId": "3",
+      "inputKey": "seed",
+      "help": "Random seed for reproducible results (-1 for random)"
+    },
+    {
+      "id": "ks_3_steps",
+      "label": "Steps",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 25,
+      "nodeId": "3",
+      "inputKey": "steps",
+      "help": "Number of diffusion steps (higher = better quality, slower)"
+    },
+    {
+      "id": "ks_3_cfg",
+      "label": "CFG Scale",
+      "type": "number",
+      "required": true,
+      "defaultValue": 8.0,
+      "nodeId": "3",
+      "inputKey": "cfg",
+      "help": "Classifier-free guidance scale (higher = more prompt adherence)"
+    },
+    {
+      "id": "ks_3_sampler",
+      "label": "Sampler",
+      "type": "string",
+      "required": true,
+      "defaultValue": "uni_pc",
+      "nodeId": "3",
+      "inputKey": "sampler_name",
+      "help": "Sampling algorithm (uni_pc recommended for Wan models)"
+    },
+    {
+      "id": "ks_3_scheduler",
+      "label": "Scheduler",
+      "type": "string",
+      "required": true,
+      "defaultValue": "simple",
+      "nodeId": "3",
+      "inputKey": "scheduler",
+      "help": "Noise schedule (simple recommended)"
+    },
+    {
+      "id": "video_10_fps",
+      "label": "Frame Rate (FPS)",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 16,
+      "nodeId": "10",
+      "inputKey": "fps",
+      "help": "Video frame rate (16 FPS recommended for Wan models)"
+    },
+    {
+      "id": "save_11_prefix",
+      "label": "Filename Prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "t2v/MediaLabs",
+      "nodeId": "11",
+      "inputKey": "filename_prefix",
+      "help": "Prefix for saved video filename"
+    }
+  ],
+  "createdAt": 1757400000000
+}

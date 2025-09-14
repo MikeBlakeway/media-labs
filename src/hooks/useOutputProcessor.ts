@@ -6,6 +6,7 @@
  */
 
 import { useMemo } from 'react'
+import { isValidS3Url } from '@/lib/s3.utils'
 
 export interface ProcessedImage {
   id: string
@@ -67,8 +68,8 @@ export function useOutputProcessor(output: WorkflowOutput | null, status: string
 
     // Process images
     const processedImages: ProcessedImage[] = (output.images || []).map((img, index) => {
-      const base64Data = img.base64 || img.data
-      const imageUrl = img.url
+      const base64Data = img.base64 || (img.type === 'base64' ? img.data : undefined)
+      const imageUrl = img.url || (img.type === 's3_url' ? img.data : undefined)
       const filename = img.filename || `result-${index + 1}.png`
 
       let displaySrc: string
@@ -77,9 +78,12 @@ export function useOutputProcessor(output: WorkflowOutput | null, status: string
       if (base64Data) {
         displaySrc = `data:image/png;base64,${base64Data}`
         downloadable = true
+      } else if (imageUrl && isValidS3Url(imageUrl)) {
+        displaySrc = imageUrl
+        downloadable = true // S3 URLs are downloadable
       } else if (imageUrl) {
         displaySrc = imageUrl
-        downloadable = false // External URLs typically not downloadable
+        downloadable = false // Other external URLs typically not downloadable
       } else {
         displaySrc = '' // Will be handled by fallback UI
         downloadable = false

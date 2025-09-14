@@ -208,6 +208,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
         }
         status={status}
         error={jobError || error}
+        workflowMeta={meta}
       />
 
       {/* Result History */}

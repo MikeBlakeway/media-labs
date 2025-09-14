@@ -1,15 +1,13 @@
 {
   "slug": "wan2-1-flf2v",
-  "name": "Untitled Workflow",
+  "name": "First & Last Frame to Video (Wan 2.1 FLF2V)",
+  "outputType": "video",
   "workflow": {
     "6": {
       "class_type": "CLIPTextEncode",
       "inputs": {
         "text": "glass flower blossom",
-        "clip": [
-          "38",
-          0
-        ]
+        "clip": ["38", 0]
       },
       "_meta": {
         "title": "CLIP Text Encode (Positive Prompt)"
@@ -19,10 +17,7 @@
       "class_type": "CLIPTextEncode",
       "inputs": {
         "text": "vivid/gaudy color tones, overexposed, static, blurry/unclear details, subtitles/captions, style, work/artwork, painting, image/frame/scene, motionless/still, overall grayish/with a gray cast, worst quality, low quality, JPEG compression artifacts, ugly, defective/damaged/incomplete, extra fingers, poorly drawn hands, poorly drawn face, deformed/malformed, disfigured, malformed limbs, fused fingers (syndactyly), non-moving still image, cluttered background, three legs, crowded background (many people in the background), walking backwards, overexposed\n",
-        "clip": [
-          "38",
-          0
-        ]
+        "clip": ["38", 0]
       },
       "_meta": {
         "title": "CLIP Text Encode (Negative Prompt)"
@@ -31,14 +26,8 @@
     "8": {
       "class_type": "VAEDecode",
       "inputs": {
-        "samples": [
-          "90",
-          0
-        ],
-        "vae": [
-          "39",
-          0
-        ]
+        "samples": ["90", 0],
+        "vae": ["39", 0]
       },
       "_meta": {
         "title": "VAE Decode"
@@ -87,14 +76,8 @@
       "class_type": "CLIPVisionEncode",
       "inputs": {
         "crop": "none",
-        "clip_vision": [
-          "49",
-          0
-        ],
-        "image": [
-          "52",
-          0
-        ]
+        "clip_vision": ["49", 0],
+        "image": ["52", 0]
       },
       "_meta": {
         "title": "CLIP Vision Encode"
@@ -122,10 +105,7 @@
       "class_type": "ModelSamplingSD3",
       "inputs": {
         "shift": 8,
-        "model": [
-          "37",
-          0
-        ]
+        "model": ["37", 0]
       },
       "_meta": {
         "title": "ModelSamplingSD3"
@@ -138,34 +118,13 @@
         "height": 1280,
         "length": 33,
         "batch_size": 1,
-        "positive": [
-          "6",
-          0
-        ],
-        "negative": [
-          "7",
-          0
-        ],
-        "vae": [
-          "39",
-          0
-        ],
-        "clip_vision_start_image": [
-          "51",
-          0
-        ],
-        "clip_vision_end_image": [
-          "87",
-          0
-        ],
-        "start_image": [
-          "52",
-          0
-        ],
-        "end_image": [
-          "72",
-          0
-        ]
+        "positive": ["6", 0],
+        "negative": ["7", 0],
+        "vae": ["39", 0],
+        "clip_vision_start_image": ["51", 0],
+        "clip_vision_end_image": ["87", 0],
+        "start_image": ["52", 0],
+        "end_image": ["72", 0]
       },
       "_meta": {
         "title": "WanFirstLastFrameToVideo"
@@ -175,14 +134,8 @@
       "class_type": "CLIPVisionEncode",
       "inputs": {
         "crop": "none",
-        "clip_vision": [
-          "49",
-          0
-        ],
-        "image": [
-          "72",
-          0
-        ]
+        "clip_vision": ["49", 0],
+        "image": ["72", 0]
       },
       "_meta": {
         "title": "CLIP Vision Encode"
@@ -197,22 +150,10 @@
         "sampler_name": "uni_pc",
         "scheduler": "simple",
         "denoise": 1,
-        "model": [
-          "79",
-          0
-        ],
-        "positive": [
-          "83",
-          0
-        ],
-        "negative": [
-          "83",
-          1
-        ],
-        "latent_image": [
-          "83",
-          2
-        ]
+        "model": ["79", 0],
+        "positive": ["83", 0],
+        "negative": ["83", 1],
+        "latent_image": ["83", 2]
       },
       "_meta": {
         "title": "KSampler"
@@ -222,10 +163,7 @@
       "class_type": "CreateVideo",
       "inputs": {
         "fps": 16,
-        "images": [
-          "8",
-          0
-        ]
+        "images": ["8", 0]
       },
       "_meta": {
         "title": "Create Video"
@@ -237,10 +175,7 @@
         "filename_prefix": "video/ComfyUI",
         "format": "auto",
         "codec": "auto",
-        "video": [
-          "91",
-          0
-        ]
+        "video": ["91", 0]
       },
       "_meta": {
         "title": "Save Video"

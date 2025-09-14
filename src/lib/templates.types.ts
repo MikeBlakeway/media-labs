@@ -20,4 +20,5 @@ export interface WorkflowTemplate {
   workflow: ExportApiWorkflow
   fields: FieldSpec[]
   createdAt: number
+  outputType?: 'image' | 'video'
 }

@@ -32,7 +32,7 @@ media-labs/
 
 ## Architecture Overview
 
-### Hooks-Based Architecture (Completed)
+### Hooks-Based Architecture
 
 The application has been **fully refactored** into a comprehensive hooks-based architecture:
 
@@ -139,10 +139,10 @@ RUNPOD_S3_REGION=us-east-1
 RUNPOD_VOLUME_ID=your_volume_id
 
 # Backblaze B2 (optional - for output storage)
-B2_S3_ACCESS_KEY_ID=your_b2_key
-B2_S3_SECRET_ACCESS_KEY=your_b2_secret
-B2_S3_ENDPOINT=your_b2_endpoint
-B2_S3_BUCKET=your_b2_bucket
+BUCKET_ACCESS_KEY_ID=your_b2_key
+BUCKET_SECRET_ACCESS_KEY=your_b2_secret
+BUCKET_ENDPOINT_URL=your_b2_endpoint
+BUCKET_NAME=your_b2_bucket
 ```
 
 ## Key Design Patterns
@@ -404,3 +404,75 @@ make test-integration     # Run integration tests
 5. Submit PR with clear description
 
 This guide should provide AI agents with comprehensive understanding of the Media Labs project structure, development workflows, and best practices for contributing effectively.
+
+## Video Workflow Support
+
+### Overview
+
+The Media Labs application now supports workflows that generate video outputs. This enhancement includes the following updates:
+
+- **New Components**:
+
+  - `VideoPlayer.tsx`: A robust video player for rendering video outputs.
+  - `MediaDisplay.tsx`: A unified component for displaying both images and videos.
+
+- **Updated Hooks**:
+
+  - `useWorkflowOutputType`: Determines the output type (image or video) for a given workflow.
+
+- **Workflow Templates**:
+  - Example video workflow templates are stored in `data/workflows/`.
+
+### Development Workflow
+
+1. **Adding Video Workflows**:
+
+   - Create a new JSON file in `data/workflows/`.
+   - Ensure the `outputType` field is set to `video`.
+   - Validate the workflow using the preflight endpoint.
+
+2. **Testing Video Components**:
+
+   - Unit tests for `VideoPlayer.tsx` are located in `src/components/__tests__/`.
+   - Integration tests ensure proper rendering of video workflows.
+
+3. **Updating Documentation**:
+   - Update relevant sections in `AGENTS.md` and `.github/copilot-instructions.md`.
+
+### Key Commands
+
+```bash
+# Run tests for video components
+make test
+
+# Validate video workflow templates
+make validate-workflows
+```
+
+## Mandatory Documentation Review
+
+### AI Assistant Standards
+
+To ensure all changes and tasks align with project standards and requirements, AI assistants must adhere to the following:
+
+1. **Documentation Review**:
+
+   - Before interacting with the codebase, AI assistants must read and understand the application documentation, including:
+     - `AGENTS.md`
+     - `.github/copilot-instructions.md`
+     - Any other relevant project-specific documentation.
+
+2. **Compliance Verification**:
+
+   - All generated code, edits, and tasks must strictly follow the standards outlined in the documentation.
+   - This includes adhering to architectural principles, coding conventions, and testing requirements.
+
+3. **Session Enforcement**:
+
+   - This review process is mandatory for every chat session.
+   - AI assistants must confirm compliance with the documentation before proceeding with any tasks.
+
+4. **Error Reporting**:
+   - If any ambiguity or conflict arises in the documentation, it must be flagged and clarified before making changes.
+
+By enforcing these standards, we ensure consistency, maintainability, and quality across the project.

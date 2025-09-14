@@ -1,0 +1,278 @@
+{
+  "slug": "stable-video-diffusion-xt",
+  "name": "Image to Video (SVD-XT 1.1)",
+  "outputType": "video",
+  "workflow": {
+    "1": {
+      "class_type": "LoadImage",
+      "inputs": {
+        "image": "input_image.png"
+      },
+      "_meta": {
+        "title": "Load Input Image"
+      }
+    },
+    "2": {
+      "class_type": "StableVideoDiffusion_Sampler",
+      "inputs": {
+        "width": 1024,
+        "height": 576,
+        "video_frames": 25,
+        "motion_bucket_id": 127,
+        "fps": 6,
+        "augmentation_level": 0.0,
+        "seed": 42,
+        "steps": 20,
+        "cfg": 2.5,
+        "sampler_name": "euler",
+        "scheduler": "karras",
+        "denoise": 1.0,
+        "model": ["3", 0],
+        "positive": ["4", 0],
+        "negative": ["5", 0],
+        "latent_image": ["6", 0],
+        "image": ["1", 0]
+      },
+      "_meta": {
+        "title": "SVD Sampler"
+      }
+    },
+    "3": {
+      "class_type": "CheckpointLoaderSimple",
+      "inputs": {
+        "ckpt_name": "svd_xt_1_1.safetensors"
+      },
+      "_meta": {
+        "title": "Load SVD Model"
+      }
+    },
+    "4": {
+      "class_type": "SVD_img2vid_Conditioning",
+      "inputs": {
+        "width": 1024,
+        "height": 576,
+        "video_frames": 25,
+        "motion_bucket_id": 127,
+        "fps": 6,
+        "augmentation_level": 0.0,
+        "clip_vision": ["7", 0],
+        "init_image": ["1", 0],
+        "vae": ["3", 2]
+      },
+      "_meta": {
+        "title": "SVD Conditioning"
+      }
+    },
+    "5": {
+      "class_type": "SVD_img2vid_Conditioning",
+      "inputs": {
+        "width": 1024,
+        "height": 576,
+        "video_frames": 25,
+        "motion_bucket_id": 127,
+        "fps": 6,
+        "augmentation_level": 0.0,
+        "clip_vision": ["7", 0],
+        "init_image": ["1", 0],
+        "vae": ["3", 2]
+      },
+      "_meta": {
+        "title": "SVD Negative Conditioning"
+      }
+    },
+    "6": {
+      "class_type": "EmptySD3LatentImage",
+      "inputs": {
+        "width": 1024,
+        "height": 576,
+        "batch_size": 25
+      },
+      "_meta": {
+        "title": "Empty Latent Video"
+      }
+    },
+    "7": {
+      "class_type": "CLIPVisionLoader",
+      "inputs": {
+        "clip_name": "CLIP-ViT-H-14.safetensors"
+      },
+      "_meta": {
+        "title": "Load CLIP Vision"
+      }
+    },
+    "8": {
+      "class_type": "VAEDecode",
+      "inputs": {
+        "samples": ["2", 0],
+        "vae": ["3", 2]
+      },
+      "_meta": {
+        "title": "VAE Decode"
+      }
+    },
+    "9": {
+      "class_type": "CreateVideo",
+      "inputs": {
+        "fps": 6,
+        "images": ["8", 0]
+      },
+      "_meta": {
+        "title": "Create Video"
+      }
+    },
+    "10": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "filename_prefix": "i2v/MediaLabs",
+        "format": "mp4",
+        "codec": "h264",
+        "video": ["9", 0]
+      },
+      "_meta": {
+        "title": "Save Video"
+      }
+    }
+  },
+  "fields": [
+    {
+      "id": "file_1_image",
+      "label": "Input Image",
+      "type": "file",
+      "required": true,
+      "nodeId": "1",
+      "inputKey": "image",
+      "help": "Upload an image to animate into video (recommended: 1024x576 aspect ratio)"
+    },
+    {
+      "id": "svd_2_width",
+      "label": "Width",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 1024,
+      "nodeId": "2",
+      "inputKey": "width",
+      "help": "Video width in pixels (1024 recommended for SVD-XT)"
+    },
+    {
+      "id": "svd_2_height",
+      "label": "Height",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 576,
+      "nodeId": "2",
+      "inputKey": "height",
+      "help": "Video height in pixels (576 recommended for SVD-XT)"
+    },
+    {
+      "id": "svd_2_frames",
+      "label": "Video Frames",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 25,
+      "nodeId": "2",
+      "inputKey": "video_frames",
+      "help": "Number of video frames to generate (25 = ~4 seconds at 6 FPS)"
+    },
+    {
+      "id": "svd_2_motion",
+      "label": "Motion Intensity",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 127,
+      "nodeId": "2",
+      "inputKey": "motion_bucket_id",
+      "help": "Motion intensity level (1-255, 127 = medium motion)"
+    },
+    {
+      "id": "svd_2_fps",
+      "label": "Frame Rate (FPS)",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 6,
+      "nodeId": "2",
+      "inputKey": "fps",
+      "help": "Frames per second for video generation (6 FPS recommended for SVD)"
+    },
+    {
+      "id": "svd_2_augmentation",
+      "label": "Augmentation Level",
+      "type": "number",
+      "required": true,
+      "defaultValue": 0.0,
+      "nodeId": "2",
+      "inputKey": "augmentation_level",
+      "help": "Image augmentation level (0.0-1.0, 0.0 = no augmentation)"
+    },
+    {
+      "id": "svd_2_seed",
+      "label": "Seed",
+      "type": "integer",
+      "required": false,
+      "defaultValue": 42,
+      "nodeId": "2",
+      "inputKey": "seed",
+      "help": "Random seed for reproducible results (-1 for random)"
+    },
+    {
+      "id": "svd_2_steps",
+      "label": "Steps",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 20,
+      "nodeId": "2",
+      "inputKey": "steps",
+      "help": "Number of diffusion steps (20 recommended for SVD)"
+    },
+    {
+      "id": "svd_2_cfg",
+      "label": "CFG Scale",
+      "type": "number",
+      "required": true,
+      "defaultValue": 2.5,
+      "nodeId": "2",
+      "inputKey": "cfg",
+      "help": "Classifier-free guidance scale (2.5 recommended for SVD)"
+    },
+    {
+      "id": "svd_2_sampler",
+      "label": "Sampler",
+      "type": "string",
+      "required": true,
+      "defaultValue": "euler",
+      "nodeId": "2",
+      "inputKey": "sampler_name",
+      "help": "Sampling algorithm (euler recommended for SVD)"
+    },
+    {
+      "id": "svd_2_scheduler",
+      "label": "Scheduler",
+      "type": "string",
+      "required": true,
+      "defaultValue": "karras",
+      "nodeId": "2",
+      "inputKey": "scheduler",
+      "help": "Noise schedule (karras recommended for SVD)"
+    },
+    {
+      "id": "video_9_fps",
+      "label": "Output FPS",
+      "type": "integer",
+      "required": true,
+      "defaultValue": 6,
+      "nodeId": "9",
+      "inputKey": "fps",
+      "help": "Output video frame rate"
+    },
+    {
+      "id": "save_10_prefix",
+      "label": "Filename Prefix",
+      "type": "string",
+      "required": false,
+      "defaultValue": "i2v/MediaLabs",
+      "nodeId": "10",
+      "inputKey": "filename_prefix",
+      "help": "Prefix for saved video filename"
+    }
+  ],
+  "createdAt": 1757400001000
+}

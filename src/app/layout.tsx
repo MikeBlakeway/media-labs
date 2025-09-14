@@ -15,7 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Media Labs - AI-Powered Media Generation',
   description:
-    'Modern Next.js web application for AI-powered image generation using RunPod ComfyUI serverless endpoints'
+    'Modern Next.js web application for AI-powered image generation using RunPod ComfyUI serverless endpoints',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg'
+  }
 }
 
 export default function RootLayout({

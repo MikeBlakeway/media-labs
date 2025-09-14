@@ -55,14 +55,22 @@ npm run dev
 Copy `.env.example` to `.env` and configure:
 
 ```bash
-# RunPod Configuration
+# Required: RunPod Configuration
 RUNPOD_API_KEY=your_api_key
 RUNPOD_ENDPOINT_ID=your_endpoint_id
 
-# Optional: For using local development worker (if needed)
+# Optional: Local development worker
 USE_LOCAL_WORKER=false
 LOCAL_WORKER_URL=http://localhost:8000
+
+# Optional: RunPod S3 Volume (for custom models)
+RUNPOD_S3_ENDPOINT=your_volume_endpoint
+RUNPOD_S3_ACCESS_KEY_ID=your_access_key
+RUNPOD_S3_SECRET_ACCESS_KEY=your_secret_key
+# ... additional S3 and B2 variables in .env.example
 ```
+
+For production deployment, see **[Deployment Guide](./docs/deployment.md)** for complete environment variable setup.
 
 ## 📁 Project Structure
 
@@ -173,9 +181,23 @@ make dev  # Starts web application locally
 
 ### Production Deployment
 
+This project is deployed on **Vercel** with automatic Git integration and manual deploy hooks for advanced workflows.
+
+**Quick Start:**
+
+- Production: <https://media-labs-5idte9dqg-media-labs.vercel.app>
+- Auto-deploys from `main` branch (production) and `development` branch (preview)
+
+**Complete Documentation:**
+
+- 📖 **[Deployment Guide](./docs/deployment.md)** - Comprehensive Vercel setup and configuration
+- 🔗 **[Deploy Hooks Reference](./docs/vercel-deploy-hooks.md)** - Manual deployment triggers and examples
+
+**Manual Build & Deploy:**
+
 ```bash
 make build           # Build web application
-# Deploy to your preferred hosting platform (Vercel, Netlify, etc.)
+npx vercel --prod    # Deploy to production
 ```
 
 ## 🤝 Contributing
@@ -195,5 +217,6 @@ This project is private and proprietary.
 ## 🆘 Support
 
 - Check documentation in `docs/` folder
+- Review **[Deployment Guide](./docs/deployment.md)** for Vercel setup and troubleshooting
 - Use `make env-check` for environment diagnostics
 - Review workflow templates in `data/workflows/` for examples

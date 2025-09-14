@@ -211,5 +211,6 @@
       "inputKey": "filename_prefix"
     }
   ],
-  "createdAt": 1757283689456
+  "createdAt": 1757283689456,
+  "outputType": "image"
 }
