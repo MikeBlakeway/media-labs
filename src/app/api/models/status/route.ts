@@ -21,21 +21,18 @@ export async function GET(req: NextRequest) {
       modelName: searchParams.get('modelName') || undefined,
       modelType: searchParams.get('modelType') || undefined
     }
-    
+
     const parsed = StatusQuerySchema.safeParse(query)
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Invalid query parameters', details: parsed.error.flatten() }, 
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid query parameters', details: parsed.error.flatten() }, { status: 400 })
     }
-    
+
     const service = getPreloadingService()
-    
+
     // If specific model requested
     if (parsed.data.modelName && parsed.data.modelType) {
       const modelStatus = service.getModelStatus(parsed.data.modelName, parsed.data.modelType)
-      
+
       if (!modelStatus) {
         return NextResponse.json({
           modelName: parsed.data.modelName,
@@ -44,36 +41,30 @@ export async function GET(req: NextRequest) {
           inQueue: false
         })
       }
-      
+
       return NextResponse.json({
         ...modelStatus,
         inQueue: true
       })
     }
-    
+
     // If workflow slug provided, get workflow-specific status
     if (parsed.data.workflowSlug) {
       const template = getTemplate(parsed.data.workflowSlug)
       if (!template) {
-        return NextResponse.json(
-          { error: 'Workflow template not found' }, 
-          { status: 404 }
-        )
+        return NextResponse.json({ error: 'Workflow template not found' }, { status: 404 })
       }
-      
+
       // Validate workflow
       const workflowValidation = ExportApiWorkflowSchema.safeParse(template.workflow)
       if (!workflowValidation.success) {
-        return NextResponse.json(
-          { error: 'Invalid workflow in template' }, 
-          { status: 500 }
-        )
+        return NextResponse.json({ error: 'Invalid workflow in template' }, { status: 500 })
       }
-      
+
       // Get required models
       const requirements = inferModelRequirements(workflowValidation.data)
       const readyTimeInfo = estimateWorkflowReadyTime(requirements)
-      
+
       // Get status for each required model
       const modelStatuses = requirements.map(req => {
         const status = service.getModelStatus(req.name, req.type)
@@ -85,9 +76,9 @@ export async function GET(req: NextRequest) {
           inQueue: !!status
         }
       })
-      
+
       const queueStatus = service.getPreloadStatus()
-      
+
       return NextResponse.json({
         workflowSlug: parsed.data.workflowSlug,
         workflowName: template.name,
@@ -103,15 +94,18 @@ export async function GET(req: NextRequest) {
         }
       })
     }
-    
+
     // General queue status
     const queueStatus = service.getPreloadStatus()
-    
+
     return NextResponse.json({
       queue: queueStatus,
       summary: {
-        totalModels: queueStatus.active.length + queueStatus.queued.length + 
-                    queueStatus.completed.length + queueStatus.failed.length,
+        totalModels:
+          queueStatus.active.length +
+          queueStatus.queued.length +
+          queueStatus.completed.length +
+          queueStatus.failed.length,
         activeDownloads: queueStatus.active.length,
         queuedDownloads: queueStatus.queued.length,
         completedDownloads: queueStatus.completed.length,
@@ -120,13 +114,9 @@ export async function GET(req: NextRequest) {
         estimatedCompletion: queueStatus.estimatedCompletion
       }
     })
-    
   } catch (error) {
     console.error('Model status API error:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json(
-      { error: 'Failed to get model status', details: message }, 
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to get model status', details: message }, { status: 500 })
   }
 }

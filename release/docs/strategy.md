@@ -123,13 +123,11 @@ git push origin hotfix/critical-security-fix
 ### Recommended Platforms
 
 1. **Vercel** (Recommended for Next.js)
-
    - Perfect Next.js integration
    - Automatic preview deployments
    - Edge functions support
 
 2. **Netlify** (Alternative)
-
    - Good for static sites
    - Branch-based deployments
 

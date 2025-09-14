@@ -76,7 +76,6 @@ Return the TODO list in a Markdown format, grouped by priority and issue type.
 Prompt files are Markdown files and use the `.prompt.md` extension and have this structure:
 
 - **Header** (optional): YAML frontmatter
-
   - `description`: Short description of the prompt
   - `mode`: Chat mode used for running the prompt: `ask`, `edit`, or `agent` (default).
   - `model`: Language model used when running the prompt. If not specified, the currently selected model in model picker is used.
@@ -87,7 +86,6 @@ Prompt files are Markdown files and use the `.prompt.md` extension and have this
   Reference other workspace files, prompt files, or instruction files by using Markdown links. Use relative paths to reference these files, and ensure that the paths are correct based on the location of the prompt file.
 
   Within a prompt file, you can reference variables by using the `${variableName}` syntax. You can reference the following variables:
-
   - Workspace variables - `${workspaceFolder}`, `${workspaceFolderBasename}`
   - Selection variables - `${selection}`, `${selectedText}`
   - File context variables - `${file}`, `${fileBasename}`, `${fileDirname}`, `${fileBasenameNoExtension}`
@@ -108,7 +106,6 @@ To create a prompt file:
    Alternatively, use the **Chat: New Prompt File** command from the Command Palette (`kb(workbench.action.showCommands)`).
 
 1. Choose the location where the prompt file should be created.
-
    - **Workspace**: By default, workspace prompt files are stored in the `.github/prompts` folder of your workspace. Add more prompt folders for your workspace with the `setting(chat.promptFilesLocations)` setting.
 
    - **User profile**: User prompt files are stored in the [current profile folder](/docs/configure/profiles.md). You can sync your user prompt files across multiple devices by using [Settings Sync](/docs/configure/settings-sync.md).

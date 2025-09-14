@@ -13,12 +13,7 @@ interface ProgressBarProps {
   className?: string
 }
 
-export function ProgressBar({ 
-  progress, 
-  status, 
-  showPercentage = true, 
-  className = '' 
-}: ProgressBarProps) {
+export function ProgressBar({ progress, status, showPercentage = true, className = '' }: ProgressBarProps) {
   const getProgressColor = () => {
     if (['failed', 'cancelled', 'timed-out'].includes(status)) return 'bg-red-500'
     if (status === 'completed') return 'bg-green-500'

@@ -76,7 +76,6 @@
 ### 1. GitHub Repository Setup (15 minutes)
 
 1. **Go to Repository Settings**:
-
    - Settings → Branches → Add rule for `main`
    - Follow [BRANCH_PROTECTION_GUIDE.md](.github/BRANCH_PROTECTION_GUIDE.md)
 

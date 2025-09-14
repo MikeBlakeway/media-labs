@@ -1,6 +1,6 @@
 /**
  * Model Analytics Library Tests
- * 
+ *
  * Tests for model usage tracking, priority calculation, and combination analysis.
  */
 
@@ -90,12 +90,7 @@ describe('Model Analytics', () => {
     })
 
     it('returns zero usage for unknown models', () => {
-      const priority = calculateModelPriority(
-        'unknown-model.safetensors',
-        mockEvents,
-        [],
-        DEFAULT_PRIORITY_WEIGHTS
-      )
+      const priority = calculateModelPriority('unknown-model.safetensors', mockEvents, [], DEFAULT_PRIORITY_WEIGHTS)
 
       expect(priority.usageCount).toBe(0)
       expect(priority.score).toBeGreaterThanOrEqual(0)
@@ -119,7 +114,7 @@ describe('Model Analytics', () => {
 
       expect(Array.isArray(combinations)).toBe(true)
       expect(combinations.length).toBeGreaterThanOrEqual(0)
-      
+
       if (combinations.length > 0) {
         const combo = combinations[0]
         expect(ModelCombinationSchema.safeParse(combo).success).toBe(true)
@@ -155,20 +150,15 @@ describe('Model Analytics', () => {
     ]
 
     it('returns prioritized candidates for workflow', () => {
-      const candidates = getPreloadCandidates(
-        'text-to-image',
-        mockRequirements,
-        mockEvents,
-        []
-      )
+      const candidates = getPreloadCandidates('text-to-image', mockRequirements, mockEvents, [])
 
       expect(Array.isArray(candidates)).toBe(true)
       expect(candidates.length).toBeGreaterThan(0)
-      
+
       // Should include required models
       const requiredModel = candidates.find(c => c.modelName === 'flux1-dev.safetensors')
       expect(requiredModel).toBeDefined()
-      
+
       // Should be sorted by priority descending
       for (let i = 1; i < candidates.length; i++) {
         expect(candidates[i].score).toBeLessThanOrEqual(candidates[i - 1].score)
@@ -177,12 +167,7 @@ describe('Model Analytics', () => {
 
     it('includes additional models from combinations', () => {
       const combinations = findModelCombinations(mockEvents)
-      const candidates = getPreloadCandidates(
-        'text-to-image',
-        mockRequirements,
-        mockEvents,
-        combinations
-      )
+      const candidates = getPreloadCandidates('text-to-image', mockRequirements, mockEvents, combinations)
 
       expect(candidates.length).toBeGreaterThanOrEqual(mockRequirements.length)
     })

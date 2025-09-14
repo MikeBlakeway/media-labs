@@ -11,7 +11,6 @@ This guide will get you up and running with your new **Weekly Release Strategy**
 ### Step 1: GitHub Repository Setup (10 minutes)
 
 1. **Set up Branch Protection**
-
    - Go to **Settings** → **Branches** → **Add rule**
    - Follow instructions in [protection_guide.md](protection_guide.md)
 

@@ -8,6 +8,9 @@
  * - Automatic cleanup when approaching capacity limits
  */
 
+// Volume configuration constants
+const VOLUME_PATH = '/runpod-volume'
+
 // Types for volume management
 export type ModelUsage = {
   modelPath: string
@@ -101,7 +104,7 @@ export class VolumeManagementService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           op: 'df',
-          args: { paths: ['/runpod-volume'] }
+          args: { paths: [VOLUME_PATH] }
         })
       })
 
@@ -116,7 +119,7 @@ export class VolumeManagementService {
       }
 
       // Extract stats from volume worker response
-      const volumePath = result.usage?.find((u: { path: string }) => u.path === '/runpod-volume')
+      const volumePath = result.usage?.find((u: { path: string }) => u.path === VOLUME_PATH)
       if (!volumePath) {
         throw new Error('Volume path not found in disk usage results')
       }
@@ -270,7 +273,7 @@ export class VolumeManagementService {
       body: JSON.stringify({
         op: 'rm',
         args: {
-          paths: [`/runpod-volume/${modelPath}`],
+          paths: [`${VOLUME_PATH}/${modelPath}`],
           dryRun: false
         }
       })

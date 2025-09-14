@@ -23,7 +23,6 @@ This is the simplest method if the official images meet your needs.
 
 - Navigate to [`Serverless > Endpoints`](https://www.runpod.io/console/serverless/user/endpoints) and click on `New Endpoint`
 - In the dialog, configure:
-
   - Endpoint Name: `comfy` (or your preferred name)
   - Worker configuration: Select a GPU that can run the model included in your chosen image (see [GPU recommendations](#gpu-recommendations-for-official-images)).
   - Active Workers: `0` (Scale as needed based on expected load).

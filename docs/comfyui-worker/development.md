@@ -28,7 +28,6 @@ Both tests will use the data from [`test_input.json`](../test_input.json), so ma
    ```
 
 3. **Activate the virtual environment**:
-
    - **Windows (Command Prompt/PowerShell)**:
 
      ```bash

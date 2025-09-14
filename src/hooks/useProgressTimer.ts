@@ -11,19 +11,16 @@ import { TERMINAL_STATUSES, formatDuration } from '@/lib/progress.config'
 export interface UseProgressTimerResult {
   // Time state
   elapsedSeconds: number
-  
+
   // Formatted values
   formattedElapsed: string
-  
+
   // Timer control
   resetTimer: () => void
   setCustomElapsed: (seconds: number) => void
 }
 
-export function useProgressTimer(
-  startTime?: number,
-  status?: string
-): UseProgressTimerResult {
+export function useProgressTimer(startTime?: number, status?: string): UseProgressTimerResult {
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
   // Reset timer when start time changes
@@ -67,10 +64,10 @@ export function useProgressTimer(
   return {
     // Time state
     elapsedSeconds,
-    
+
     // Formatted values
     formattedElapsed,
-    
+
     // Timer control
     resetTimer,
     setCustomElapsed

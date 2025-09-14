@@ -79,8 +79,8 @@ export function MediaGallery({ items, workflowMeta, className = '', gridCols = 2
     gridCols === 1
       ? 'grid-cols-1'
       : gridCols === 3
-      ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-      : 'grid-cols-1 md:grid-cols-2'
+        ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        : 'grid-cols-1 md:grid-cols-2'
 
   return (
     <div className={`space-y-4 ${className}`}>

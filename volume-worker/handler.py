@@ -129,7 +129,16 @@ def op_b2_download(args: Dict[str, Any]) -> Dict[str, Any]:
 
     for model in models:
         s3_key = model["s3Key"]
-        dest_path = within_root(model["destPath"])
+        # Support both destPath and workerPath for backward compatibility
+        dest_path_str = model.get("destPath", model.get("workerPath"))
+        if not dest_path_str:
+            return {
+                "ok": False,
+                "error": f"Model object missing 'destPath' and 'workerPath': {model}",
+                "failedModel": model,
+                "results": results
+            }
+        dest_path = within_root(dest_path_str)
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         required = bool(model.get("required", True))
 

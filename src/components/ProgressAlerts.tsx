@@ -12,18 +12,12 @@ interface ProgressAlertsProps {
   className?: string
 }
 
-export function ProgressAlerts({ 
-  status, 
-  attempts = 0, 
-  className = '' 
-}: ProgressAlertsProps) {
+export function ProgressAlerts({ status, attempts = 0, className = '' }: ProgressAlertsProps) {
   return (
     <div className={className}>
       {/* Retry attempt warning */}
       {attempts > 1 && (
-        <div className='text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded mb-2'>
-          ⚠️ Retry attempt #{attempts}
-        </div>
+        <div className='text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded mb-2'>⚠️ Retry attempt #{attempts}</div>
       )}
 
       {/* Timeout warning */}

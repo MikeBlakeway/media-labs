@@ -48,16 +48,16 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
   } = useJobManagement()
 
   // Handle model preflight checks
-  const { 
-    preflightBusy, 
-    preflightErr, 
-    preflight, 
-    missing, 
-    allPresent, 
-    runPreflight, 
+  const {
+    preflightBusy,
+    preflightErr,
+    preflight,
+    missing,
+    allPresent,
+    runPreflight,
     startPreloading,
     canStartPreloading,
-    copyCommands 
+    copyCommands
   } = useWorkflowPreflight(slug)
 
   // Handle model preloading
@@ -78,14 +78,14 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
     if (!allPresent && canStartPreloading) {
       const proceed = confirm(
         'Some required models are missing. Would you like to start preloading them now? ' +
-        'This will download models in the background to speed up future runs.'
+          'This will download models in the background to speed up future runs.'
       )
       if (proceed) {
         await startPreloading()
         return
       }
     }
-    
+
     if (!meta || !allPresent) {
       alert('Required models are missing. Please upload them and click Recheck or start preloading.')
       return
@@ -185,9 +185,9 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
           disabled={!isValid || submitting || status === 'queued' || status === 'running'}
           className='rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50'
           title={
-            allPresent 
-              ? 'Run workflow' 
-              : preloading.isWorkflowReady 
+            allPresent
+              ? 'Run workflow'
+              : preloading.isWorkflowReady
                 ? 'Models are ready! Click to run.'
                 : 'Models are being prepared...'
           }

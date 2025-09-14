@@ -285,8 +285,12 @@ export class ModelPreloadingService {
         body: JSON.stringify({
           op: 'b2_download',
           args: {
-            s3Key: status.s3Key,
-            workerPath: status.workerPath
+            models: [
+              {
+                s3Key: status.s3Key,
+                destPath: status.workerPath
+              }
+            ]
           }
         })
       })

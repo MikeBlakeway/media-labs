@@ -29,7 +29,6 @@ Before deploying from GitHub, you need to authorize Runpod to access your reposi
 3. Sign in using the GitHub authorization flow. This will open your GitHub account settings page.
 
 4. Choose which repositories Runpod can access:
-
    - **All repositories:** Access to all current and future repositories.
    - **Only select repositories:** Choose specific repositories.
 
@@ -48,14 +47,12 @@ To deploy a worker from a GitHub repository:
 3. Under **Import Git Repository**, use the search bar or menu to select the repository containing your code. This menu is populated with all repos connected to your account (repos you've forked/created, or owned by your GitHub organizations).
 
 4. Configure your deployment options:
-
    - **Branch:** Select which branch to deploy from.
    - **Dockerfile Path:** Specify the path to your Dockerfile (if not in root).
 
    Then click **Next**\*\*
 
 5. Configure your endpoint settings:
-
    - Enter an **Endpoint Name**.
    - Choose your **Endpoint Type**: select **Queue** for traditional queue-based processing or **Load Balancer** for direct HTTP access (see [Load balancing endpoints](/serverless/load-balancing/overview) for details).
    - Under **GPU Configuration**, select the appropriate GPU types for your workload.

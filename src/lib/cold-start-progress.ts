@@ -251,7 +251,14 @@ export async function downloadWithProgress(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         op: 'b2_download',
-        args: { s3Key, workerPath }
+        args: {
+          models: [
+            {
+              s3Key,
+              destPath: workerPath
+            }
+          ]
+        }
       })
     })
 

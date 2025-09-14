@@ -1,6 +1,6 @@
 name: Spike follow-ups
 description: Decompose spike outcomes into actionable, well-scoped issues that follow our standards.
-title: "[{type}] {short title}"
+title: '[{type}] {short title}'
 labels:
   - spike-followup
 body:

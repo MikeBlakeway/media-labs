@@ -30,7 +30,6 @@ All requests POST to RunPod Serverless **`/run`** with an `input` payload:
 
 - **`op: "seed"`**
 - **Args:** `{ manifest: Entry[], dryRun?: boolean }` where each `Entry` has:
-
   - `repo` (string) — HF repo id
   - `remote` (string) — path inside repo (single file)
   - `destDir` (string) — absolute path under `/runpod-volume`

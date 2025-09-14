@@ -157,8 +157,8 @@
 
 **Release completed successfully**: **_/_**/**_ at _**:**\_ \_**
 **Final version**: v**\_**
-**Issues encountered**: ******\_\_\_\_******
-**Notes for next release**: ******\_\_\_\_******
+**Issues encountered**: **\*\***\_\_\_\_**\*\***
+**Notes for next release**: **\*\***\_\_\_\_**\*\***
 
 ---
 

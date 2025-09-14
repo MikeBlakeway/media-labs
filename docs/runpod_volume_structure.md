@@ -65,7 +65,6 @@
 ## 3) Prerequisites (multi-container setup)
 
 - **Two RunPod Serverless endpoints** sharing the same Network Volume:
-
   1. **ComfyUI endpoint** - your existing workflow execution endpoint
   2. **Seeder Worker endpoint** - dedicated volume operations service (see `docs/runpod_volume_seeder.md`)
 
