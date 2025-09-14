@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+interface VolumeStats {
+  totalBytes: number
+  usedBytes: number
+  freeBytes: number
+  usagePercent: number
+}
+
+interface VolumeHistoryEntry {
+  timestamp: Date
+  stats: VolumeStats
+}
+
 export const runtime = 'nodejs'
 
 // In-memory storage for volume history
 // In production, this would be replaced with a persistent database
-let volumeHistory: Array<{ timestamp: Date; stats: any }> = []
+let volumeHistory: VolumeHistoryEntry[] = []
 
 /**
  * Get volume usage history
@@ -24,7 +36,7 @@ export async function GET(req: NextRequest) {
     // Apply resolution aggregation
     if (resolution === 'hourly' && filteredHistory.length > 100) {
       // Group by hour for large datasets
-      const hourlyData = new Map<string, any[]>()
+      const hourlyData = new Map<string, VolumeHistoryEntry[]>()
       
       filteredHistory.forEach(entry => {
         const hourKey = new Date(entry.timestamp).toISOString().substring(0, 13) // YYYY-MM-DDTHH

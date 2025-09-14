@@ -6,7 +6,8 @@ import {
   shouldTriggerEviction,
   isModelProtected,
   EvictionResultSchema,
-  CACHE_CONFIG
+  CACHE_CONFIG,
+  type ModelCacheEntry
 } from '@/lib/cache-manager'
 
 export const runtime = 'nodejs'
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
         success: false,
         message: 'No models available for eviction',
         reason: 'All models are either pinned, in use, or protected',
-        protectedModels: models.filter((m: any) => isModelProtected(m)).length,
+        protectedModels: models.filter((m: ModelCacheEntry) => isModelProtected(m)).length,
         totalModels: models.length
       })
     }
@@ -190,8 +191,8 @@ export async function GET() {
     const { volumeStats, models } = await getCacheData()
 
     // Analyze current state
-    const protectedModels = models.filter((m: any) => isModelProtected(m))
-    const evictableModels = models.filter((m: any) => !isModelProtected(m))
+    const protectedModels = models.filter((m: ModelCacheEntry) => isModelProtected(m))
+    const evictableModels = models.filter((m: ModelCacheEntry) => !isModelProtected(m))
     
     // Calculate what would be evicted if triggered now
     const targetBytes = calculateEvictionTarget(volumeStats, CACHE_CONFIG.LOW_WATER_MARK)

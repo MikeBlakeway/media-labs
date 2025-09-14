@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { isModelProtected } from '@/lib/cache-manager'
+import { isModelProtected, type ModelCacheEntry } from '@/lib/cache-manager'
 
 export const runtime = 'nodejs'
 
@@ -19,7 +19,7 @@ async function getModelInfo(modelName: string) {
   }
   
   const data = await response.json()
-  const model = data.models.find((m: any) => m.modelName === modelName)
+  const model = data.models.find((m: ModelCacheEntry) => m.modelName === modelName)
   
   if (!model) {
     throw new Error(`Model ${modelName} not found`)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { updateModelAccess, calculateHeatScore } from '@/lib/cache-manager'
+import { updateModelAccess } from '@/lib/cache-manager'
 
 export const runtime = 'nodejs'
 
@@ -11,9 +11,21 @@ const TrackAccessRequestSchema = z.object({
   userId: z.string().optional()
 })
 
+interface ModelCacheEntry {
+  modelName: string
+  filePath: string
+  size: number
+  lastAccessed: Date
+  accessCount: number
+  isPinned: boolean
+  isInUse: boolean
+  type: 'unet' | 'clip' | 'clip_vision' | 'vae' | 'lora' | 'checkpoints'
+  heatScore: number
+}
+
 // In-memory storage for model access tracking
 // In production, this would be replaced with a persistent database
-const modelAccessData = new Map<string, any>()
+const modelAccessData = new Map<string, ModelCacheEntry>()
 let accessHistory: Array<{ timestamp: Date; modelName: string; modelType: string }> = []
 
 /**

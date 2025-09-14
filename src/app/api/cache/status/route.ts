@@ -5,15 +5,16 @@ import {
   VolumeStatsSchema,
   CacheStatusSchema,
   calculateHeatScore,
-  CACHE_CONFIG
+  CACHE_CONFIG,
+  type ModelCacheEntry
 } from '@/lib/cache-manager'
 
 export const runtime = 'nodejs'
 
 // In-memory cache storage for model tracking
 // In production, this would be replaced with a persistent database
-const modelCache = new Map<string, any>()
-let volumeStatsHistory: Array<{ timestamp: Date; stats: any }> = []
+const modelCache = new Map<string, ModelCacheEntry>()
+let volumeStatsHistory: Array<{ timestamp: Date; stats: { totalBytes: number; usedBytes: number; freeBytes: number; usagePercent: number } }> = []
 
 /**
  * Get current volume statistics from volume worker
@@ -90,13 +91,21 @@ async function getModelsFromVolume() {
       // Get or create cache entry
       let cacheEntry = modelCache.get(model.modelName)
       if (!cacheEntry) {
-        cacheEntry = { ...model }
-        modelCache.set(model.modelName, cacheEntry)
+        cacheEntry = { 
+          ...model, 
+          heatScore: 0, // Will be calculated below
+          type: model.type as ModelCacheEntry['type']
+        }
+      } else {
+        // Update cache entry with current data
+        Object.assign(cacheEntry, { ...model, type: model.type as ModelCacheEntry['type'] })
       }
-
-      // Update cache entry with current data
-      Object.assign(cacheEntry, model)
+      
+      // Calculate heat score
       cacheEntry.heatScore = calculateHeatScore(cacheEntry)
+      
+      // Update cache
+      modelCache.set(model.modelName, cacheEntry)
       
       return ModelCacheEntrySchema.parse(cacheEntry)
     })

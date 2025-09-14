@@ -70,7 +70,7 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
       setCacheStatus(statusData.cacheStatus)
       
       // Transform model data
-      const modelsData = statusData.models?.map((model: any) => ({
+      const modelsData = statusData.models?.map((model: ModelCacheEntry) => ({
         ...model,
         lastAccessed: new Date(model.lastAccessed)
       })) || []
@@ -81,7 +81,7 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
       const historyResponse = await fetch('/api/cache/analytics/volume-history')
       if (historyResponse.ok) {
         const historyData = await historyResponse.json()
-        const transformedHistory = historyData.history?.map((entry: any) => ({
+        const transformedHistory = historyData.history?.map((entry: { timestamp: string; stats: VolumeStats }) => ({
           timestamp: new Date(entry.timestamp),
           stats: entry.stats
         })) || []

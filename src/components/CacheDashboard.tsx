@@ -1,7 +1,7 @@
 'use client'
 
 import { useCacheAnalytics } from '@/hooks/useCacheAnalytics'
-import { CACHE_CONFIG } from '@/lib/cache-manager'
+import { CACHE_CONFIG, type ModelCacheEntry } from '@/lib/cache-manager'
 
 interface CacheStatusCardProps {
   title: string
@@ -21,7 +21,7 @@ function CacheStatusCard({ title, value, subtitle, className = '' }: CacheStatus
 }
 
 interface ModelListProps {
-  models: any[]
+  models: ModelCacheEntry[]
   onPin: (modelName: string) => void
   onUnpin: (modelName: string) => void
   onEvict: (modelName: string) => void

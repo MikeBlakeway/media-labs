@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+interface ModelData {
+  heatScore: number
+  type: string
+  size: number
+  isPinned: boolean
+  isInUse: boolean
+}
+
 export const runtime = 'nodejs'
 
 // In-memory storage for metrics tracking
@@ -24,11 +32,11 @@ export async function GET() {
     }
     
     const data = await response.json()
-    const models = data.models || []
+    const models: ModelData[] = data.models || []
 
     // Calculate average heat score
     const averageHeatScore = models.length > 0 
-      ? models.reduce((sum: number, model: any) => sum + model.heatScore, 0) / models.length
+      ? models.reduce((sum: number, model: ModelData) => sum + model.heatScore, 0) / models.length
       : 0
 
     // Calculate hit/miss ratios
@@ -37,22 +45,22 @@ export async function GET() {
     const missRatio = totalRequests > 0 ? (metricsData.cacheMisses / totalRequests) * 100 : 0
 
     // Calculate model distribution by type
-    const modelDistribution = models.reduce((acc: Record<string, number>, model: any) => {
+    const modelDistribution = models.reduce((acc: Record<string, number>, model: ModelData) => {
       acc[model.type] = (acc[model.type] || 0) + 1
       return acc
     }, {})
 
     // Calculate size distribution
-    const totalSize = models.reduce((sum: number, model: any) => sum + model.size, 0)
+    const totalSize = models.reduce((sum: number, model: ModelData) => sum + model.size, 0)
     const averageModelSize = models.length > 0 ? totalSize / models.length : 0
 
     // Heat score distribution
     const heatScoreRanges = {
-      'very_low': models.filter((m: any) => m.heatScore < 0.2).length,
-      'low': models.filter((m: any) => m.heatScore >= 0.2 && m.heatScore < 0.5).length,
-      'medium': models.filter((m: any) => m.heatScore >= 0.5 && m.heatScore < 0.8).length,
-      'high': models.filter((m: any) => m.heatScore >= 0.8 && m.heatScore < 1.2).length,
-      'very_high': models.filter((m: any) => m.heatScore >= 1.2).length
+      'very_low': models.filter((m: ModelData) => m.heatScore < 0.2).length,
+      'low': models.filter((m: ModelData) => m.heatScore >= 0.2 && m.heatScore < 0.5).length,
+      'medium': models.filter((m: ModelData) => m.heatScore >= 0.5 && m.heatScore < 0.8).length,
+      'high': models.filter((m: ModelData) => m.heatScore >= 0.8 && m.heatScore < 1.2).length,
+      'very_high': models.filter((m: ModelData) => m.heatScore >= 1.2).length
     }
 
     const metrics = {
@@ -62,8 +70,8 @@ export async function GET() {
       totalEvictions: metricsData.totalEvictions,
       totalReclaimed: metricsData.totalReclaimed,
       modelCount: models.length,
-      pinnedModels: models.filter((m: any) => m.isPinned).length,
-      inUseModels: models.filter((m: any) => m.isInUse).length,
+      pinnedModels: models.filter((m: ModelData) => m.isPinned).length,
+      inUseModels: models.filter((m: ModelData) => m.isInUse).length,
       modelDistribution,
       heatScoreRanges,
       sizeMetrics: {
