@@ -45,21 +45,40 @@ const KNOWN_NODE_TYPES = [
   'LoraLoader',
   'VAELoader',
   'CLIPLoader',
+  'UNETLoader',
+  'CLIPVisionLoader',
+  'UpscaleModelLoader',
 
   // Encoders
   'CLIPTextEncode',
+  'CLIPVisionEncode',
   'VAEEncode',
   'VAEDecode',
 
   // Samplers
   'KSampler',
   'KSamplerAdvanced',
+  'ModelSamplingSD3',
+  'ModelSamplingDiscrete',
 
   // Image operations
   'LoadImage',
   'LoadImageFromPath',
   'SaveImage',
   'PreviewImage',
+  'ImageUpscaleWithModel',
+
+  // Video operations (V2V support)
+  'LoadVideo',
+  'SaveVideo',
+  'CreateVideo',
+  'VideoFrameExtractor',
+  'VideoFrameInterpolator',
+
+  // Video effects and processing
+  'ColorCorrection',
+  'TemporalStabilizer',
+  'FilmGrain',
 
   // Latent operations
   'EmptyLatentImage',
@@ -68,6 +87,9 @@ const KNOWN_NODE_TYPES = [
 
   // FLUX-specific
   'FluxGuidance',
+
+  // WAN-specific (existing I2V)
+  'WanFirstLastFrameToVideo',
 
   // Common utility nodes
   'Note',
