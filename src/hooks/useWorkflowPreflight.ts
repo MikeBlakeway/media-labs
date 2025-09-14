@@ -2,6 +2,7 @@
  * useWorkflowPreflight Hook
  *
  * Manages workflow preflight checks for model availability.
+ * Enhanced with intelligent model preloading capabilities.
  * Extracts preflight logic from the main workflow component.
  */
 
@@ -35,10 +36,14 @@ export interface UseWorkflowPreflightResult {
 
   // Actions
   runPreflight: () => Promise<void>
+  
+  // Preloading actions
+  startPreloading: () => Promise<void>
 
   // Computed values
   missing: PreflightItem[]
   allPresent: boolean
+  canStartPreloading: boolean
 
   // Utility functions
   buildS3CpCommands: (items: PreflightItem[]) => string
@@ -120,17 +125,56 @@ export function useWorkflowPreflight(slug: string): UseWorkflowPreflightResult {
     }
   }, [buildS3CpCommands, preflight])
 
+  // Start intelligent preloading for missing models
+  const startPreloading = useCallback(async () => {
+    if (!slug) {
+      setPreflightErr('No workflow slug provided for preloading')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/models/preload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'workflow',
+          workflowSlug: slug,
+          trigger: 'form_completion'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to start preloading')
+      }
+
+      const result = await response.json()
+      console.log('Preloading started for workflow:', slug, result)
+      
+      // Show success message
+      alert(`Started preloading ${result.queued.length} models. Check the status panel for progress.`)
+      
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to start preloading'
+      console.error('Preloading error:', error)
+      setPreflightErr(`Preloading failed: ${message}`)
+    }
+  }, [slug])
+
   // Computed values
   const missing = preflight.filter(p => !p.present)
   const allPresent = missing.length === 0
+  const canStartPreloading = missing.length > 0 && Boolean(slug)
 
   return {
     preflightBusy,
     preflightErr,
     preflight,
     runPreflight,
+    startPreloading,
     missing,
     allPresent,
+    canStartPreloading,
     buildS3CpCommands,
     copyCommands
   }

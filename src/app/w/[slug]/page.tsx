@@ -4,12 +4,14 @@ import { use } from 'react'
 import { WorkflowResults } from '@/components/WorkflowResults'
 import { ProgressIndicator } from '@/components/ProgressIndicator'
 import { ResultHistory } from '@/components/ResultHistory'
+import { ModelPreloadingProgress } from '@/components/ModelPreloadingProgress'
 
 // Import our extracted hooks and components
 import { useWorkflowTemplate } from '@/hooks/useWorkflowTemplate'
 import { useWorkflowForm } from '@/hooks/useWorkflowForm'
 import { useJobManagement } from '@/hooks/useJobManagement'
 import { useWorkflowPreflight } from '@/hooks/useWorkflowPreflight'
+import { useModelPreloading } from '@/hooks/useModelPreloading'
 import { useFieldLabeling } from '@/hooks/useFieldLabeling'
 import { useFileUpload } from '@/hooks/useFileUpload'
 import { FormField } from '@/components/FormFields'
@@ -46,8 +48,20 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
   } = useJobManagement()
 
   // Handle model preflight checks
-  const { preflightBusy, preflightErr, preflight, missing, allPresent, runPreflight, copyCommands } =
-    useWorkflowPreflight(slug)
+  const { 
+    preflightBusy, 
+    preflightErr, 
+    preflight, 
+    missing, 
+    allPresent, 
+    runPreflight, 
+    startPreloading,
+    canStartPreloading,
+    copyCommands 
+  } = useWorkflowPreflight(slug)
+
+  // Handle model preloading
+  const preloading = useModelPreloading(slug)
 
   // Handle file uploads
   const { uploadFile } = useFileUpload()
@@ -60,8 +74,20 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
 
   // Handle form submission with full workflow
   const handleSubmit = async () => {
+    // If models are not ready but preloading is available, suggest preloading
+    if (!allPresent && canStartPreloading) {
+      const proceed = confirm(
+        'Some required models are missing. Would you like to start preloading them now? ' +
+        'This will download models in the background to speed up future runs.'
+      )
+      if (proceed) {
+        await startPreloading()
+        return
+      }
+    }
+    
     if (!meta || !allPresent) {
-      alert('Required models are missing. Please upload them and click Recheck.')
+      alert('Required models are missing. Please upload them and click Recheck or start preloading.')
       return
     }
 
@@ -119,6 +145,9 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
         <p className='mt-2 text-sm opacity-70'>Fill the fields and run the workflow</p>
       </header>
 
+      {/* Model Preloading Status */}
+      <ModelPreloadingProgress workflowSlug={slug} showActions={true} />
+
       {/* Preflight Status Banner */}
       <PreflightStatus
         preflight={{
@@ -128,6 +157,8 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
           missing,
           allPresent,
           runPreflight,
+          startPreloading,
+          canStartPreloading,
           copyCommands,
           buildS3CpCommands: () => ''
         }}
@@ -151,11 +182,17 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
       <div className='mt-4 flex flex-wrap items-center gap-2'>
         <button
           onClick={handleSubmit}
-          disabled={!isValid || !allPresent || submitting || status === 'queued' || status === 'running'}
+          disabled={!isValid || submitting || status === 'queued' || status === 'running'}
           className='rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50'
-          title={allPresent ? 'Run workflow' : 'Missing models — upload and Recheck'}
+          title={
+            allPresent 
+              ? 'Run workflow' 
+              : preloading.isWorkflowReady 
+                ? 'Models are ready! Click to run.'
+                : 'Models are being prepared...'
+          }
         >
-          {submitting ? 'Submitting...' : 'Run'}
+          {submitting ? 'Submitting...' : allPresent ? 'Run' : canStartPreloading ? 'Preload & Run' : 'Run'}
         </button>
 
         {canCancelJob && (

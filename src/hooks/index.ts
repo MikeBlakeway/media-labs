@@ -27,6 +27,10 @@ export type { UseFileUploadResult, UploadState } from './useFileUpload'
 export { useWorkflowPreflight } from './useWorkflowPreflight'
 export type { UseWorkflowPreflightResult, PreflightItem } from './useWorkflowPreflight'
 
+// Model preloading
+export { useModelPreloading } from './useModelPreloading'
+export type { UseModelPreloadingResult, ModelStatus, WorkflowStatus, QueueStatus } from './useModelPreloading'
+
 // Result history
 export { useResultHistory } from './useResultHistory'
 export type { UseResultHistoryResult, HistoryItem } from './useResultHistory'
