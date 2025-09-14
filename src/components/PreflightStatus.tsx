@@ -2,6 +2,7 @@
  * Preflight Status Component
  *
  * Displays model availability status and provides upload commands.
+ * Enhanced with intelligent model preloading capabilities.
  * Extracted from WorkflowContainer for better organization.
  */
 
@@ -64,14 +65,27 @@ export function PreflightStatus({ preflight }: PreflightStatusProps) {
           </div>
 
           {preflight.missing.length > 0 && (
-            <div className='flex items-center gap-2'>
+            <div className='flex gap-2 items-center'>
+              {/* Intelligent preloading action (when available) */}
+              {preflight.canStartPreloading && (
+                <button
+                  onClick={preflight.startPreloading}
+                  className='px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors'
+                  title='Start intelligent preloading for missing models'
+                >
+                  🚀 Start Preloading
+                </button>
+              )}
+
+              {/* Manual upload commands */}
               <button
                 onClick={preflight.copyCommands}
-                className='inline-flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+                className='px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors'
+                title='Copy manual upload commands'
               >
-                <span>📋</span>
-                Copy Upload Commands
+                📋 Copy Upload Commands
               </button>
+
               <div className='text-xs text-gray-500'>Upload missing models to continue</div>
             </div>
           )}

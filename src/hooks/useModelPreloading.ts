@@ -89,6 +89,49 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
   const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(null)
   const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null)
   
+  // Refresh status from API
+  const refreshStatus = useCallback(async () => {
+    try {
+      const params = new URLSearchParams()
+      if (workflowSlug) {
+        params.append('workflowSlug', workflowSlug)
+      }
+      
+      const response = await fetch(`/api/models/status?${params}`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch status')
+      }
+      
+      const data = await response.json()
+      
+      if (workflowSlug && data.workflowSlug) {
+        // Parse workflow-specific status
+        const workflowResult = WorkflowStatusSchema.safeParse(data)
+        if (workflowResult.success) {
+          setWorkflowStatus(workflowResult.data)
+        } else {
+          console.error('Invalid workflow status format:', workflowResult.error)
+          setError('Invalid status data format')
+        }
+      } else {
+        // Parse general queue status
+        const queueResult = QueueStatusSchema.safeParse(data)
+        if (queueResult.success) {
+          setQueueStatus(queueResult.data)
+        } else {
+          console.error('Invalid queue status format:', queueResult.error)
+          setError('Invalid status data format')
+        }
+      }
+      
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh status'
+      console.error('Refresh status error:', err)
+      setError(message)
+    }
+  }, [workflowSlug])
+  
   // Preload models for a specific workflow
   const preloadWorkflow = useCallback(async (slug: string, trigger = 'manual_request') => {
     try {
@@ -200,49 +243,6 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
     }
   }, [refreshStatus])
   
-  // Refresh status from API
-  const refreshStatus = useCallback(async () => {
-    try {
-      const params = new URLSearchParams()
-      if (workflowSlug) {
-        params.append('workflowSlug', workflowSlug)
-      }
-      
-      const response = await fetch(`/api/models/status?${params}`)
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch status')
-      }
-      
-      const data = await response.json()
-      
-      if (workflowSlug && data.workflowSlug) {
-        // Parse workflow-specific status
-        const workflowResult = WorkflowStatusSchema.safeParse(data)
-        if (workflowResult.success) {
-          setWorkflowStatus(workflowResult.data)
-        } else {
-          console.error('Invalid workflow status format:', workflowResult.error)
-          setError('Invalid status data format')
-        }
-      } else {
-        // Parse general queue status
-        const queueResult = QueueStatusSchema.safeParse(data)
-        if (queueResult.success) {
-          setQueueStatus(queueResult.data)
-        } else {
-          console.error('Invalid queue status format:', queueResult.error)
-          setError('Invalid status data format')
-        }
-      }
-      
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to refresh status'
-      console.error('Refresh status error:', err)
-      setError(message)
-    }
-  }, [workflowSlug])
-  
   // Auto-refresh status periodically
   useEffect(() => {
     // Initial load
@@ -250,8 +250,8 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
     
     // Set up polling for active downloads
     const interval = setInterval(() => {
-      const hasActiveDownloads = workflowStatus?.queueSummary.totalActive > 0 || 
-                                 queueStatus?.summary.activeDownloads > 0
+      const hasActiveDownloads = (workflowStatus?.queueSummary.totalActive || 0) > 0 || 
+                                 (queueStatus?.summary.activeDownloads || 0) > 0
       
       if (hasActiveDownloads) {
         void refreshStatus()
