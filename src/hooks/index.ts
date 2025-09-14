@@ -56,3 +56,6 @@ export type { UseUploadCardResult, UploadResponse } from './useUploadCard'
 // Workflow output type detection
 export { useWorkflowOutputType, useWorkflowOutputTypeSimple } from './useWorkflowOutputType'
 export type { UseWorkflowOutputTypeResult, WorkflowOutputType } from './useWorkflowOutputType'
+
+// Cache analytics hooks
+export { useCacheAnalytics, useCacheMetrics } from './useCacheAnalytics'
