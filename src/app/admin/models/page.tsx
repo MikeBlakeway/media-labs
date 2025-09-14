@@ -11,12 +11,22 @@ import { useState } from 'react'
 import { ModelPreloadingProgress } from '@/components/ModelPreloadingProgress'
 import { useModelPreloading } from '@/hooks/useModelPreloading'
 
+type WarmingStrategy = 'popular_models' | 'recent_combinations' | 'all_templates'
+
+type WarmingResult = {
+  strategy?: string
+  warmed?: number
+  skipped?: number
+  models?: string[]
+  [k: string]: unknown
+} | null
+
 export default function ModelsAdminPage() {
-  const [warmingStrategy, setWarmingStrategy] = useState<'popular_models' | 'recent_combinations' | 'all_templates'>('popular_models')
+  const [warmingStrategy, setWarmingStrategy] = useState<WarmingStrategy>('popular_models')
   const [maxModels, setMaxModels] = useState(10)
   const [priorityThreshold, setPriorityThreshold] = useState(0.3)
   const [warming, setWarming] = useState(false)
-  const [warmingResult, setWarmingResult] = useState<any>(null)
+  const [warmingResult, setWarmingResult] = useState<WarmingResult>(null)
   
   const preloading = useModelPreloading()
 
@@ -107,7 +117,7 @@ export default function ModelsAdminPage() {
             </label>
             <select
               value={warmingStrategy}
-              onChange={(e) => setWarmingStrategy(e.target.value as any)}
+              onChange={(e) => setWarmingStrategy(e.target.value as WarmingStrategy)}
               className='w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
             >
               <option value='popular_models'>Popular Models</option>
