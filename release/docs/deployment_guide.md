@@ -41,11 +41,11 @@ RUNPOD_MODEL_DIR_LORA=loras
 RUNPOD_MODEL_DIR_CHECKPOINTS=checkpoints
 
 # B2 Storage (for outputs)
-B2_S3_ENDPOINT=https://s3.us-west-004.backblazeb2.com
-B2_S3_REGION=us-west-004
-B2_S3_BUCKET=your-bucket-name
-B2_S3_ACCESS_KEY_ID=your_b2_key_id
-B2_S3_SECRET_ACCESS_KEY=your_b2_secret_key
+BUCKET_ENDPOINT_URL=https://s3.us-west-004.backblazeb2.com
+BUCKET_REGION=us-west-004
+BUCKET_NAME=your-bucket-name
+BUCKET_ACCESS_KEY_ID=your_b2_key_id
+BUCKET_SECRET_ACCESS_KEY=your_b2_secret_key
 ```
 
 ### Deployment Configuration

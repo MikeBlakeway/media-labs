@@ -63,3 +63,8 @@ volume-worker/test-results
 volume-worker/__pycache__
 volume-worker/tmp
 .vercel
+
+.env*
+.flaskenv*
+!.env.project
+!.env.vault

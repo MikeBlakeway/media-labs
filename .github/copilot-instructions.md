@@ -228,7 +228,7 @@ When context files don't provide specific guidance:
 
 - Runpod S3: `RUNPOD_VOLUME_ID` (used as RUNPOD_BUCKET), `RUNPOD_S3_REGION`, `RUNPOD_S3_ENDPOINT`, `RUNPOD_S3_ACCESS_KEY_ID`, `RUNPOD_S3_SECRET_ACCESS_KEY`.
 - Model mapping: All models must be stored under `models/<type>/...` at the root of your S3 bucket. Per-type directories: `RUNPOD_MODEL_DIR_UNET`, `RUNPOD_MODEL_DIR_CLIP`, `RUNPOD_MODEL_DIR_CLIP_VISION`, `RUNPOD_MODEL_DIR_VAE`, `RUNPOD_MODEL_DIR_LORA`, `RUNPOD_MODEL_DIR_CHECKPOINTS`.
-- Backblaze B2 output storage: `B2_S3_ENDPOINT`, `B2_S3_REGION`, `B2_S3_BUCKET`, `B2_S3_ACCESS_KEY_ID`, `B2_S3_SECRET_ACCESS_KEY`.
+- Backblaze B2 output storage: `BUCKET_ENDPOINT_URL`, `BUCKET_REGION`, `BUCKET_NAME`, `BUCKET_ACCESS_KEY_ID`, `BUCKET_SECRET_ACCESS_KEY`.
 
 ## Error Handling Patterns
 

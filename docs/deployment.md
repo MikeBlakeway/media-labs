@@ -80,11 +80,11 @@ All environments are configured with the following variables:
 
 ### Backblaze B2 (Output Storage)
 
-- `B2_S3_ENDPOINT`: s3.eu-central-003.backblazeb2.com
-- `B2_S3_REGION`: eu-central-003
-- `B2_S3_BUCKET`: media-labs
-- `B2_S3_ACCESS_KEY_ID`: B2 access key
-- `B2_S3_SECRET_ACCESS_KEY`: B2 secret key
+- `BUCKET_ENDPOINT_URL`: s3.eu-central-003.backblazeb2.com
+- `BUCKET_REGION`: eu-central-003
+- `BUCKET_NAME`: media-labs
+- `BUCKET_ACCESS_KEY_ID`: B2 access key
+- `BUCKET_SECRET_ACCESS_KEY`: B2 secret key
 
 ### Model Configuration
 

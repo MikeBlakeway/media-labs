@@ -139,10 +139,10 @@ RUNPOD_S3_REGION=us-east-1
 RUNPOD_VOLUME_ID=your_volume_id
 
 # Backblaze B2 (optional - for output storage)
-B2_S3_ACCESS_KEY_ID=your_b2_key
-B2_S3_SECRET_ACCESS_KEY=your_b2_secret
-B2_S3_ENDPOINT=your_b2_endpoint
-B2_S3_BUCKET=your_b2_bucket
+BUCKET_ACCESS_KEY_ID=your_b2_key
+BUCKET_SECRET_ACCESS_KEY=your_b2_secret
+BUCKET_ENDPOINT_URL=your_b2_endpoint
+BUCKET_NAME=your_b2_bucket
 ```
 
 ## Key Design Patterns

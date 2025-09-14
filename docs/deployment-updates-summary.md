@@ -50,11 +50,11 @@ All environment variables have been configured in Vercel across production, prev
 
 #### Backblaze B2 Storage (Output Files)
 
-- **B2_S3_ACCESS_KEY_ID** - B2 access credentials
-- **B2_S3_SECRET_ACCESS_KEY** - B2 secret credentials
-- **B2_S3_ENDPOINT** - B2 endpoint URL
-- **B2_S3_REGION** - B2 region
-- **B2_S3_BUCKET** - B2 bucket name
+- **BUCKET_ACCESS_KEY_ID** - B2 access credentials
+- **BUCKET_SECRET_ACCESS_KEY** - B2 secret credentials
+- **BUCKET_ENDPOINT_URL** - B2 endpoint URL
+- **BUCKET_REGION** - B2 region
+- **BUCKET_NAME** - B2 bucket name
 
 ## Deploy Hooks Setup
 
@@ -171,11 +171,11 @@ npx vercel env add RUNPOD_MODEL_DIR_LORA production preview development
 npx vercel env add RUNPOD_MODEL_DIR_CHECKPOINTS production preview development
 
 # Configure B2 storage
-npx vercel env add B2_S3_ACCESS_KEY_ID production preview development
-npx vercel env add B2_S3_SECRET_ACCESS_KEY production preview development
-npx vercel env add B2_S3_ENDPOINT production preview development
-npx vercel env add B2_S3_REGION production preview development
-npx vercel env add B2_S3_BUCKET production preview development
+npx vercel env add BUCKET_ACCESS_KEY_ID production preview development
+npx vercel env add BUCKET_SECRET_ACCESS_KEY production preview development
+npx vercel env add BUCKET_ENDPOINT_URL production preview development
+npx vercel env add BUCKET_REGION production preview development
+npx vercel env add BUCKET_NAME production preview development
 ```
 
 ## Production Verification
