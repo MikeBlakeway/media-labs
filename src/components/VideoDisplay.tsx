@@ -7,7 +7,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface VideoDisplayProps {
   videos: string[]
@@ -18,11 +18,26 @@ interface VideoDisplayProps {
 
 export function VideoDisplay({ videos, className = '', inputVideo, comparisonMode = false }: VideoDisplayProps) {
   const [selectedVideo, setSelectedVideo] = useState(0)
-  const [showComparison, setShowComparison] = useState(comparisonMode && inputVideo)
+  // Initialize to false; keep in sync with props via useEffect so changes to
+  // `comparisonMode` or `inputVideo` after mount update the state.
+  const [showComparison, setShowComparison] = useState<boolean>(false)
+
+  useEffect(() => {
+    setShowComparison(Boolean(comparisonMode && inputVideo))
+  }, [comparisonMode, inputVideo])
+
+  // Ensure selectedVideo stays within bounds if the videos array changes.
+  useEffect(() => {
+    setSelectedVideo(prev => {
+      if (videos.length === 0) return 0
+      return prev >= videos.length ? 0 : prev
+    })
+  }, [videos])
 
   if (videos.length === 0) return null
 
-  const currentVideo = videos[selectedVideo]
+  // Safe fallback in case selectedVideo is out of bounds for any reason.
+  const currentVideo = videos[selectedVideo] ?? videos[0]
 
   return (
     <div className={className}>
@@ -76,9 +91,7 @@ export function VideoDisplay({ videos, className = '', inputVideo, comparisonMod
               key={index}
               onClick={() => setSelectedVideo(index)}
               className={`px-3 py-1 text-xs rounded transition-colors ${
-                index === selectedVideo
-                  ? 'bg-green-200 text-green-800'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                index === selectedVideo ? 'bg-green-200 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               Video {index + 1}
