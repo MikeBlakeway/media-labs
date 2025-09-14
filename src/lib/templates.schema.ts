@@ -15,7 +15,8 @@ export const FieldSpecSchema = z.object({
 export const TemplateMetaSchema = z.object({
   slug: z.string(),
   name: z.string(),
-  fields: z.array(FieldSpecSchema)
+  fields: z.array(FieldSpecSchema),
+  outputType: z.enum(['image', 'video']).optional().default('image')
 })
 export type TemplateMeta = z.infer<typeof TemplateMetaSchema>
 

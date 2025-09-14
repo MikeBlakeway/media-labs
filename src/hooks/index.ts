@@ -48,3 +48,7 @@ export type { UseWorkflowRunnerJobResult } from './useWorkflowRunnerJob'
 // Upload card hook
 export { useUploadCard } from './useUploadCard'
 export type { UseUploadCardResult, UploadResponse } from './useUploadCard'
+
+// Workflow output type detection
+export { useWorkflowOutputType, useWorkflowOutputTypeSimple } from './useWorkflowOutputType'
+export type { UseWorkflowOutputTypeResult, OutputType } from './useWorkflowOutputType'
