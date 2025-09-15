@@ -180,11 +180,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
           onClick={handleSubmit}
           disabled={!isValid || submitting || status === 'queued' || status === 'running'}
           className='rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50'
-          title={
-            allPresent
-              ? 'Run workflow'
-              : 'Models may be missing - check status above'
-          }
+          title={allPresent ? 'Run workflow' : 'Models may be missing - check status above'}
         >
           {submitting ? 'Submitting...' : allPresent ? 'Run' : canStartPreloading ? 'Preload & Run' : 'Run'}
         </button>
