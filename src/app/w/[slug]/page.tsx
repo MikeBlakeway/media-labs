@@ -11,7 +11,6 @@ import { useWorkflowTemplate } from '@/hooks/useWorkflowTemplate'
 import { useWorkflowForm } from '@/hooks/useWorkflowForm'
 import { useJobManagement } from '@/hooks/useJobManagement'
 import { useWorkflowPreflight } from '@/hooks/useWorkflowPreflight'
-import { useModelPreloading } from '@/hooks/useModelPreloading'
 import { useFieldLabeling } from '@/hooks/useFieldLabeling'
 import { useFileUpload } from '@/hooks/useFileUpload'
 import { FormField } from '@/components/FormFields'
@@ -59,9 +58,6 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
     canStartPreloading,
     copyCommands
   } = useWorkflowPreflight(slug)
-
-  // Handle model preloading
-  const preloading = useModelPreloading(slug)
 
   // Handle file uploads
   const { uploadFile } = useFileUpload()
@@ -184,13 +180,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
           onClick={handleSubmit}
           disabled={!isValid || submitting || status === 'queued' || status === 'running'}
           className='rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50'
-          title={
-            allPresent
-              ? 'Run workflow'
-              : preloading.isWorkflowReady
-                ? 'Models are ready! Click to run.'
-                : 'Models are being prepared...'
-          }
+          title={allPresent ? 'Run workflow' : 'Models may be missing - check status above'}
         >
           {submitting ? 'Submitting...' : allPresent ? 'Run' : canStartPreloading ? 'Preload & Run' : 'Run'}
         </button>

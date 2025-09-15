@@ -6,7 +6,7 @@
  * Extracts template-related logic from the main workflow component.
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { TemplateMetaSchema, type TemplateMeta } from '@/lib/templates.schema'
 import type { ExportApiWorkflow } from '@/lib/workflow.infer'
 
@@ -34,10 +34,14 @@ export function useWorkflowTemplate(slug: string): UseWorkflowTemplateResult {
   const [error, setError] = useState<string>('')
   const [preloadingStarted, setPreloadingStarted] = useState<boolean>(false)
 
+  // Use ref to access preloadingStarted without causing dependency issues
+  const preloadingStartedRef = useRef(preloadingStarted)
+  preloadingStartedRef.current = preloadingStarted
+
   // Trigger preloading for workflow models
   const triggerPreloading = useCallback(
     async (workflowSlug: string) => {
-      if (preloadingStarted) return // Avoid duplicate preloading requests
+      if (preloadingStartedRef.current) return // Avoid duplicate preloading requests
 
       try {
         setPreloadingStarted(true)
@@ -63,7 +67,7 @@ export function useWorkflowTemplate(slug: string): UseWorkflowTemplateResult {
         // Don't throw error - preloading is optional
       }
     },
-    [preloadingStarted]
+    [] // Remove preloadingStarted dependency to prevent infinite loop
   )
 
   const loadTemplate = useCallback(async (): Promise<void> => {
