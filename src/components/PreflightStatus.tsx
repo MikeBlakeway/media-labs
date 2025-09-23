@@ -21,25 +21,37 @@ export function PreflightStatus({ preflight }: PreflightStatusProps) {
     <div className='rounded-xl border bg-white p-4 shadow-sm'>
       <div className='flex items-center justify-between mb-3'>
         <h3 className='font-medium text-gray-900'>Model Requirements</h3>
-        {!preflight.preflightBusy && !preflight.preflightErr && totalCount > 0 && (
-          <div
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-              allModelsPresent ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-            }`}
+        <div className='flex items-center gap-2'>
+          {/* Refresh button for cache busting */}
+          <button
+            onClick={() => preflight.runPreflight(true)}
+            disabled={preflight.preflightBusy}
+            className='px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors disabled:opacity-50'
+            title='Force refresh (clears cache)'
           >
-            {allModelsPresent ? (
-              <>
-                <span className='w-1.5 h-1.5 bg-green-500 rounded-full'></span>
-                All models available
-              </>
-            ) : (
-              <>
-                <span className='w-1.5 h-1.5 bg-orange-500 rounded-full'></span>
-                {preflight.missing.length} missing
-              </>
-            )}
-          </div>
-        )}
+            🔄
+          </button>
+
+          {!preflight.preflightBusy && !preflight.preflightErr && totalCount > 0 && (
+            <div
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                allModelsPresent ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+              }`}
+            >
+              {allModelsPresent ? (
+                <>
+                  <span className='w-1.5 h-1.5 bg-green-500 rounded-full'></span>
+                  All models available
+                </>
+              ) : (
+                <>
+                  <span className='w-1.5 h-1.5 bg-orange-500 rounded-full'></span>
+                  {preflight.missing.length} missing
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {preflight.preflightBusy ? (

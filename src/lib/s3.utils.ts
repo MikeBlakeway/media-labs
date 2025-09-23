@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { S3Client, HeadObjectCommand } from '@aws-sdk/client-s3'
 
 // B2/S3 Configuration Schema
 export const B2ConfigSchema = z.object({
@@ -65,5 +66,80 @@ export function extractS3Key(url: string): string | null {
     return parsed.pathname.substring(1) // Remove leading slash
   } catch {
     return null
+  }
+}
+
+/**
+ * Unified S3 object existence check with consistent error handling.
+ * This function consolidates the logic from both the preflight API and model status API
+ * to ensure consistent behavior across all S3 operations.
+ */
+export async function checkS3ObjectExists(
+  s3Client: S3Client,
+  bucket: string,
+  key: string,
+  context: string = 'unknown'
+): Promise<{ exists: boolean; error?: string }> {
+  try {
+    await s3Client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }))
+    return { exists: true }
+  } catch (err: unknown) {
+    // Consistent error handling across all S3-compatible providers
+    if (err && typeof err === 'object') {
+      const obj = err as Record<string, unknown>
+
+      // Check $response.statusCode first (most reliable)
+      const rawResp = obj['$response']
+      if (rawResp && typeof rawResp === 'object') {
+        const statusVal =
+          (rawResp as Record<string, unknown>)['statusCode'] ?? (rawResp as Record<string, unknown>)['status']
+        if (typeof statusVal === 'number') {
+          if (statusVal === 404) return { exists: false }
+          if (statusVal >= 200 && statusVal < 300) return { exists: true } // Handle deserialization errors
+
+          // Log unexpected status codes for debugging
+          console.warn(`S3 HEAD request failed [${context}]`, {
+            bucket,
+            key,
+            status: statusVal,
+            source: '$response.statusCode'
+          })
+          return { exists: false, error: `HTTP ${statusVal}` }
+        }
+      }
+
+      // Check $metadata.httpStatusCode (fallback)
+      const meta = obj['$metadata']
+      if (meta && typeof meta === 'object') {
+        const httpStatusCode =
+          (meta as Record<string, unknown>)['httpStatusCode'] ?? (meta as Record<string, unknown>)['statusCode']
+        if (typeof httpStatusCode === 'number') {
+          if (httpStatusCode === 404) return { exists: false }
+          if (httpStatusCode >= 200 && httpStatusCode < 300) return { exists: true } // Handle deserialization errors
+
+          // Log unexpected status codes for debugging
+          console.warn(`S3 HEAD request failed [${context}]`, {
+            bucket,
+            key,
+            status: httpStatusCode,
+            source: '$metadata.httpStatusCode'
+          })
+          return { exists: false, error: `HTTP ${httpStatusCode}` }
+        }
+      }
+
+      // Check common error names/codes
+      const nameVal = obj['name'] ?? obj['Code'] ?? obj['code']
+      if (typeof nameVal === 'string') {
+        if (nameVal === 'NotFound' || nameVal === 'NoSuchKey' || nameVal === 'NotFoundException') {
+          return { exists: false }
+        }
+      }
+    }
+
+    // Fallback: log error and return false conservatively
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(`S3 HEAD request failed [${context}]`, { bucket, key, message })
+    return { exists: false, error: message }
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { use } from 'react'
+import { use, useEffect } from 'react'
 import { WorkflowResults } from '@/components/WorkflowResults'
 import { ProgressIndicator } from '@/components/ProgressIndicator'
 import { ResultHistory } from '@/components/ResultHistory'
@@ -13,6 +13,7 @@ import { useJobManagement } from '@/hooks/useJobManagement'
 import { useWorkflowPreflight } from '@/hooks/useWorkflowPreflight'
 import { useFieldLabeling } from '@/hooks/useFieldLabeling'
 import { useFileUpload } from '@/hooks/useFileUpload'
+import { useModelPreloading } from '@/hooks/useModelPreloading'
 import { FormField } from '@/components/FormFields'
 import { JobStatusDisplay } from '@/components/JobStatus'
 import { PreflightStatus } from '@/components/PreflightStatus'
@@ -64,6 +65,17 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
 
   // Handle enhanced field labeling
   const { getEnhancedFieldLabel } = useFieldLabeling(workflow)
+
+  // Handle model preloading for synchronization
+  const { syncWithPreflight } = useModelPreloading(slug)
+
+  // Synchronize model preloading status when preflight checks complete
+  useEffect(() => {
+    if (!preflightBusy && preflight.length > 0) {
+      // Sync model status after preflight completes to ensure consistency
+      syncWithPreflight()
+    }
+  }, [preflightBusy, preflight.length, syncWithPreflight])
 
   // Check if job can be cancelled
   const canCancelJob = jobId && (status === 'queued' || status === 'running')

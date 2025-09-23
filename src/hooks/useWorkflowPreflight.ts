@@ -35,7 +35,7 @@ export interface UseWorkflowPreflightResult {
   preflight: PreflightItem[]
 
   // Actions
-  runPreflight: () => Promise<void>
+  runPreflight: (bustCache?: boolean) => Promise<void>
 
   // Preloading actions
   startPreloading: () => Promise<void>
@@ -56,41 +56,56 @@ export function useWorkflowPreflight(slug: string): UseWorkflowPreflightResult {
   const [preflight, setPreflight] = useState<PreflightItem[]>([])
 
   // Run preflight check
-  const runPreflight = useCallback(async () => {
-    if (!slug) {
-      setPreflightErr('No workflow slug provided')
-      setPreflightBusy(false)
-      return
-    }
-
-    setPreflightBusy(true)
-    setPreflightErr('')
-
-    try {
-      const res = await fetch('/api/workflows/preflight', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ kind: 'slug', slug })
-      })
-
-      const raw = await res.json()
-      const parsed = PreflightRespSchema.safeParse(raw)
-
-      if (!res.ok || !parsed.success) {
-        console.error('Preflight response validation failed:', parsed.success ? 'Response not ok' : parsed.error)
-        throw new Error('Invalid preflight response')
+  const runPreflight = useCallback(
+    async (bustCache = false) => {
+      if (!slug) {
+        setPreflightErr('No workflow slug provided')
+        setPreflightBusy(false)
+        return
       }
 
-      setPreflight(parsed.data.results)
-    } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Preflight failed'
-      console.error('Preflight error:', e)
-      setPreflightErr(errorMessage)
-      setPreflight([])
-    } finally {
-      setPreflightBusy(false)
-    }
-  }, [slug])
+      setPreflightBusy(true)
+      setPreflightErr('')
+
+      try {
+        // Add cache-busting parameter when needed
+        const params = new URLSearchParams()
+        if (bustCache) {
+          params.set('t', Date.now().toString())
+        }
+
+        const url = `/api/workflows/preflight${params.toString() ? `?${params}` : ''}`
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            // Prevent browser caching when cache busting is requested
+            ...(bustCache && { 'cache-control': 'no-cache, no-store, must-revalidate' })
+          },
+          body: JSON.stringify({ kind: 'slug', slug })
+        })
+
+        const raw = await res.json()
+        const parsed = PreflightRespSchema.safeParse(raw)
+
+        if (!res.ok || !parsed.success) {
+          console.error('Preflight response validation failed:', parsed.success ? 'Response not ok' : parsed.error)
+          throw new Error('Invalid preflight response')
+        }
+
+        setPreflight(parsed.data.results)
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : 'Preflight failed'
+        console.error('Preflight error:', e)
+        setPreflightErr(errorMessage)
+        setPreflight([])
+      } finally {
+        setPreflightBusy(false)
+      }
+    },
+    [slug]
+  )
 
   // Auto-run preflight when slug changes
   useEffect(() => {
