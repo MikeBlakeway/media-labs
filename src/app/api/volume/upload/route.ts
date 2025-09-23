@@ -32,10 +32,15 @@ async function* toAsyncIterable(stream: ReadableStream<Uint8Array>) {
 }
 
 export async function POST(req: NextRequest) {
+  let bucket: string
+  let key: string
+  let size: number
+  let contentType: string
+
   try {
     ensureEnv('RUNPOD_S3_ENDPOINT', process.env.RUNPOD_S3_ENDPOINT)
     ensureEnv('RUNPOD_S3_REGION', process.env.RUNPOD_S3_REGION)
-    const bucket = ensureEnv('RUNPOD_VOLUME_ID', RUNPOD_BUCKET)
+    bucket = ensureEnv('RUNPOD_VOLUME_ID', RUNPOD_BUCKET)
 
     const form = await req.formData()
     const file = form.get('file')
@@ -47,8 +52,8 @@ export async function POST(req: NextRequest) {
     const jobId =
       typeof providedJobId === 'string' && providedJobId.trim().length > 0 ? providedJobId.trim() : crypto.randomUUID()
 
-    const contentType = file.type || 'application/octet-stream'
-    const size = file.size
+    contentType = file.type || 'application/octet-stream'
+    size = file.size
     if (size <= 0) return NextResponse.json({ error: 'empty file' }, { status: 400 })
     if (size > MAX_UPLOAD_BYTES)
       return NextResponse.json({ error: `file too large (> ${MAX_UPLOAD_BYTES} bytes)` }, { status: 413 })
@@ -56,10 +61,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `unsupported content-type: ${contentType}` }, { status: 415 })
 
     const safeName = sanitizeFilename(file.name || 'upload')
-    const key = `inputs/${jobId}/${safeName}`
+    key = `inputs/${jobId}/${safeName}`
 
     const webStream = file.stream() as ReadableStream<Uint8Array>
     const nodeReadable = Readable.from(toAsyncIterable(webStream))
+
+    console.log(`[upload] Uploading ${safeName} (${size} bytes) to ${bucket}/${key}`)
 
     await runpodS3.send(
       new PutObjectCommand({
@@ -71,10 +78,29 @@ export async function POST(req: NextRequest) {
       })
     )
 
+    console.log(`[upload] Successfully uploaded ${key}`)
     const workerPath = `/runpod-volume/${key}`
     const payload: JsonOk = { key, workerPath, jobId, filename: safeName, size, contentType }
     return NextResponse.json(payload, { status: 200 })
   } catch (err) {
+    console.error('[upload] Upload failed:', {
+      error: err
+    })
+
+    // Extract more details from AWS SDK errors
+    if (err && typeof err === 'object') {
+      const awsError = err as Record<string, unknown>
+      if (awsError.$metadata) {
+        console.error('[upload] AWS metadata:', awsError.$metadata)
+      }
+      if (awsError.$response) {
+        console.error('[upload] AWS response:', {
+          statusCode: (awsError.$response as Record<string, unknown>).statusCode,
+          headers: (awsError.$response as Record<string, unknown>).headers
+        })
+      }
+    }
+
     const message = err instanceof Error ? err.message : 'unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

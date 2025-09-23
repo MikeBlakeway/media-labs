@@ -52,6 +52,19 @@ Thumbs.db
 ## Test output
 coverage/
 
+## Temporary test files
+# Note: Use scripts/test/ directory for organized test scripts
+test-*.js
+test-*.mjs
+test-*.ts
+debug-*.js
+debug-*.mjs
+debug-*.ts
+
+# Prevent temporary files in root directory
+/test-*
+/debug-*
+
 ## Misc
 .cache/
 .local/

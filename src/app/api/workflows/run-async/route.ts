@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getTemplate } from '@/lib/templates.fs'
-import { runAsync, runSync } from '@/lib/runpod'
+import { runAsync } from '@/lib/runpod'
 import { ExportApiWorkflowSchema, type ExportApiWorkflow, type ExportApiNode } from '@/lib/workflow.infer'
 
 export const runtime = 'nodejs'
-
-// Note: runAsync and runSync functions now include:
-// - Automatic retry with exponential backoff for API failures
-// - Configurable timeouts to prevent hanging requests
-// - Enhanced error handling with detailed logging
-// - Support for retryable vs non-retryable error classification
 
 const PatchSpecSchema = z.object({
   nodeId: z.string(),
@@ -18,25 +12,26 @@ const PatchSpecSchema = z.object({
   value: z.union([z.string(), z.number(), z.boolean()])
 })
 
-const RunReqSchema = z.object({
+const AsyncRunReqSchema = z.object({
   slug: z.string(),
-  patches: z.array(PatchSpecSchema),
-  mode: z.enum(['auto', 'sync', 'async']).optional()
+  patches: z.array(PatchSpecSchema)
 })
-type RunReq = z.infer<typeof RunReqSchema>
+type AsyncRunReq = z.infer<typeof AsyncRunReqSchema>
 
-function approxSizeBytes(obj: unknown): number {
-  return Buffer.byteLength(JSON.stringify(obj), 'utf8')
-}
-
+/**
+ * Force Async Workflow Runner
+ *
+ * This endpoint always runs workflows in async mode to avoid worker-comfyui
+ * websocket timeout issues with long-running video generation workflows.
+ */
 export async function POST(req: NextRequest) {
   try {
     const bodyUnknown = await req.json()
-    const parsed = RunReqSchema.safeParse(bodyUnknown)
+    const parsed = AsyncRunReqSchema.safeParse(bodyUnknown)
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
-    const body: RunReq = parsed.data
+    const body: AsyncRunReq = parsed.data
 
     const tpl = getTemplate(body.slug)
     if (!tpl) {
@@ -67,30 +62,19 @@ export async function POST(req: NextRequest) {
     const patched: ExportApiWorkflow = out
 
     const input = { workflow: patched }
-    let mode: 'sync' | 'async'
-    if (body.mode === 'sync' || body.mode === 'async') {
-      mode = body.mode
-    } else {
-      // For video workflows, ALWAYS use async to avoid worker-comfyui websocket timeouts
-      const isVideoWorkflow =
-        body.slug?.includes('video') || body.slug?.includes('flf2v') || body.slug?.includes('wan2')
 
-      if (isVideoWorkflow) {
-        // Force async for video workflows due to worker-comfyui websocket timeout limitations
-        mode = 'async'
-      } else {
-        // For non-video workflows, use sync for smaller payloads, async for larger ones
-        mode = approxSizeBytes({ input }) > 10 * 1024 * 1024 ? 'async' : 'sync'
-      }
-    }
+    // Always use async mode to avoid worker-comfyui websocket timeouts
+    const asyncOut = await runAsync(input)
 
-    if (mode === 'sync') {
-      const outSync: unknown = await runSync(input)
-      return NextResponse.json(outSync, { status: 200 })
-    } else {
-      const asyncOut = await runAsync(input)
-      return NextResponse.json({ id: asyncOut.id, status: 'IN_PROGRESS' }, { status: 200 })
-    }
+    return NextResponse.json(
+      {
+        id: asyncOut.id,
+        status: 'IN_PROGRESS',
+        mode: 'async',
+        message: 'Workflow submitted in async mode to prevent timeout issues'
+      },
+      { status: 200 }
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : 'unknown error'
     return NextResponse.json({ error: message }, { status: 500 })

@@ -203,10 +203,11 @@ export async function POST(req: NextRequest) {
         // Estimate model size based on type - this will be updated with actual size when downloaded
         const estimatedSizeBytes = getEstimatedModelSize(r.type)
         void volumeManagement.recordModelUsage(s3Key, r.type, estimatedSizeBytes)
-        
+
         // Track model access for cache analytics
         try {
-          await fetch('/api/cache/track-access', {
+          const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'
+          await fetch(`${baseUrl}/api/cache/track-access`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

@@ -13,9 +13,9 @@ import {
   ModelPrioritySchema,
   ModelCombinationSchema,
   DEFAULT_PRIORITY_WEIGHTS
-} from './model-analytics'
-import type { ModelUsageEvent } from './model-analytics'
-import type { ModelRequirement } from './workflow.preflight'
+} from '../model-analytics'
+import type { ModelUsageEvent } from '../model-analytics'
+import type { ModelRequirement } from '../workflow.preflight'
 
 describe('Model Analytics', () => {
   const mockEvents: ModelUsageEvent[] = [

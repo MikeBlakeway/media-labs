@@ -125,7 +125,7 @@ export function useJobManagement(): UseJobManagementResult {
     []
   )
 
-  // Polling function
+  // Polling function with 20-second intervals
   const startPolling = useCallback(
     async (jobId: string, slug: string) => {
       const poll = async (): Promise<void> => {
@@ -179,10 +179,12 @@ export function useJobManagement(): UseJobManagementResult {
             // Store result in history
             await storeResultInHistory(jobId, s.data.status, s.data.output, slug, duration)
           } else {
-            // Continue polling for non-terminal states
+            // Continue polling for non-terminal states with 20-second intervals
+            const pollInterval = 20000 // 20 seconds as requested
+
             pollRef.current = window.setTimeout(() => {
               void poll()
-            }, 2000)
+            }, pollInterval)
           }
         } catch (error) {
           console.error('Polling error:', error)
