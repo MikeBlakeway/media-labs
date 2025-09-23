@@ -1,11 +1,11 @@
-import { 
-  calculateHeatScore, 
-  selectModelsForEviction, 
+import {
+  calculateHeatScore,
+  selectModelsForEviction,
   isModelProtected,
   updateModelAccess,
   validateCacheConfig,
   CACHE_CONFIG
-} from './cache-manager'
+} from '../cache-manager'
 
 describe('Cache Manager', () => {
   describe('calculateHeatScore', () => {

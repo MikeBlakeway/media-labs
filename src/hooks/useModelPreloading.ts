@@ -255,25 +255,32 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
     [refreshStatus]
   )
 
-  // Auto-refresh status periodically
-  useEffect(() => {
-    // Initial load
-    void refreshStatus()
-
-    // Set up polling for active downloads using a stable reference
-    const interval = setInterval(() => {
-      void refreshStatus()
-    }, 5000) // Poll every 5 seconds (reduced frequency to prevent excessive API calls)
-
-    return () => clearInterval(interval)
-  }, [refreshStatus]) // Only depend on refreshStatus, not on reactive state
-
-  // Computed values
+  // Computed values (calculated before useEffect to avoid dependency issues)
   const isWorkflowReady = workflowStatus?.readyNow || false
   const workflowReadyTime = workflowStatus?.estimatedReadyTime || null
   const activeDownloads = queueStatus?.summary.activeDownloads || workflowStatus?.queueSummary.totalActive || 0
   const queuedDownloads = queueStatus?.summary.queuedDownloads || workflowStatus?.queueSummary.totalQueued || 0
   const overallProgress = queueStatus?.summary.overallProgress || workflowStatus?.queueSummary.totalProgress || 0
+
+  // Auto-refresh status periodically - only when there's active work
+  useEffect(() => {
+    // Initial load
+    void refreshStatus()
+
+    // Only set up polling if there are active downloads or queued downloads
+    const shouldPoll = activeDownloads > 0 || queuedDownloads > 0
+
+    if (!shouldPoll) {
+      return // No polling if no active work
+    }
+
+    // Set up polling for active downloads using a stable reference
+    const interval = setInterval(() => {
+      void refreshStatus()
+    }, 20000) // Poll every 20 seconds as requested
+
+    return () => clearInterval(interval)
+  }, [refreshStatus, activeDownloads, queuedDownloads]) // Poll only when there's active work
 
   return {
     // State

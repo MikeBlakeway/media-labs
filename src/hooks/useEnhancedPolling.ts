@@ -23,14 +23,16 @@ interface UseEnhancedPollingOptions {
   onError?: (error: string) => void
   maxAttempts?: number
   baseInterval?: number
+  isVideoWorkflow?: boolean // New option for video workflows
 }
 
 export function useEnhancedPolling(options: UseEnhancedPollingOptions = {}) {
   const {
     onComplete,
     onError,
-    maxAttempts = 100, // ~3 minutes with backoff
-    baseInterval = 2000 // 2 seconds
+    isVideoWorkflow = false,
+    maxAttempts = isVideoWorkflow ? 200 : 100, // More attempts for video (up to 20+ minutes)
+    baseInterval = 20000 // 20-second polling interval as requested
   } = options
 
   const [state, setState] = useState<PollingState>({
@@ -101,15 +103,8 @@ export function useEnhancedPolling(options: UseEnhancedPollingOptions = {}) {
             setState(prev => ({ ...prev, error: errorMsg }))
             onError?.(errorMsg)
           } else {
-            // Calculate backoff delay (exponential with cap)
-            const backoffDelay = Math.min(
-              baseInterval * Math.pow(1.2, Math.floor(attempt / 10)),
-              10000 // Max 10 seconds
-            )
-
-            pollRef.current = window.setTimeout(() => {
-              void poll(attempt + 1)
-            }, backoffDelay)
+            // Use configured base interval for polling
+            pollRef.current = window.setTimeout(() => poll(attempt + 1), baseInterval)
           }
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Polling failed'

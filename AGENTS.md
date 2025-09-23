@@ -268,6 +268,42 @@ make install-web PKG=package-name
 make install-worker PKG=package-name
 ```
 
+### Creating Test Scripts
+
+When creating temporary test scripts for debugging or development:
+
+1. **Location**: All test scripts must be placed in `scripts/test/`
+2. **Language**: All test scripts must be written in TypeScript (`.ts` extension)
+3. **Naming**: Use descriptive names with `test-` prefix: `test-feature-name.ts`
+4. **Cleanup**: Remove temporary test scripts once they are no longer needed
+5. **Documentation**: Useful ongoing scripts should be documented in `scripts/README.md`
+
+#### Execution Pattern
+
+```bash
+# Execute test scripts from project root
+npx tsx scripts/test/test-example.ts
+```
+
+#### File Organization
+
+```text
+scripts/
+├── README.md           # Script documentation (must be maintained)
+├── test/              # Temporary test scripts directory
+│   ├── test-api.ts    # Example test script
+│   └── test-feature.ts # Another test script
+├── deploy.sh          # Production deployment script
+└── validate-workflows.ts # Production validation script
+```
+
+#### Documentation Requirements
+
+- Always check if `scripts/README.md` exists before creating it
+- Update the README when adding useful scripts for ongoing debugging
+- Document script purpose, usage, and cleanup status
+- Follow established markdown formatting standards
+
 ## Deployment Process
 
 ### Local Development
@@ -412,10 +448,12 @@ This guide should provide AI agents with comprehensive understanding of the Medi
 The Media Labs application now supports workflows that generate video outputs. This enhancement includes the following updates:
 
 - **New Components**:
+
   - `VideoPlayer.tsx`: A robust video player for rendering video outputs.
   - `MediaDisplay.tsx`: A unified component for displaying both images and videos.
 
 - **Updated Hooks**:
+
   - `useWorkflowOutputType`: Determines the output type (image or video) for a given workflow.
 
 - **Workflow Templates**:
@@ -424,11 +462,13 @@ The Media Labs application now supports workflows that generate video outputs. T
 ### Development Workflow
 
 1. **Adding Video Workflows**:
+
    - Create a new JSON file in `data/workflows/`.
    - Ensure the `outputType` field is set to `video`.
    - Validate the workflow using the preflight endpoint.
 
 2. **Testing Video Components**:
+
    - Unit tests for `VideoPlayer.tsx` are located in `src/components/__tests__/`.
    - Integration tests ensure proper rendering of video workflows.
 
@@ -452,16 +492,19 @@ make validate-workflows
 To ensure all changes and tasks align with project standards and requirements, AI assistants must adhere to the following:
 
 1. **Documentation Review**:
+
    - Before interacting with the codebase, AI assistants must read and understand the application documentation, including:
      - `AGENTS.md`
      - `.github/copilot-instructions.md`
      - Any other relevant project-specific documentation.
 
 2. **Compliance Verification**:
+
    - All generated code, edits, and tasks must strictly follow the standards outlined in the documentation.
    - This includes adhering to architectural principles, coding conventions, and testing requirements.
 
 3. **Session Enforcement**:
+
    - This review process is mandatory for every chat session.
    - AI assistants must confirm compliance with the documentation before proceeding with any tasks.
 

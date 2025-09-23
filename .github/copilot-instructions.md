@@ -15,11 +15,13 @@ When generating code for this repository:
 Before generating code, scan the codebase to identify:
 
 1. **Language Versions**:
+
    - TypeScript 5.x with strict mode enabled (see tsconfig.json)
    - ES2017 target with modern ESNext modules
    - Node.js 18+ (20+ recommended per README.md)
 
 2. **Framework Versions**:
+
    - Next.js 15.5.2 with App Router architecture
    - React 19.1.0 with React DOM 19.1.0
    - TailwindCSS 4.x with PostCSS-only configuration
@@ -436,6 +438,48 @@ expect(body).toMatchObject({ expected: 'response' })
 - Match logging patterns from existing code
 - Use the same approach to configuration as seen in the codebase
 
+## Test Script Conventions
+
+When creating temporary test scripts for debugging or development:
+
+### Location and Structure
+
+- **Directory**: All test scripts must be placed in `scripts/test/`
+- **Language**: All test scripts must be written in TypeScript (`.ts` extension)
+- **Naming**: Use descriptive names with `test-` prefix: `test-feature-name.ts`
+
+### Lifecycle Management
+
+- **Cleanup**: Remove temporary test scripts once they are no longer needed
+- **Documentation**: Useful ongoing scripts should be documented in `scripts/README.md`
+- **Maintenance**: Update `scripts/README.md` when adding, removing, or modifying scripts
+
+### Execution Pattern
+
+```bash
+# Execute test scripts from project root
+npx tsx scripts/test/test-example.ts
+```
+
+### File Organization
+
+```text
+scripts/
+├── README.md           # Script documentation (must be maintained)
+├── test/              # Temporary test scripts directory
+│   ├── test-api.ts    # Example test script
+│   └── test-feature.ts # Another test script
+├── deploy.sh          # Production deployment script
+└── validate-workflows.ts # Production validation script
+```
+
+### Documentation Requirements
+
+- Always check if `scripts/README.md` exists before creating it
+- Update the README when adding useful scripts for ongoing debugging
+- Document script purpose, usage, and cleanup status
+- Follow established markdown formatting standards
+
 ## Migration Note
 
 **As of September 2025, all model files must be stored under `models/<type>/...` at the root of your S3 bucket.**
@@ -448,10 +492,12 @@ If you previously used `ComfyUI/models/`, move your files to `models/` and updat
 The Media Labs application now supports workflows that generate video outputs. This enhancement includes the following updates:
 
 - **New Components**:
+
   - `VideoPlayer.tsx`: A robust video player for rendering video outputs.
   - `MediaDisplay.tsx`: A unified component for displaying both images and videos.
 
 - **Updated Hooks**:
+
   - `useWorkflowOutputType`: Determines the output type (image or video) for a given workflow.
 
 - **Workflow Templates**:
@@ -460,11 +506,13 @@ The Media Labs application now supports workflows that generate video outputs. T
 ### Development Workflow
 
 1. **Adding Video Workflows**:
+
    - Create a new JSON file in `data/workflows/`.
    - Ensure the `outputType` field is set to `video`.
    - Validate the workflow using the preflight endpoint.
 
 2. **Testing Video Components**:
+
    - Unit tests for `VideoPlayer.tsx` are located in `src/components/__tests__/`.
    - Integration tests ensure proper rendering of video workflows.
 
@@ -488,16 +536,19 @@ make validate-workflows
 To ensure all changes and tasks align with project standards and requirements, AI assistants must adhere to the following:
 
 1. **Documentation Review**:
+
    - Before interacting with the codebase, AI assistants must read and understand the application documentation, including:
      - `AGENTS.md`
      - `.github/copilot-instructions.md`
      - Any other relevant project-specific documentation.
 
 2. **Compliance Verification**:
+
    - All generated code, edits, and tasks must strictly follow the standards outlined in the documentation.
    - This includes adhering to architectural principles, coding conventions, and testing requirements.
 
 3. **Session Enforcement**:
+
    - This review process is mandatory for every chat session.
    - AI assistants must confirm compliance with the documentation before proceeding with any tasks.
 

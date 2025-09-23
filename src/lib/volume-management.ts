@@ -99,7 +99,8 @@ export class VolumeManagementService {
 
     try {
       // Call volume worker to get disk usage stats
-      const response = await fetch('/api/volume', {
+      const baseUrl = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'
+      const response = await fetch(`${baseUrl}/api/volume`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

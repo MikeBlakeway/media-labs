@@ -3,6 +3,7 @@
  *
  * Unified media display component that automatically selects between
  * image and video display based on workflow output type.
+ * Handles both public URLs and private S3 URLs with signed URL generation.
  */
 
 'use client'
@@ -10,6 +11,7 @@
 import Image from 'next/image'
 import { VideoPlayer } from './VideoPlayer'
 import { useWorkflowOutputTypeSimple } from '@/hooks/useWorkflowOutputType'
+import { useSignedUrl } from '@/hooks/useSignedUrl'
 import type { TemplateMeta } from '@/lib/templates.schema'
 import type { WorkflowTemplate } from '@/lib/templates.types'
 
@@ -23,6 +25,19 @@ interface MediaDisplayProps {
   priority?: boolean
 }
 
+/**
+ * Check if a URL is a private S3 URL that needs signed URL generation
+ */
+function isPrivateS3Url(url: string): boolean {
+  try {
+    const urlObj = new URL(url)
+    // Check if it's a Backblaze B2 S3 endpoint
+    return urlObj.hostname.includes('backblazeb2.com') && urlObj.pathname.includes('/media-labs/')
+  } catch {
+    return false
+  }
+}
+
 export function MediaDisplay({
   src,
   workflowMeta,
@@ -34,13 +49,52 @@ export function MediaDisplay({
 }: MediaDisplayProps) {
   const outputType = useWorkflowOutputTypeSimple(workflowMeta)
 
+  // Use signed URL for private S3 files
+  const needsSignedUrl = isPrivateS3Url(src)
+  const { signedUrl, loading, error } = useSignedUrl(needsSignedUrl ? src : null)
+
+  // Use signed URL if available, otherwise use original src
+  const displaySrc = needsSignedUrl ? signedUrl : src
+
+  // Show loading state for signed URL generation
+  if (needsSignedUrl && loading) {
+    return (
+      <div className={`flex items-center justify-center rounded-lg bg-gray-100 ${className}`} style={{ width, height }}>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600 mx-auto'></div>
+          <p className='text-sm text-gray-600 mt-2'>Loading secure {outputType}...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state for signed URL generation
+  if (needsSignedUrl && error) {
+    return (
+      <div
+        className={`flex items-center justify-center rounded-lg bg-red-50 border border-red-200 ${className}`}
+        style={{ width, height }}
+      >
+        <div className='text-center p-4'>
+          <p className='text-red-600 text-sm'>Failed to load secure {outputType}</p>
+          <p className='text-red-500 text-xs mt-1'>{error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if we need a signed URL but don't have one yet
+  if (needsSignedUrl && !displaySrc) {
+    return null
+  }
+
   if (outputType === 'video') {
-    return <VideoPlayer src={src} className={className} controls={true} muted={true} loop={false} alt={alt} />
+    return <VideoPlayer src={displaySrc!} className={className} controls={true} muted={true} loop={false} alt={alt} />
   }
 
   return (
     <Image
-      src={src}
+      src={displaySrc!}
       alt={alt}
       width={width}
       height={height}
@@ -79,8 +133,8 @@ export function MediaGallery({ items, workflowMeta, className = '', gridCols = 2
     gridCols === 1
       ? 'grid-cols-1'
       : gridCols === 3
-        ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-        : 'grid-cols-1 md:grid-cols-2'
+      ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+      : 'grid-cols-1 md:grid-cols-2'
 
   return (
     <div className={`space-y-4 ${className}`}>

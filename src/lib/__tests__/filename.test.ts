@@ -1,4 +1,4 @@
-import { sanitizeFilename, isAllowedMime } from './filename'
+import { sanitizeFilename, isAllowedMime } from '../filename'
 
 describe('sanitizeFilename', () => {
   it('removes path traversal', () => {
