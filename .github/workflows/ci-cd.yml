@@ -52,6 +52,12 @@ jobs:
           RUNPOD_S3_SECRET_ACCESS_KEY: ${{ secrets.RUNPOD_S3_SECRET_ACCESS_KEY }}
           RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
           RUNPOD_ENDPOINT_ID: ${{ secrets.RUNPOD_ENDPOINT_ID }}
+          # Backblaze B2 Configuration (required for signed URL tests)
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          BUCKET_ENDPOINT_URL: ${{ secrets.BUCKET_ENDPOINT_URL }}
+          BUCKET_REGION: ${{ secrets.BUCKET_REGION }}
+          BUCKET_ACCESS_KEY_ID: ${{ secrets.BUCKET_ACCESS_KEY_ID }}
+          BUCKET_SECRET_ACCESS_KEY: ${{ secrets.BUCKET_SECRET_ACCESS_KEY }}
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
@@ -100,6 +106,12 @@ jobs:
           RUNPOD_MODEL_DIR_VAE: ${{ secrets.RUNPOD_MODEL_DIR_VAE }}
           RUNPOD_MODEL_DIR_LORA: ${{ secrets.RUNPOD_MODEL_DIR_LORA }}
           RUNPOD_MODEL_DIR_CHECKPOINTS: ${{ secrets.RUNPOD_MODEL_DIR_CHECKPOINTS }}
+          # Backblaze B2 Configuration (required for signed URL generation)
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
+          BUCKET_ENDPOINT_URL: ${{ secrets.BUCKET_ENDPOINT_URL }}
+          BUCKET_REGION: ${{ secrets.BUCKET_REGION }}
+          BUCKET_ACCESS_KEY_ID: ${{ secrets.BUCKET_ACCESS_KEY_ID }}
+          BUCKET_SECRET_ACCESS_KEY: ${{ secrets.BUCKET_SECRET_ACCESS_KEY }}
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
