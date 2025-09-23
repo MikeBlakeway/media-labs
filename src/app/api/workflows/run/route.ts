@@ -72,8 +72,7 @@ export async function POST(req: NextRequest) {
       mode = body.mode
     } else {
       // For video workflows, ALWAYS use async to avoid worker-comfyui websocket timeouts
-      const isVideoWorkflow =
-        body.slug?.includes('video') || body.slug?.includes('flf2v') || body.slug?.includes('wan2')
+      const isVideoWorkflow = tpl.outputType === 'video'
 
       if (isVideoWorkflow) {
         // Force async for video workflows due to worker-comfyui websocket timeout limitations

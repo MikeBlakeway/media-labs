@@ -32,7 +32,7 @@ export function useEnhancedPolling(options: UseEnhancedPollingOptions = {}) {
     onError,
     isVideoWorkflow = false,
     maxAttempts = isVideoWorkflow ? 200 : 100, // More attempts for video (up to 20+ minutes)
-    baseInterval = isVideoWorkflow ? 5000 : 2000 // Longer intervals for video (5s vs 2s)
+    baseInterval = 20000 // 20-second polling interval as requested
   } = options
 
   const [state, setState] = useState<PollingState>({
@@ -103,10 +103,8 @@ export function useEnhancedPolling(options: UseEnhancedPollingOptions = {}) {
             setState(prev => ({ ...prev, error: errorMsg }))
             onError?.(errorMsg)
           } else {
-            // 20-second polling interval as requested
-            const nextInterval = 20000 // 20 seconds
-
-            pollRef.current = window.setTimeout(() => poll(attempt + 1), nextInterval)
+            // Use configured base interval for polling
+            pollRef.current = window.setTimeout(() => poll(attempt + 1), baseInterval)
           }
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : 'Polling failed'

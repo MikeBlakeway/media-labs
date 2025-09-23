@@ -49,15 +49,12 @@ async function isModelAvailableOnVolume(modelName: string, modelType: string): P
         }
       }
 
-      // Check for specific date parsing errors that indicate success
-      if (err instanceof Error && err.message.includes('Invalid RFC-7231 date-time value')) {
-        // This is likely a date parsing issue with a successful response
-        // Check if we have successful metadata
-        if (meta && typeof meta === 'object') {
-          const httpStatusCode = (meta as Record<string, unknown>)['httpStatusCode']
-          if (typeof httpStatusCode === 'number' && httpStatusCode === 200) {
-            return true
-          }
+      // For any other structured error with a 200 status, assume the object exists
+      // This handles various SDK deserialization issues without relying on specific error messages
+      if (meta && typeof meta === 'object') {
+        const httpStatusCode = (meta as Record<string, unknown>)['httpStatusCode']
+        if (typeof httpStatusCode === 'number' && httpStatusCode === 200) {
+          return true
         }
       }
     }

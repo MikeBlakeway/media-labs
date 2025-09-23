@@ -112,15 +112,6 @@ export function useSignedUrl(
     }
   }, [generateSignedUrl, refreshTimer])
 
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (refreshTimer) {
-        clearTimeout(refreshTimer)
-      }
-    }
-  }, [refreshTimer])
-
   const refresh = useCallback(() => {
     if (refreshTimer) {
       clearTimeout(refreshTimer)
