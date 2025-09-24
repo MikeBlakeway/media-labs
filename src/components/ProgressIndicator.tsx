@@ -33,7 +33,7 @@ export function ProgressIndicator({ status, jobId, startTime, attempts = 0 }: Pr
   }
 
   return (
-    <div className='mt-6 p-4 bg-gray-50 rounded-xl border'>
+    <div className='mt-6 p-4 bg-panel rounded-xl border border-border'>
       {/* Header with timing and job info */}
       <ProgressHeader
         isTerminalState={calculation.isTerminalState}

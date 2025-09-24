@@ -89,7 +89,17 @@ export function MediaDisplay({
   }
 
   if (outputType === 'video') {
-    return <VideoPlayer src={displaySrc!} className={className} controls={true} muted={true} loop={false} alt={alt} />
+    return (
+      <VideoPlayer
+        src={displaySrc!}
+        className={className}
+        muted={true}
+        loop={false}
+        alt={alt}
+        enableSignedUrlRefresh={needsSignedUrl}
+        onError={error => console.error('Video playback error:', error)}
+      />
+    )
   }
 
   return (
