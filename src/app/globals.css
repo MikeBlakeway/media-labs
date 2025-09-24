@@ -1,21 +1,153 @@
 @import 'tailwindcss';
 
 :root {
+  /* Base colors */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Semantic colors for components */
+  --panel: #f8fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --input: #ffffff;
+  --input-border: #d1d5db;
+
+  /* Text colors */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-placeholder: #9ca3af;
+
+  /* Interactive colors */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-foreground: #ffffff;
+
+  /* Status colors */
+  --success: #10b981;
+  --success-bg: #d1fae5;
+  --success-border: #a7f3d0;
+  --error: #ef4444;
+  --error-bg: #fee2e2;
+  --error-border: #fecaca;
+  --warning: #f59e0b;
+  --warning-bg: #fef3c7;
+  --warning-border: #fed7aa;
+
+  /* File upload specific */
+  --file-bg: #eff6ff;
+  --file-text: #1d4ed8;
+  --file-hover: #dbeafe;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Utility classes for using CSS variables with Tailwind */
+.bg-card {
+  background-color: var(--card);
+}
+.bg-panel {
+  background-color: var(--panel);
+}
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-muted {
+  color: var(--text-muted);
+}
+.border-default {
+  border-color: var(--border);
+}
+.bg-input {
+  background-color: var(--input);
+}
+.border-input {
+  border-color: var(--input-border);
 }
 
+/* Dark mode colors - class-based for manual toggle support */
+:root.dark,
+.dark {
+  /* Base colors */
+  --background: #0b0f1a;
+  --foreground: #e6eef8;
+
+  /* Semantic colors for components */
+  --panel: #1e293b;
+  --card: #0f172a;
+  --border: #334155;
+  --input: #1e293b;
+  --input-border: #475569;
+
+  /* Text colors */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-placeholder: #64748b;
+
+  /* Interactive colors */
+  --primary: #60a5fa;
+  --primary-hover: #3b82f6;
+  --primary-foreground: #0f172a;
+
+  /* Status colors */
+  --success: #22c55e;
+  --success-bg: #14532d;
+  --success-border: #166534;
+  --error: #f87171;
+  --error-bg: #7f1d1d;
+  --error-border: #991b1b;
+  --warning: #fbbf24;
+  --warning-bg: #78350f;
+  --warning-border: #92400e;
+
+  /* File upload specific */
+  --file-bg: #1e40af;
+  --file-text: #dbeafe;
+  --file-hover: #1e3a8a;
+}
+
+/* Auto dark mode fallback - apply dark mode based on system preference */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not(.light) {
+    /* Base colors */
+    --background: #0b0f1a;
+    --foreground: #e6eef8;
+
+    /* Semantic colors for components */
+    --panel: #1e293b;
+    --card: #0f172a;
+    --border: #334155;
+    --input: #1e293b;
+    --input-border: #475569;
+
+    /* Text colors */
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-placeholder: #64748b;
+
+    /* Interactive colors */
+    --primary: #60a5fa;
+    --primary-hover: #3b82f6;
+    --primary-foreground: #0f172a;
+
+    /* Status colors */
+    --success: #22c55e;
+    --success-bg: #14532d;
+    --success-border: #166534;
+    --error: #f87171;
+    --error-bg: #7f1d1d;
+    --error-border: #991b1b;
+    --warning: #fbbf24;
+    --warning-bg: #78350f;
+    --warning-border: #92400e;
+
+    /* File upload specific */
+    --file-bg: #1e40af;
+    --file-text: #dbeafe;
+    --file-hover: #1e3a8a;
   }
 }
 
@@ -23,4 +155,5 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

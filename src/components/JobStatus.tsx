@@ -22,17 +22,17 @@ export function JobStatusDisplay({ job }: JobStatusDisplayProps) {
 
   return (
     <div className='self-center'>
-      <div className='bg-gray-50 rounded-lg p-4'>
-        <h3 className='font-medium text-gray-800 mb-2'>Job Status</h3>
+      <div className='bg-panel rounded-lg border border-default p-4'>
+        <h3 className='font-medium text-primary mb-2'>Job Status</h3>
 
-        <div className='text-sm space-y-1'>
+        <div className='text-sm text-secondary space-y-1'>
           <div>
-            Status: <span className='font-mono'>{job.status}</span>
+            Status: <span className='font-mono text-primary'>{job.status}</span>
           </div>
 
           {job.jobId && (
             <div>
-              Job ID: <span className='font-mono'>{job.jobId}</span>
+              Job ID: <span className='font-mono text-muted'>{job.jobId}</span>
             </div>
           )}
 
@@ -42,12 +42,12 @@ export function JobStatusDisplay({ job }: JobStatusDisplayProps) {
         </div>
 
         {/* Error Display */}
-        {errorText && <div className='mt-2 text-red-600 text-sm'>{errorText}</div>}
+        {errorText && <div className='mt-2 text-red-600 dark:text-red-400 text-sm'>{errorText}</div>}
 
         {/* Results Display */}
         {hasResults && (
           <div className='mt-2'>
-            <div className='text-green-600 text-sm'>✅ Job completed successfully!</div>
+            <div className='text-green-600 dark:text-green-400 text-sm'>✅ Job completed successfully!</div>
             <details className='mt-2'>
               <summary className='text-xs text-gray-600 cursor-pointer'>View raw results</summary>
               <pre className='mt-1 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40'>{resultsText}</pre>

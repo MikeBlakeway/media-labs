@@ -76,6 +76,7 @@ export interface UseModelPreloadingResult {
   preloadModels: (models: Array<{ modelName: string; modelType: string; priority?: number }>) => Promise<void>
   cancelPreload: (modelNames?: string[]) => Promise<void>
   refreshStatus: () => Promise<void>
+  syncWithPreflight: () => Promise<void>
 
   // Computed values
   isWorkflowReady: boolean
@@ -94,6 +95,9 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
   // Use ref to track workflowSlug without causing refreshStatus to be recreated
   const workflowSlugRef = useRef(workflowSlug)
   workflowSlugRef.current = workflowSlug
+
+  // Add a ref to track whether we should sync with preflight results
+  const lastPreflightSyncRef = useRef(0)
 
   // Refresh status from API
   const refreshStatus = useCallback(async () => {
@@ -137,6 +141,19 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
       setError(message)
     }
   }, []) // Remove workflowSlug dependency to prevent refreshStatus from being recreated
+
+  // Sync with preflight results - useful when preflight completes and we want to refresh model status
+  const syncWithPreflight = useCallback(async () => {
+    const currentTime = Date.now()
+
+    // Prevent rapid successive syncs (debounce)
+    if (currentTime - lastPreflightSyncRef.current < 1000) {
+      return
+    }
+
+    lastPreflightSyncRef.current = currentTime
+    await refreshStatus()
+  }, [refreshStatus])
 
   // Preload models for a specific workflow
   const preloadWorkflow = useCallback(
@@ -294,6 +311,7 @@ export function useModelPreloading(workflowSlug?: string): UseModelPreloadingRes
     preloadModels,
     cancelPreload,
     refreshStatus,
+    syncWithPreflight,
 
     // Computed values
     isWorkflowReady,

@@ -41,13 +41,13 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'COMPLETED':
-        return 'text-green-600 bg-green-100'
+        return 'text-green-600 bg-green-100 dark:text-green-300 dark:bg-green-900/30'
       case 'FAILED':
-        return 'text-red-600 bg-red-100'
+        return 'text-red-600 bg-red-100 dark:text-red-300 dark:bg-red-900/30'
       case 'CANCELLED':
-        return 'text-orange-600 bg-orange-100'
+        return 'text-orange-600 bg-orange-100 dark:text-orange-300 dark:bg-orange-900/30'
       case 'TIMED_OUT':
-        return 'text-red-600 bg-red-100'
+        return 'text-red-600 bg-red-100 dark:text-red-300 dark:bg-red-900/30'
       default:
         return 'text-gray-600 bg-gray-100'
     }
@@ -65,27 +65,31 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
   return (
     <div className='mt-6'>
       <div className='flex items-center justify-between mb-4'>
-        <h3 className='font-medium text-gray-800'>Result History</h3>
+        <h3 className='font-medium text-primary'>Result History</h3>
         <div className='flex gap-2'>
           <button
             onClick={() => history.setFilter('current')}
-            className={`px-3 py-1 text-sm rounded ${
-              history.filter === 'current' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            className={`px-3 py-1 text-sm rounded transition-colors ${
+              history.filter === 'current'
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                : 'bg-panel text-secondary hover:bg-input'
             }`}
           >
             Current
           </button>
           <button
             onClick={() => history.setFilter('all')}
-            className={`px-3 py-1 text-sm rounded ${
-              history.filter === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            className={`px-3 py-1 text-sm rounded transition-colors ${
+              history.filter === 'all'
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                : 'bg-panel text-secondary hover:bg-input'
             }`}
           >
             All
           </button>
           <button
             onClick={history.loadHistory}
-            className='px-3 py-1 text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 rounded'
+            className='px-3 py-1 text-sm bg-panel text-secondary hover:bg-input rounded transition-colors'
             disabled={history.loading}
           >
             🔄 Refresh
@@ -96,21 +100,24 @@ export function ResultHistory({ currentSlug, onSelectResult }: ResultHistoryProp
       {history.loading && (
         <div className='flex items-center justify-center py-8'>
           <div className='w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin' />
-          <span className='ml-2 text-gray-600'>Loading history...</span>
+          <span className='ml-2 text-secondary'>Loading history...</span>
         </div>
       )}
 
       {history.error && (
-        <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-4'>
-          <p className='text-red-700 text-sm'>{history.error}</p>
-          <button onClick={history.loadHistory} className='mt-2 text-red-600 hover:text-red-800 text-sm underline'>
+        <div className='bg-red-50 border border-red-200 rounded-lg p-4 mb-4 dark:bg-red-900/20 dark:border-red-800'>
+          <p className='text-red-700 dark:text-red-300 text-sm'>{history.error}</p>
+          <button
+            onClick={history.loadHistory}
+            className='mt-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm underline'
+          >
             Try again
           </button>
         </div>
       )}
 
       {!history.loading && !history.error && history.history.length === 0 && (
-        <div className='text-center py-8 text-gray-500'>
+        <div className='text-center py-8 text-muted'>
           <p>No workflow results yet.</p>
           <p className='text-sm mt-1'>Results will appear here after running workflows.</p>
         </div>

@@ -5,14 +5,14 @@ import { getTemplate } from '@/lib/templates.fs'
 import { inferModelRequirements, modelPaths } from '@/lib/workflow.preflight'
 import { ExportApiWorkflowSchema } from '@/lib/workflow.infer'
 import { runpodS3, RUNPOD_BUCKET } from '@/lib/runpodVolume'
-import { HeadObjectCommand } from '@aws-sdk/client-s3'
+import { checkS3ObjectExists } from '@/lib/s3.utils'
 
 export const runtime = 'nodejs'
 
 const MODELS_PREFIX = process.env.RUNPOD_MODELS_PREFIX || 'models'
 
 /**
- * Check if a model exists on the RunPod volume
+ * Check if a model exists on the RunPod volume using unified S3 checking logic
  */
 async function isModelAvailableOnVolume(modelName: string, modelType: string): Promise<boolean> {
   try {
@@ -23,43 +23,21 @@ async function isModelAvailableOnVolume(modelName: string, modelType: string): P
       type: modelType as 'unet' | 'clip' | 'clip_vision' | 'vae' | 'lora' | 'checkpoints'
     }
     const { s3Key } = modelPaths(MODELS_PREFIX, requirement)
-    await runpodS3.send(new HeadObjectCommand({ Bucket: RUNPOD_BUCKET, Key: s3Key }))
-    return true
+
+    const checkStartTime = Date.now()
+    const result = await checkS3ObjectExists(runpodS3, RUNPOD_BUCKET, s3Key, `status-${modelName}`)
+    const checkDuration = Date.now() - checkStartTime
+
+    console.log(`[MODEL_STATUS] Model check for ${modelName}:`, {
+      modelType,
+      s3Key,
+      exists: result.exists,
+      duration: `${checkDuration}ms`,
+      error: result.error || 'none'
+    })
+
+    return result.exists
   } catch (err: unknown) {
-    if (err && typeof err === 'object') {
-      const obj = err as Record<string, unknown>
-
-      // Check metadata first - if we have a 200 status, the object exists despite deserialization errors
-      const meta = obj['$metadata']
-      if (meta && typeof meta === 'object') {
-        const httpStatusCode = (meta as Record<string, unknown>)['httpStatusCode']
-        if (typeof httpStatusCode === 'number') {
-          if (httpStatusCode === 200) return true // Object exists, ignore deserialization errors
-          if (httpStatusCode === 404) return false
-        }
-      }
-
-      // Check for 404 in response
-      const rawResp = obj['$response']
-      if (rawResp && typeof rawResp === 'object') {
-        const statusVal = (rawResp as Record<string, unknown>)['statusCode']
-        if (typeof statusVal === 'number') {
-          if (statusVal === 200) return true // Object exists
-          if (statusVal === 404) return false
-        }
-      }
-
-      // For any other structured error with a 200 status, assume the object exists
-      // This handles various SDK deserialization issues without relying on specific error messages
-      if (meta && typeof meta === 'object') {
-        const httpStatusCode = (meta as Record<string, unknown>)['httpStatusCode']
-        if (typeof httpStatusCode === 'number' && httpStatusCode === 200) {
-          return true
-        }
-      }
-    }
-
-    // On other errors, assume not available
     console.warn('Error checking model availability:', { modelName, modelType, error: err })
     return false
   }

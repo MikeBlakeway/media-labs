@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { runpodS3, RUNPOD_BUCKET } from '@/lib/runpodVolume'
 import { b2 } from '@/lib/b2'
-import { isB2Configured } from '@/lib/s3.utils'
+import { isB2Configured, checkS3ObjectExists } from '@/lib/s3.utils'
 import { HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getTemplate } from '@/lib/templates.fs'
 import { ExportApiWorkflowSchema, type ExportApiWorkflow } from '@/lib/workflow.infer'
@@ -93,10 +93,25 @@ async function checkModelPresence(
     return { present: true }
   }
 
-  // Check if it exists in the S3 volume
-  const presentOnVolume = await objectExists(bucket, s3Key)
-  if (presentOnVolume) {
+  // Check if it exists in the S3 volume using unified checking function
+  const checkStartTime = Date.now()
+  const volumeCheck = await checkS3ObjectExists(runpodS3, bucket, s3Key, `preflight-${modelName}`)
+  const checkDuration = Date.now() - checkStartTime
+
+  console.log(`[PREFLIGHT] Model check for ${modelName}:`, {
+    s3Key,
+    exists: volumeCheck.exists,
+    duration: `${checkDuration}ms`,
+    error: volumeCheck.error || 'none'
+  })
+
+  if (volumeCheck.exists) {
     return { present: true }
+  }
+
+  // Log any errors from the volume check for debugging
+  if (volumeCheck.error) {
+    console.warn(`Volume check failed for ${modelName}:`, volumeCheck.error)
   }
 
   // If not on volume, check B2 cold storage
@@ -112,59 +127,6 @@ async function checkModelPresence(
 
   // Model not found anywhere
   return { present: false }
-}
-
-async function objectExists(bucket: string, key: string): Promise<boolean> {
-  try {
-    // Prefer HEAD to check object existence — faster and more reliable across S3-compatible APIs
-    await runpodS3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }))
-    return true
-  } catch (err: unknown) {
-    // Inspect known AWS SDK shapes without unsafe casting.
-    if (err && typeof err === 'object') {
-      const obj = err as Record<string, unknown>
-
-      // 1) Some SDK errors expose a raw $response with statusCode even when parsing fails
-      const rawResp = obj['$response']
-      if (rawResp && typeof rawResp === 'object') {
-        const statusVal =
-          (rawResp as Record<string, unknown>)['statusCode'] ?? (rawResp as Record<string, unknown>)['status']
-        if (typeof statusVal === 'number') {
-          const status = statusVal
-          if (status === 404) return false
-          if (status >= 200 && status < 300) return true
-          // For other non-2xx, log and treat as not present (conservative)
-          console.error('HEAD failed', { bucket, key, status, note: 'raw $response present' })
-          return false
-        }
-      }
-
-      // 2) Fallback: check $metadata.httpStatusCode
-      const meta = obj['$metadata']
-      if (meta && typeof meta === 'object') {
-        const httpStatusCode =
-          (meta as Record<string, unknown>)['httpStatusCode'] ?? (meta as Record<string, unknown>)['statusCode']
-        if (typeof httpStatusCode === 'number') {
-          const httpStatus = httpStatusCode
-          if (httpStatus === 404) return false
-          if (httpStatus >= 200 && httpStatus < 300) return true
-          console.error('HEAD failed', { bucket, key, status: httpStatus, note: '$metadata.httpStatusCode' })
-          return false
-        }
-      }
-
-      // 3) Check common provider error codes/names
-      const nameVal = obj['name'] ?? obj['Code'] ?? obj['code']
-      if (typeof nameVal === 'string') {
-        if (nameVal === 'NotFound' || nameVal === 'NoSuchKey' || nameVal === 'NotFoundException') return false
-      }
-    }
-
-    // If we couldn't classify the error, log the message and return false conservatively.
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('HEAD failed', { bucket, key, msg })
-    return false
-  }
 }
 
 export async function POST(req: NextRequest) {
@@ -234,6 +196,16 @@ export async function POST(req: NextRequest) {
         })
       )
     }
+
+    // Log the final preflight results for debugging
+    const summary = {
+      total: presences.length,
+      present: presences.filter(p => p.present).length,
+      missing: presences.filter(p => !p.present).length,
+      models: presences.map(p => ({ name: p.name, present: p.present }))
+    }
+
+    console.log(`[PREFLIGHT] Final results for workflow:`, summary)
 
     return NextResponse.json({ ok: true, results: presences }, { status: 200 })
   } catch (err) {
