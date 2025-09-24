@@ -22,18 +22,18 @@ interface FormFieldProps {
  */
 export function FormField({ field, value, onChange, enhancedLabel }: FormFieldProps) {
   const baseInputClasses =
-    'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500'
+    'block w-full px-3 py-2 bg-input border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-primary dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100'
 
   return (
     <div key={field.id}>
-      <label className='block text-sm font-medium text-gray-700 mb-1'>
+      <label className='block text-sm font-medium text-secondary mb-1'>
         {enhancedLabel}
-        {field.required && <span className='text-red-500 ml-1'>*</span>}
+        {field.required && <span className='text-red-500 dark:text-red-400 ml-1'>*</span>}
       </label>
 
       {renderFieldInput()}
 
-      {field.help && <p className='mt-1 text-xs text-gray-500'>{field.help}</p>}
+      {field.help && <p className='mt-1 text-xs text-muted'>{field.help}</p>}
     </div>
   )
 
@@ -47,7 +47,7 @@ export function FormField({ field, value, onChange, enhancedLabel }: FormFieldPr
               const file = e.target.files?.[0] || null
               onChange(file)
             }}
-            className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+            className='block w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:text-slate-400 dark:file:bg-blue-900 dark:file:text-blue-300 dark:hover:file:bg-blue-800'
           />
         )
 
@@ -68,7 +68,7 @@ export function FormField({ field, value, onChange, enhancedLabel }: FormFieldPr
             type='checkbox'
             checked={Boolean(value)}
             onChange={e => onChange(e.target.checked)}
-            className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
+            className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-input rounded dark:border-slate-600 dark:bg-slate-800'
           />
         )
 
@@ -125,12 +125,12 @@ export function FormFieldsSection({
   getEnhancedLabel
 }: FormFieldsSectionProps) {
   return (
-    <div className='bg-white rounded-lg border p-4'>
-      <h3 className='font-medium text-gray-800 mb-4'>Workflow Parameters</h3>
+    <div className='bg-card rounded-lg border border-default p-4'>
+      <h3 className='font-medium text-primary mb-4'>Workflow Parameters</h3>
 
       {errors.length > 0 && (
-        <div className='mb-4 bg-red-50 border border-red-200 rounded p-3'>
-          <div className='text-red-800 text-sm'>
+        <div className='mb-4 bg-red-50 border border-red-200 rounded p-3 dark:bg-red-900/20 dark:border-red-800'>
+          <div className='text-red-800 text-sm dark:text-red-300'>
             {errors.map((error, i) => (
               <div key={i}>{error}</div>
             ))}

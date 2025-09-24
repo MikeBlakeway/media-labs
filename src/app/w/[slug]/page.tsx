@@ -175,7 +175,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
       {/* Dynamic Form Fields */}
       <div className='mt-6 space-y-4'>
         {meta.fields.map(field => (
-          <div key={field.id} className='rounded-xl border p-3'>
+          <div key={field.id} className='rounded-xl border border-default bg-card p-3'>
             <FormField
               field={field}
               value={formData[field.id] ?? ''}
@@ -191,7 +191,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
         <button
           onClick={handleSubmit}
           disabled={!isValid || submitting || status === 'queued' || status === 'running'}
-          className='rounded-xl bg-black px-4 py-2 text-white disabled:opacity-50'
+          className='rounded-xl bg-black dark:bg-blue-600 px-4 py-2 text-white hover:bg-gray-800 dark:hover:bg-blue-700 disabled:opacity-50 transition-colors'
           title={allPresent ? 'Run workflow' : 'Models may be missing - check status above'}
         >
           {submitting ? 'Submitting...' : allPresent ? 'Run' : canStartPreloading ? 'Preload & Run' : 'Run'}
@@ -200,7 +200,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
         {canCancelJob && (
           <button
             onClick={cancelJob}
-            className='rounded-xl bg-red-600 px-4 py-2 text-white hover:bg-red-700'
+            className='rounded-xl bg-red-600 dark:bg-red-500 px-4 py-2 text-white hover:bg-red-700 dark:hover:bg-red-600 transition-colors'
             title='Cancel running job'
           >
             Cancel
@@ -210,7 +210,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
         {jobId && (
           <button
             onClick={forceCheckStatus}
-            className='rounded-xl bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'
+            className='rounded-xl bg-blue-600 dark:bg-blue-500 px-4 py-2 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors'
             title='Force check job status'
           >
             🔍 Check Status

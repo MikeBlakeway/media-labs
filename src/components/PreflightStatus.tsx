@@ -18,15 +18,15 @@ export function PreflightStatus({ preflight }: PreflightStatusProps) {
   const allModelsPresent = preflight.missing.length === 0
 
   return (
-    <div className='rounded-xl border bg-white p-4 shadow-sm'>
+    <div className='rounded-xl border border-default bg-card p-4 shadow-sm'>
       <div className='flex items-center justify-between mb-3'>
-        <h3 className='font-medium text-gray-900'>Model Requirements</h3>
+        <h3 className='font-medium text-primary'>Model Requirements</h3>
         <div className='flex items-center gap-2'>
           {/* Refresh button for cache busting */}
           <button
             onClick={() => preflight.runPreflight(true)}
             disabled={preflight.preflightBusy}
-            className='px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors disabled:opacity-50'
+            className='px-2 py-1 text-xs bg-panel hover:bg-input text-secondary rounded transition-colors disabled:opacity-50 dark:hover:bg-slate-700'
             title='Force refresh (clears cache)'
           >
             🔄
@@ -35,7 +35,9 @@ export function PreflightStatus({ preflight }: PreflightStatusProps) {
           {!preflight.preflightBusy && !preflight.preflightErr && totalCount > 0 && (
             <div
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                allModelsPresent ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                allModelsPresent
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                  : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
               }`}
             >
               {allModelsPresent ? (
@@ -56,24 +58,28 @@ export function PreflightStatus({ preflight }: PreflightStatusProps) {
 
       {preflight.preflightBusy ? (
         <div className='flex items-center gap-3 py-2'>
-          <div className='w-5 h-5 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin' />
-          <span className='text-sm text-gray-700'>Checking model availability...</span>
+          <div className='w-5 h-5 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin dark:border-blue-700 dark:border-t-blue-400' />
+          <span className='text-sm text-secondary'>Checking model availability...</span>
         </div>
       ) : preflight.preflightErr ? (
-        <div className='rounded-lg bg-red-50 border border-red-200 p-3'>
+        <div className='rounded-lg bg-red-50 border border-red-200 p-3 dark:bg-red-900/20 dark:border-red-800'>
           <div className='flex items-center gap-2'>
-            <span className='text-red-500'>⚠️</span>
-            <span className='text-sm text-red-700 font-medium'>Preflight Check Failed</span>
+            <span className='text-red-500 dark:text-red-400'>⚠️</span>
+            <span className='text-sm text-red-700 dark:text-red-300 font-medium'>Preflight Check Failed</span>
           </div>
-          <div className='text-sm text-red-600 mt-1'>{preflight.preflightErr}</div>
+          <div className='text-sm text-red-600 dark:text-red-400 mt-1'>{preflight.preflightErr}</div>
         </div>
       ) : totalCount > 0 ? (
         <div className='space-y-3'>
           <div className='flex items-center gap-2 text-sm'>
-            <span className={`font-medium ${allModelsPresent ? 'text-green-700' : 'text-gray-700'}`}>
+            <span
+              className={`font-medium ${allModelsPresent ? 'text-green-700 dark:text-green-300' : 'text-secondary'}`}
+            >
               {availableCount} of {totalCount} models available
             </span>
-            {!allModelsPresent && <span className='text-orange-600'>• {preflight.missing.length} missing</span>}
+            {!allModelsPresent && (
+              <span className='text-orange-600 dark:text-orange-400'>• {preflight.missing.length} missing</span>
+            )}
           </div>
 
           {preflight.missing.length > 0 && (
