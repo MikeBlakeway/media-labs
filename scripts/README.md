@@ -73,6 +73,26 @@ npx tsx scripts/test/test-example.ts
 
 _This example script should be kept as a reference template._
 
+#### `test-workflow-form-categorization.ts`
+
+Integration test for ML-002 story - validates workflow form field categorization across real workflow templates.
+
+**Usage:**
+
+```bash
+npx tsx scripts/test/test-workflow-form-categorization.ts
+```
+
+**Purpose:**
+
+- Validates field categorization logic with real workflow templates from `data/workflows/`
+- Ensures proper balance between essential and advanced fields
+- Provides metrics on categorization effectiveness (% essential vs advanced)
+- Verifies that essential fields (prompts, uploads, size) are correctly identified
+- Useful for ongoing validation when workflow templates are added/modified
+
+_Keep for ongoing validation of field categorization logic._
+
 #### `test-fflf2v-debug.ts`
 
 Debugging script for investigating the "unknown op 'None'" error in fflf2v workflow execution.

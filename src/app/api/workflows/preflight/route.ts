@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { runpodS3, RUNPOD_BUCKET } from '@/lib/runpodVolume'
 import { b2 } from '@/lib/b2'
-import { isB2Configured, checkS3ObjectExists } from '@/lib/s3.utils'
+import { isB2Configured } from '@/lib/s3.utils'
+import { checkS3ObjectExistsWithRetry } from '@/lib/s3.enhanced'
 import { HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getTemplate } from '@/lib/templates.fs'
 import { ExportApiWorkflowSchema, type ExportApiWorkflow } from '@/lib/workflow.infer'
 import { inferModelRequirements, modelPaths, ModelPresenceSchema, type ModelPresence } from '@/lib/workflow.preflight'
-import { detectRunPodVariant, isModelPreinstalled } from '@/lib/runpod.preinstalled'
 import { volumeManagement } from '@/lib/volume-management'
 
 export const runtime = 'nodejs'
@@ -86,22 +86,17 @@ async function checkModelPresence(
   requiresColdStart?: boolean
   estimatedColdStartTime?: number
 }> {
-  // First check if model is pre-installed in the RunPod variant
-  const variant = detectRunPodVariant()
-  if (isModelPreinstalled(modelName, variant)) {
-    console.log(`Model ${modelName} is pre-installed in RunPod variant ${variant}`)
-    return { present: true }
-  }
-
-  // Check if it exists in the S3 volume using unified checking function
+  // Check if it exists in the S3 volume using enhanced retry logic
   const checkStartTime = Date.now()
-  const volumeCheck = await checkS3ObjectExists(runpodS3, bucket, s3Key, `preflight-${modelName}`)
+  const volumeCheck = await checkS3ObjectExistsWithRetry(runpodS3, bucket, s3Key, `preflight-${modelName}`)
   const checkDuration = Date.now() - checkStartTime
 
-  console.log(`[PREFLIGHT] Model check for ${modelName}:`, {
+  console.log(`[PREFLIGHT] Enhanced model check for ${modelName}:`, {
     s3Key,
     exists: volumeCheck.exists,
     duration: `${checkDuration}ms`,
+    retryDuration: `${volumeCheck.duration}ms`,
+    fromCache: volumeCheck.fromCache,
     error: volumeCheck.error || 'none'
   })
 

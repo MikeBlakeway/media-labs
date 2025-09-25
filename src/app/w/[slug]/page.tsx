@@ -17,6 +17,9 @@ import { useModelPreloading } from '@/hooks/useModelPreloading'
 import { FormField } from '@/components/FormFields'
 import { JobStatusDisplay } from '@/components/JobStatus'
 import { PreflightStatus } from '@/components/PreflightStatus'
+import { CollapsibleSection } from '@/components/CollapsibleSection'
+import { useFieldSummary } from '@/components/FieldSummaryBadge'
+import { categorizeFields } from '@/lib/field-categorization'
 import { processFormPatches } from '@/lib/workflow.utils'
 
 interface WorkflowPageProps {
@@ -68,6 +71,10 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
 
   // Handle model preloading for synchronization
   const { syncWithPreflight } = useModelPreloading(slug)
+
+  // Categorize fields into essential and advanced
+  const fieldCategories = meta ? categorizeFields(meta.fields) : { essential: [], advanced: [] }
+  const advancedSummary = useFieldSummary(fieldCategories.advanced, formData)
 
   // Synchronize model preloading status when preflight checks complete
   useEffect(() => {
@@ -174,7 +181,8 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
 
       {/* Dynamic Form Fields */}
       <div className='mt-6 space-y-4'>
-        {meta.fields.map(field => (
+        {/* Essential Fields - Always Visible */}
+        {fieldCategories.essential.map(field => (
           <div key={field.id} className='rounded-xl border border-default bg-card p-3'>
             <FormField
               field={field}
@@ -184,6 +192,24 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
             />
           </div>
         ))}
+
+        {/* Advanced Fields - Collapsible */}
+        {fieldCategories.advanced.length > 0 && (
+          <CollapsibleSection title='Advanced Settings' summaryText={advancedSummary || undefined} className='mt-4'>
+            <div className='space-y-4'>
+              {fieldCategories.advanced.map(field => (
+                <div key={field.id} className='rounded-xl border border-default bg-card p-3'>
+                  <FormField
+                    field={field}
+                    value={formData[field.id] ?? ''}
+                    onChange={value => updateField(field.id, value)}
+                    enhancedLabel={getEnhancedFieldLabel(field, meta.fields)}
+                  />
+                </div>
+              ))}
+            </div>
+          </CollapsibleSection>
+        )}
       </div>
 
       {/* Action Buttons */}

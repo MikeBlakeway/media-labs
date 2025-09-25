@@ -6,5 +6,16 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
+  },
+  transform: {
+    '^.+\\.(ts|tsx)$': 'ts-jest'
+  },
+  globals: {
+    'ts-jest': {
+      useESM: false,
+      tsconfig: {
+        jsx: 'react-jsx'
+      }
+    }
   }
 }

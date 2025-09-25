@@ -94,7 +94,15 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
       const metricsResponse = await fetch('/api/cache/analytics/metrics')
       if (metricsResponse.ok) {
         const metricsData = await metricsResponse.json()
-        setMetrics(metricsData.metrics || metrics)
+        setMetrics(
+          metricsData.metrics || {
+            hitRatio: 0,
+            missRatio: 0,
+            averageHeatScore: 0,
+            totalEvictions: 0,
+            totalReclaimed: 0
+          }
+        )
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load cache data'
@@ -103,7 +111,7 @@ export function useCacheAnalytics(): CacheAnalyticsData & CacheAnalyticsActions 
     } finally {
       setLoading(false)
     }
-  }, [metrics])
+  }, [])
 
   const trackModelAccess = useCallback(
     async (modelName: string, modelType: string) => {

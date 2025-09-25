@@ -5,7 +5,7 @@ import { getTemplate } from '@/lib/templates.fs'
 import { inferModelRequirements, modelPaths } from '@/lib/workflow.preflight'
 import { ExportApiWorkflowSchema } from '@/lib/workflow.infer'
 import { runpodS3, RUNPOD_BUCKET } from '@/lib/runpodVolume'
-import { checkS3ObjectExists } from '@/lib/s3.utils'
+import { checkS3ObjectExistsWithRetry } from '@/lib/s3.enhanced'
 
 export const runtime = 'nodejs'
 
@@ -25,14 +25,16 @@ async function isModelAvailableOnVolume(modelName: string, modelType: string): P
     const { s3Key } = modelPaths(MODELS_PREFIX, requirement)
 
     const checkStartTime = Date.now()
-    const result = await checkS3ObjectExists(runpodS3, RUNPOD_BUCKET, s3Key, `status-${modelName}`)
+    const result = await checkS3ObjectExistsWithRetry(runpodS3, RUNPOD_BUCKET, s3Key, `status-${modelName}`)
     const checkDuration = Date.now() - checkStartTime
 
-    console.log(`[MODEL_STATUS] Model check for ${modelName}:`, {
+    console.log(`[MODEL_STATUS] Enhanced model check for ${modelName}:`, {
       modelType,
       s3Key,
       exists: result.exists,
       duration: `${checkDuration}ms`,
+      retryDuration: `${result.duration}ms`,
+      fromCache: result.fromCache,
       error: result.error || 'none'
     })
 

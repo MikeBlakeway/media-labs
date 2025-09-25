@@ -83,12 +83,22 @@ export const RUNPOD_VARIANTS: Record<string, RunPodVariant> = {
   },
   'flux1-dev': {
     tag: '3.4.0-flux1-dev',
-    description: 'FLUX.1 Dev models',
+    description: 'FLUX.1 Dev models with wan2.1',
     models: [
       {
         name: 'flux1-dev.safetensors',
         type: 'unet',
         workerPath: '/runpod-volume/models/diffusion_models/flux1-dev.safetensors'
+      },
+      {
+        name: 'wan2.1_flf2v_720p_14B_fp16.safetensors',
+        type: 'unet',
+        workerPath: '/runpod-volume/models/diffusion_models/wan2.1_flf2v_720p_14B_fp16.safetensors'
+      },
+      {
+        name: 'wan2.1_t2v_1.3B_fp16.safetensors',
+        type: 'unet',
+        workerPath: '/runpod-volume/models/diffusion_models/wan2.1_t2v_1.3B_fp16.safetensors'
       },
       {
         name: 'clip_l.safetensors',

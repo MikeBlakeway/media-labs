@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ModelCacheEntrySchema, VolumeStatsSchema, calculateHeatScore, type ModelCacheEntry } from '@/lib/cache-manager'
 
 interface ModelData {
+  name: string
   heatScore: number
   type: string
   size: number
@@ -20,21 +22,130 @@ const metricsData = {
   lastUpdated: new Date()
 }
 
+// Shared in-memory cache storage (same as cache/status endpoint)
+const modelCache = new Map<string, ModelCacheEntry>()
+
+/**
+ * Get sample volume statistics (matches cache/status logic)
+ */
+async function getVolumeStats() {
+  try {
+    console.log('[cache-metrics] Using fallback volume stats')
+    return VolumeStatsSchema.parse({
+      totalBytes: 64424509440, // 60GB default
+      usedBytes: Math.floor(64424509440 * 0.45), // 45% usage as example
+      freeBytes: Math.floor(64424509440 * 0.55),
+      usagePercent: 45.0
+    })
+  } catch (err) {
+    console.error('Failed to get volume stats:', err)
+    return VolumeStatsSchema.parse({
+      totalBytes: 64424509440,
+      usedBytes: 0,
+      freeBytes: 64424509440,
+      usagePercent: 0
+    })
+  }
+}
+
+/**
+ * Get sample models data (matches cache/status logic)
+ */
+async function getModelsData() {
+  try {
+    // Sample model data (matches cache/status endpoint)
+    const sampleModels = [
+      {
+        modelName: 'flux1-dev.safetensors',
+        filePath: '/runpod-volume/models/unet/flux1-dev.safetensors',
+        size: 12000000000, // 12GB
+        lastAccessed: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        accessCount: 15,
+        isPinned: true,
+        isInUse: false,
+        type: 'unet'
+      },
+      {
+        modelName: 'clip_l.safetensors',
+        filePath: '/runpod-volume/models/clip/clip_l.safetensors',
+        size: 1200000000, // 1.2GB
+        lastAccessed: new Date(Date.now() - 30 * 60 * 1000),
+        accessCount: 8,
+        isPinned: false,
+        isInUse: true,
+        type: 'clip'
+      },
+      {
+        modelName: 'sdxl_vae.safetensors',
+        filePath: '/runpod-volume/models/vae/sdxl_vae.safetensors',
+        size: 600000000, // 600MB
+        lastAccessed: new Date(Date.now() - 6 * 60 * 60 * 1000),
+        accessCount: 3,
+        isPinned: false,
+        isInUse: false,
+        type: 'vae'
+      }
+    ]
+
+    const models = sampleModels.map(model => {
+      let cacheEntry = modelCache.get(model.modelName)
+      if (!cacheEntry) {
+        cacheEntry = {
+          ...model,
+          heatScore: 0,
+          type: model.type as ModelCacheEntry['type']
+        }
+      } else {
+        Object.assign(cacheEntry, { ...model, type: model.type as ModelCacheEntry['type'] })
+      }
+
+      // Calculate heat score
+      cacheEntry.heatScore = calculateHeatScore(cacheEntry)
+      modelCache.set(model.modelName, cacheEntry)
+
+      return ModelCacheEntrySchema.parse(cacheEntry)
+    })
+
+    return models
+  } catch (err) {
+    console.error('Failed to get models:', err)
+    return []
+  }
+}
+
 /**
  * Get cache efficiency metrics
  */
 export async function GET() {
   try {
-    // Get current cache status to calculate dynamic metrics
-    const response = await fetch('/api/cache/status')
-    if (!response.ok) {
-      throw new Error('Failed to get cache status')
-    }
+    // Get current cache status directly (avoiding server-side fetch issues)
+    const volumeStats = await getVolumeStats()
+    const cacheModels = await getModelsData()
 
-    const data = await response.json()
-    const models: ModelData[] = data.models || []
+    // Convert to analytics format
+    const models: ModelData[] = cacheModels.map(model => ({
+      name: model.modelName,
+      heatScore: model.heatScore,
+      type: model.type,
+      size: model.size,
+      isPinned: model.isPinned,
+      isInUse: model.isInUse
+    }))
 
-    // Calculate average heat score
+    // Create data structure to match expected format
+    const data = {
+      success: true,
+      data: {
+        models,
+        totalModels: models.length,
+        totalSize: models.reduce((sum, model) => sum + model.size, 0),
+        pinnedModels: models.filter(m => m.isPinned).length,
+        inUseModels: models.filter(m => m.isInUse).length
+      },
+      cacheStatus: {
+        volumeStats
+      }
+    } // Calculate average heat score
     const averageHeatScore =
       models.length > 0 ? models.reduce((sum: number, model: ModelData) => sum + model.heatScore, 0) / models.length : 0
 
