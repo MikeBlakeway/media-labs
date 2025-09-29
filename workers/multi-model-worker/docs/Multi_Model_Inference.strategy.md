@@ -14,10 +14,10 @@ Create a proof-of-concept RunPod serverless worker that delivers multi-modal AI 
 
 ### Strategic Value
 
-- **Unified Infrastructure**: Consolidate multiple AI capabilities into a single, cost-effective endpoint
-- **Resource Optimization**: Achieve comprehensive multi-modal support within strict storage limits
-- **Scalability Foundation**: Establish architecture for future expansion to production-scale capabilities
-- **Cost Efficiency**: Leverage serverless deployment for optimal resource utilization
+- Unified Infrastructure: Consolidate multiple AI capabilities into a single, cost-effective endpoint
+- Resource Optimization: Achieve comprehensive multi-modal support within strict storage limits
+- Scalability Foundation: Establish architecture for future expansion to production-scale capabilities
+- Cost Efficiency: Leverage serverless deployment for optimal resource utilization
 
 ### Success Criteria
 
@@ -172,7 +172,7 @@ class ModelManager:
 
 #### 2.1 Text-to-Image Foundation (FLUX.1)
 
-**Implementation Specification**
+Implementation Specification
 
 ```python
 class FluxHandler:
@@ -200,7 +200,7 @@ class FluxHandler:
         return self.encode_output(image)
 ```
 
-**Storage Optimization**
+Storage Optimization
 
 - Use FLUX.1 Schnell fp8 quantized version (12-15GB vs 23GB full precision)
 - Implement dynamic model loading to free memory when not in use
@@ -208,7 +208,7 @@ class FluxHandler:
 
 #### 2.2 ControlNet Integration
 
-**Multi-Control Implementation**
+Multi-Control Implementation
 
 ```python
 class ControlNetHandler:
@@ -236,7 +236,7 @@ class ControlNetHandler:
 
 #### 2.3 Image-to-Video (AnimateDiff)
 
-**Motion Synthesis Implementation**
+Motion Synthesis Implementation
 
 ```python
 class AnimateDiffHandler:
@@ -263,7 +263,7 @@ class AnimateDiffHandler:
 
 #### 2.4 Text-to-Video (LTX-Video)
 
-**Video Generation Implementation**
+Video Generation Implementation
 
 ```python
 class LTXVideoHandler:
@@ -298,9 +298,7 @@ class LTXVideoHandler:
 
 ### Phase 3: Advanced Modalities & Optimization (Week 6-7)
 
-#### 3.1 Inpainting Implementation
-
-**SDXL Inpainting Integration**
+#### 3.1 SDXL Inpainting Integration
 
 ```python
 class InpaintingHandler:
@@ -325,9 +323,7 @@ class InpaintingHandler:
         return self.encode_output(result)
 ```
 
-#### 3.2 Camera Control System
-
-**CameraCtrl Implementation**
+#### 3.2 Camera Control CameraCtrl Implementation
 
 ```python
 class CameraControlHandler:
@@ -348,9 +344,7 @@ class CameraControlHandler:
         return self.encode_video_output(controlled_video)
 ```
 
-#### 3.3 Performance Optimization
-
-**Memory Management Strategy**
+#### 3.3 Performance Optimization Memory Management Strategy
 
 ```python
 class OptimizedModelManager:
@@ -375,7 +369,7 @@ class OptimizedModelManager:
         return self.load_model(required_model)
 ```
 
-#### Deliverables
+Deliverables:
 
 - [ ] SDXL inpainting fully functional
 - [ ] CameraCtrl video manipulation working
@@ -385,9 +379,7 @@ class OptimizedModelManager:
 
 ### Phase 4: Frontend Integration (Week 8-9)
 
-#### 4.1 Hooks Architecture Extension
-
-**Multi-Modal Workflow Hooks**
+#### 4.1 Multi-Modal Workflow Hooks
 
 ```typescript
 // New hook for unified multi-modal interface
@@ -426,9 +418,7 @@ export const useInpainting = () => useModalityHook('inpainting')
 export const useCameraControl = () => useModalityHook('camera-control')
 ```
 
-#### 4.2 Component Architecture
-
-**Multi-Modal Workflow Component**
+#### 4.2 Multi-Modal Workflow Components
 
 ```typescript
 interface MultiModalWorkflowProps {
@@ -456,9 +446,7 @@ export function MultiModalWorkflow({ onResult }: MultiModalWorkflowProps) {
 }
 ```
 
-#### 4.3 API Route Integration
-
-**Unified Multi-Modal API Routes**
+#### 4.3 Unified Multi-Modal API Routes
 
 ```typescript
 // /src/app/api/multi-modal/[modality]/route.ts
@@ -481,7 +469,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ mod
 }
 ```
 
-#### Deliverables
+Deliverables:
 
 - [ ] Multi-modal hooks implemented and tested
 - [ ] Component architecture supports all modalities
@@ -493,7 +481,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ mod
 
 #### 5.1 Testing Strategy
 
-**Unit Testing Framework**
+- Unit Testing Framework
 
 ```python
 # tests/unit/test_flux_handler.py
@@ -521,7 +509,7 @@ class TestFluxHandler(unittest.TestCase):
             self.handler.execute(request)
 ```
 
-**Integration Testing**
+- Integration Testing
 
 ```python
 # tests/integration/test_end_to_end.py
@@ -544,18 +532,16 @@ class TestEndToEndWorkflow(unittest.TestCase):
 
 #### 5.2 Performance Benchmarking
 
-**Benchmark Specifications**
+Specifications:
 
-- **Text-to-Image**: <15 seconds for 1024x1024, 4 steps
-- **Image-to-Video**: <25 seconds for 16 frames, 720p
-- **Text-to-Video**: <45 seconds for 5 seconds, 720p
-- **ControlNet**: <20 seconds for controlled generation
-- **Inpainting**: <18 seconds for masked region fill
-- **Camera Control**: <30 seconds for trajectory application
+- Text-to-Image: <15 seconds for 1024x1024, 4 steps
+- Image-to-Video: <25 seconds for 16 frames, 720p
+- Text-to-Video: <45 seconds for 5 seconds, 720p
+- ControlNet: <20 seconds for controlled generation
+- Inpainting: <18 seconds for masked region fill
+- Camera Control: <30 seconds for trajectory application
 
-#### 5.3 Deployment Pipeline
-
-**RunPod Deployment Configuration**
+#### 5.3 RunPod Deployment Configuration
 
 ```yaml
 # runpod-template.yaml
@@ -582,7 +568,7 @@ template:
     idle_timeout: 300 # 5 minutes
 ```
 
-#### Deliverables
+Deliverables:
 
 - [ ] Comprehensive test suite passing (>90% coverage)
 - [ ] Performance benchmarks meeting targets
@@ -652,14 +638,14 @@ ltx_config = {
 ```python
 class ResourceManager:
     def __init__(self):
-        self.gpu_memory_limit = 24 * 1024**3  # 24GB A4000/A5000
+        self.gpu_memory_limit = 24 * 10243  # 24GB A4000/A5000
         self.model_memory_usage = {
-            'flux': 15 * 1024**3,          # 15GB
-            'controlnet': 4 * 1024**3,     # 4GB
-            'animatediff': 2 * 1024**3,    # 2GB
-            'ltx_video': 8 * 1024**3,      # 8GB
-            'inpainting': 6 * 1024**3,     # 6GB
-            'camera_ctrl': 1 * 1024**3     # 1GB
+            'flux': 15 * 10243,          # 15GB
+            'controlnet': 4 * 10243,     # 4GB
+            'animatediff': 2 * 10243,    # 2GB
+            'ltx_video': 8 * 10243,      # 8GB
+            'inpainting': 6 * 10243,     # 6GB
+            'camera_ctrl': 1 * 10243     # 1GB
         }
 
     def can_load_model(self, model_type: str) -> bool:
@@ -829,38 +815,38 @@ interface MultiModalResult extends WorkflowResult {
 
 #### Human Resources (11 weeks)
 
-- **Senior ML Engineer**: 8 weeks (architecture, core implementation)
-- **Frontend Developer**: 4 weeks (integration, components)
-- **DevOps Engineer**: 3 weeks (deployment, monitoring)
-- **QA Engineer**: 2 weeks (testing, validation)
+- Senior ML Engineer: 8 weeks (architecture, core implementation)
+- Frontend Developer: 4 weeks (integration, components)
+- DevOps Engineer: 3 weeks (deployment, monitoring)
+- QA Engineer: 2 weeks (testing, validation)
 
 #### Compute Resources
 
-- **Development**: 1x A4000 GPU instance (24GB VRAM) for development/testing
-- **Staging**: 1x RunPod serverless endpoint for integration testing
-- **Production**: 3x max workers, 0x min workers for cost optimization
+- Development: 1x A4000 GPU instance (24GB VRAM) for development/testing
+- Staging: 1x RunPod serverless endpoint for integration testing
+- Production: 3x max workers, 0x min workers for cost optimization
 
 #### Storage Requirements
 
-- **Models**: 50GB RunPod Network Volume (shared with existing workers)
-- **Container Images**: 5GB container registry space
-- **Development Cache**: 20GB local development storage
+- Models: 50GB RunPod Network Volume (shared with existing workers)
+- Container Images: 5GB container registry space
+- Development Cache: 20GB local development storage
 
 ### Budget Estimation
 
 #### Development Phase (11 weeks)
 
-- **Compute**: $800 (development GPU + RunPod testing)
-- **Storage**: $150 (Network Volume expansion)
-- **Registry**: $50 (Container image storage)
-- **Total Development**: ~$1,000
+- Compute: $800 (development GPU + RunPod testing)
+- Storage: $150 (Network Volume expansion)
+- Registry: $50 (Container image storage)
+- Total Development: ~$1,000
 
 #### Production Operations (monthly)
 
-- **RunPod Serverless**: $200-500 (usage-based scaling)
-- **Network Volume**: $25 (50GB storage)
-- **Monitoring**: $50 (logging and metrics)
-- **Total Monthly**: $275-575 (scales with usage)
+- RunPod Serverless: $200-500 (usage-based scaling)
+- Network Volume: $25 (50GB storage)
+- Monitoring: $50 (logging and metrics)
+- Total Monthly: $275-575 (scales with usage)
 
 ## Risk Assessment & Mitigation
 
@@ -868,8 +854,8 @@ interface MultiModalResult extends WorkflowResult {
 
 #### Risk: Memory Limitations (High Impact, Medium Probability)
 
-**Scenario**: Models exceed available GPU memory during concurrent inference
-**Mitigation Strategy**:
+Scenario: Models exceed available GPU memory during concurrent inference
+Mitigation Strategy:
 
 - Implement smart model eviction based on usage patterns
 - Use sequential CPU offloading for large models
@@ -878,8 +864,8 @@ interface MultiModalResult extends WorkflowResult {
 
 #### Risk: Storage Constraint Violation (Medium Impact, Medium Probability)
 
-**Scenario**: Model storage exceeds 80GB limit during expansion
-**Mitigation Strategy**:
+Scenario: Model storage exceeds 80GB limit during expansion
+Mitigation Strategy:
 
 - Continuous storage monitoring with automated alerts
 - Implement model pruning and quantization pipeline
@@ -888,8 +874,8 @@ interface MultiModalResult extends WorkflowResult {
 
 #### Risk: Inference Time Targets (Medium Impact, High Probability)
 
-**Scenario**: Inference times exceed target thresholds affecting user experience
-**Mitigation Strategy**:
+Scenario: Inference times exceed target thresholds affecting user experience
+Mitigation Strategy:
 
 - Implement model warming and persistent loading
 - Use FlashBoot for faster cold starts
@@ -900,8 +886,8 @@ interface MultiModalResult extends WorkflowResult {
 
 #### Risk: Integration Complexity (Medium Impact, Medium Probability)
 
-**Scenario**: Multi-modal worker integration disrupts existing workflows
-**Mitigation Strategy**:
+Scenario: Multi-modal worker integration disrupts existing workflows
+Mitigation Strategy:
 
 - Gradual rollout with feature flags
 - Maintain backward compatibility with existing endpoints
@@ -910,8 +896,8 @@ interface MultiModalResult extends WorkflowResult {
 
 #### Risk: Cost Overruns (High Impact, Low Probability)
 
-**Scenario**: Serverless usage costs exceed budget projections
-**Mitigation Strategy**:
+Scenario: Serverless usage costs exceed budget projections
+Mitigation Strategy:
 
 - Implement usage monitoring and alerting
 - Set hard limits on concurrent workers
@@ -922,8 +908,8 @@ interface MultiModalResult extends WorkflowResult {
 
 #### Risk: Model Quality Degradation (High Impact, Low Probability)
 
-**Scenario**: Quantized/optimized models produce lower quality results
-**Mitigation Strategy**:
+Scenario: Quantized/optimized models produce lower quality results
+Mitigation Strategy:
 
 - Establish quality benchmarks for each modality
 - Implement A/B testing framework for model variants
@@ -936,48 +922,48 @@ interface MultiModalResult extends WorkflowResult {
 
 #### Inference Performance
 
-- **Text-to-Image**: Target <15s, Acceptable <20s, Critical >25s
-- **Image-to-Video**: Target <25s, Acceptable <35s, Critical >45s
-- **Text-to-Video**: Target <45s, Acceptable <60s, Critical >75s
-- **ControlNet**: Target <20s, Acceptable <25s, Critical >30s
-- **Inpainting**: Target <18s, Acceptable <25s, Critical >35s
-- **Camera Control**: Target <30s, Acceptable <40s, Critical >50s
+- Text-to-Image: Target <15s, Acceptable <20s, Critical >25s
+- Image-to-Video: Target <25s, Acceptable <35s, Critical >45s
+- Text-to-Video: Target <45s, Acceptable <60s, Critical >75s
+- ControlNet: Target <20s, Acceptable <25s, Critical >30s
+- Inpainting: Target <18s, Acceptable <25s, Critical >35s
+- Camera Control: Target <30s, Acceptable <40s, Critical >50s
 
 #### Resource Utilization
 
-- **Storage Usage**: Target <40GB, Limit <80GB
-- **Memory Efficiency**: >80% GPU utilization during inference
-- **Cold Start Time**: Target <30s, Acceptable <60s
-- **Model Load Time**: Target <10s per model
+- Storage Usage: Target <40GB, Limit <80GB
+- Memory Efficiency: >80% GPU utilization during inference
+- Cold Start Time: Target <30s, Acceptable <60s
+- Model Load Time: Target <10s per model
 
 ### Quality Metrics
 
 #### Output Quality (Human Evaluation)
 
-- **Image Generation**: >85% acceptable quality rating
-- **Video Generation**: >80% acceptable quality rating
-- **Control Accuracy**: >90% adherence to control inputs
-- **Temporal Consistency**: >85% smooth motion in videos
+- Image Generation: >85% acceptable quality rating
+- Video Generation: >80% acceptable quality rating
+- Control Accuracy: >90% adherence to control inputs
+- Temporal Consistency: >85% smooth motion in videos
 
 #### System Reliability
 
-- **Uptime**: >99.5% availability
-- **Error Rate**: <2% failed inference requests
-- **Recovery Time**: <5 minutes from failure to restoration
+- Uptime: >99.5% availability
+- Error Rate: <2% failed inference requests
+- Recovery Time: <5 minutes from failure to restoration
 
 ### Business Metrics
 
 #### Cost Efficiency
 
-- **Cost per Inference**: Target <$0.10, Acceptable <$0.20
-- **Resource ROI**: >300% compared to dedicated endpoints
-- **Development ROI**: Break-even within 6 months
+- Cost per Inference: Target <$0.10, Acceptable <$0.20
+- Resource ROI: >300% compared to dedicated endpoints
+- Development ROI: Break-even within 6 months
 
 #### User Adoption
 
-- **Feature Utilization**: >60% of users try multi-modal features
-- **Modality Distribution**: Balanced usage across all modalities
-- **User Satisfaction**: >4.0/5.0 rating for multi-modal features
+- Feature Utilization: >60% of users try multi-modal features
+- Modality Distribution: Balanced usage across all modalities
+- User Satisfaction: >4.0/5.0 rating for multi-modal features
 
 ## Conclusion
 
@@ -987,18 +973,18 @@ This implementation strategy delivers a comprehensive roadmap for creating a pro
 
 ### Key Success Factors
 
-1. **Modular Architecture**: Enables independent development and testing of each modality
-2. **Resource Optimization**: Achieves ambitious functionality within tight storage and memory limits
-3. **Integration-First Design**: Seamlessly extends existing frontend architecture and user workflows
-4. **Performance Focus**: Prioritizes inference speed for production-ready user experience
-5. **Risk Mitigation**: Addresses potential technical and operational challenges proactively
+1. Modular Architecture: Enables independent development and testing of each modality
+2. Resource Optimization: Achieves ambitious functionality within tight storage and memory limits
+3. Integration-First Design: Seamlessly extends existing frontend architecture and user workflows
+4. Performance Focus: Prioritizes inference speed for production-ready user experience
+5. Risk Mitigation: Addresses potential technical and operational challenges proactively
 
 ### Next Steps
 
-1. **Stakeholder Review**: Validate approach and resource allocation with project sponsors
-2. **Technical Validation**: Proof-of-concept implementation for FLUX.1 and ControlNet integration
-3. **Infrastructure Setup**: Provision development environment and establish CI/CD pipeline
-4. **Team Assembly**: Recruit and onboard development team members
-5. **Phase 1 Kickoff**: Begin foundation architecture development
+1. Stakeholder Review: Validate approach and resource allocation with project sponsors
+2. Technical Validation: Proof-of-concept implementation for FLUX.1 and ControlNet integration
+3. Infrastructure Setup: Provision development environment and establish CI/CD pipeline
+4. Team Assembly: Recruit and onboard development team members
+5. Phase 1 Kickoff: Begin foundation architecture development
 
 This strategy positions Media Labs to become a leader in accessible, cost-effective multi-modal AI inference while establishing a scalable foundation for future expansion into production-grade capabilities.
