@@ -117,6 +117,96 @@ deploy: build ## Deploy web application
 	@echo "$(GREEN)✅ Deployment ready$(RESET)"
 	@echo "$(YELLOW)Note: Configure your hosting platform to deploy the built application$(RESET)"
 
+##@ Docker Operations
+
+# Multi-Model Worker Configuration
+WORKER_IMAGE_NAME := ghcr.io/media-labs/multi-model-worker
+WORKER_VERSION ?= $(shell git rev-parse --short HEAD)
+WORKER_DOCKER_DIR := workers/multi-model-worker/docker
+WORKER_CONTEXT := workers/multi-model-worker
+
+.PHONY: build-worker
+build-worker: ## Build multi-model worker Docker image
+	@echo "$(BLUE)Building multi-model worker image...$(RESET)"
+	@echo "$(YELLOW)Image: $(WORKER_IMAGE_NAME):$(WORKER_VERSION)$(RESET)"
+	docker build \
+		--platform linux/amd64 \
+		--build-arg VERSION=$(WORKER_VERSION) \
+		--build-arg BUILD_DATE="$(shell date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+		--tag $(WORKER_IMAGE_NAME):$(WORKER_VERSION) \
+		--tag $(WORKER_IMAGE_NAME):latest \
+		--file $(WORKER_DOCKER_DIR)/Dockerfile \
+		$(WORKER_CONTEXT)
+	@echo "$(GREEN)✅ Worker image built: $(WORKER_IMAGE_NAME):$(WORKER_VERSION)$(RESET)"
+
+.PHONY: push-worker
+push-worker: build-worker ## Build and push multi-model worker to registry
+	@echo "$(BLUE)Pushing worker image to registry...$(RESET)"
+	docker push $(WORKER_IMAGE_NAME):$(WORKER_VERSION)
+	docker push $(WORKER_IMAGE_NAME):latest
+	@echo "$(GREEN)✅ Worker image pushed$(RESET)"
+
+.PHONY: test-worker
+test-worker: build-worker ## Test multi-model worker container
+	@echo "$(BLUE)Testing worker container...$(RESET)"
+	@echo "$(YELLOW)Running basic container health check...$(RESET)"
+	docker run --rm \
+		--platform linux/amd64 \
+		$(WORKER_IMAGE_NAME):$(WORKER_VERSION) \
+		health
+	@echo "$(GREEN)✅ Worker container test passed$(RESET)"
+
+.PHONY: run-worker-local
+run-worker-local: build-worker ## Run worker container locally for testing
+	@echo "$(BLUE)Running worker container locally...$(RESET)"
+	@echo "$(YELLOW)Container will run in foreground. Press Ctrl+C to stop.$(RESET)"
+	docker run --rm -it \
+		--platform linux/amd64 \
+		-p 8000:8000 \
+		-e LOG_LEVEL=DEBUG \
+		-e VALIDATION_MODE=basic \
+		--name media-labs-worker-test \
+		$(WORKER_IMAGE_NAME):$(WORKER_VERSION)
+
+.PHONY: worker-shell
+worker-shell: build-worker ## Open interactive shell in worker container
+	@echo "$(BLUE)Opening shell in worker container...$(RESET)"
+	docker run --rm -it \
+		--platform linux/amd64 \
+		--entrypoint /bin/bash \
+		-e LOG_LEVEL=DEBUG \
+		$(WORKER_IMAGE_NAME):$(WORKER_VERSION)
+
+.PHONY: clean-worker
+clean-worker: ## Clean worker Docker images and containers
+	@echo "$(YELLOW)Cleaning worker Docker resources...$(RESET)"
+	docker rmi $(WORKER_IMAGE_NAME):$(WORKER_VERSION) $(WORKER_IMAGE_NAME):latest 2>/dev/null || true
+	docker system prune -f
+	@echo "$(GREEN)✅ Worker Docker cleanup complete$(RESET)"
+
+.PHONY: worker-logs
+worker-logs: ## Show logs for running worker container
+	@if docker ps --format "table {{.Names}}" | grep -q "media-labs-worker"; then \
+		echo "$(BLUE)Showing worker container logs...$(RESET)"; \
+		docker logs -f media-labs-worker; \
+	else \
+		echo "$(RED)No running worker container found$(RESET)"; \
+	fi
+
+.PHONY: worker-info
+worker-info: ## Show worker image information
+	@echo "$(BLUE)Multi-Model Worker Information:$(RESET)"
+	@echo "Image name: $(WORKER_IMAGE_NAME)"
+	@echo "Version: $(WORKER_VERSION)"
+	@echo "Docker context: $(WORKER_CONTEXT)"
+	@echo "Dockerfile: $(WORKER_DOCKER_DIR)/Dockerfile"
+	@if docker images $(WORKER_IMAGE_NAME) --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}" | grep -v REPOSITORY; then \
+		echo "$(GREEN)Available images:$(RESET)"; \
+		docker images $(WORKER_IMAGE_NAME) --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"; \
+	else \
+		echo "$(YELLOW)No worker images found. Run 'make build-worker' to build.$(RESET)"; \
+	fi
+
 ##@ Utilities
 
 .PHONY: start
