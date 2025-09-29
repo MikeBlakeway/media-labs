@@ -1,10 +1,28 @@
 """
-Model wrapper classes for multi-modal inference.
+Models package for multi-modal inference worker.
 
-This package provides unified interfaces for AI models used across
-different modalities, including model loading, memory management,
-and inference optimization.
+Provides model management framework with intelligent loading, caching,
+eviction, and memory monitoring for AI model operations.
 """
+
+from .base_model import BaseModel, ModelMetadata
+from .memory_monitor import MemoryMonitor, MemoryStats, memory_monitor
+from .model_manager import ModelManager, model_manager
+
+__all__ = [
+    # Base classes
+    "BaseModel",
+    "ModelMetadata",
+
+    # Memory monitoring
+    "MemoryMonitor",
+    "MemoryStats",
+    "memory_monitor",
+
+    # Model management
+    "ModelManager",
+    "model_manager",
+]
 
 # Import model wrappers when available
 # from .flux_model import FluxModel
