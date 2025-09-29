@@ -370,7 +370,7 @@ class TestRequestValidatorEdgeCases:
     def test_validate_with_exception_handling(self):
         """Test proper exception handling during validation."""
         # Simulate validation that might cause internal error
-        with patch.object(self.validator, '_validate_parameter_presence') as mock_validate:
+        with patch.object(RequestValidator, 'validate_parameters') as mock_validate:
             mock_validate.side_effect = Exception("Simulated validation error")
 
             request_data = {'prompt': 'Test'}

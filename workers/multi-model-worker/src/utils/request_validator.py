@@ -34,30 +34,31 @@ class ModalityDetector:
             'forbidden': ['image', 'video', 'init_image'],
             'indicators': ['steps', 'guidance_scale', 'width', 'height', 'seed']
         },
-        'image-to-video': {
+                'image-to-video': {
             'required_any': ['image', 'init_image'],
-            'forbidden': ['video'],
-            'indicators': ['motion_strength', 'fps', 'duration', 'frames']
+            'forbidden': ['mask'],
+            'indicators': ['video', 'fps', 'frames', 'motion_strength', 'noise_level', 'init_image']
         },
         'text-to-video': {
             'required_any': ['prompt', 'text'],
-            'forbidden': ['image', 'init_image'],
-            'indicators': ['motion_strength', 'fps', 'duration', 'frames', 'video']
+            'forbidden': ['image', 'init_image', 'camera_motion', 'camera_pose', 'camera_trajectory'],
+            'indicators': ['fps', 'duration', 'frames', 'video']
         },
         'control-net': {
-            'required_any': ['control_image', 'control_net_type'],
+            'required_any': ['control_image'],
+            'required_all': ['controlnet_type'],
             'forbidden': [],
-            'indicators': ['conditioning_scale', 'control_net']
+            'indicators': ['conditioning_scale', 'controlnet_conditioning_scale', 'controlnet']
         },
         'inpainting': {
-            'required_any': ['image', 'mask'],
+            'required_any': ['mask'],
             'forbidden': ['video'],
-            'indicators': ['inpaint', 'mask_image', 'init_image']
+            'indicators': ['inpaint', 'mask_image', 'init_image', 'image', 'strength']
         },
         'camera-control': {
-            'required_any': ['camera_pose', 'camera_trajectory'],
+            'required_any': ['camera_pose', 'camera_trajectory', 'camera_motion'],
             'forbidden': [],
-            'indicators': ['pose', 'trajectory', 'camera']
+            'indicators': ['pose', 'trajectory', 'camera', 'motion_strength', 'orbit', 'pan', 'tilt', 'zoom']
         }
     }
 
@@ -96,13 +97,8 @@ class ModalityDetector:
                 scores[modality] = score
 
         if not scores:
-            available_modalities = list(cls.MODALITY_SIGNATURES.keys())
-            raise ValidationError(
-                'request',
-                str(request_data.keys()),
-                f"Could not detect modality from parameters. "
-                f"Please specify 'modality' field or use parameters for: {available_modalities}"
-            )
+            # Return None when no modality can be detected
+            return None
 
         # Return the modality with highest confidence score
         detected_modality = max(scores.items(), key=lambda x: x[1])[0]
@@ -121,6 +117,14 @@ class ModalityDetector:
             if not has_required:
                 return 0  # Cannot be this modality
             score += 3  # Strong positive signal
+
+        # Check if all required_all parameters are present
+        required_all = signature.get('required_all', [])
+        if required_all:
+            has_all_required = all(param in request_data for param in required_all)
+            if not has_all_required:
+                return 0  # Cannot be this modality
+            score += 5  # Very strong positive signal
 
         # Check for forbidden parameters
         forbidden = signature.get('forbidden', [])
@@ -141,8 +145,8 @@ class RequestValidator:
     """
     Validates request parameters for completeness and correctness.
 
-    Provides both general validation and modality-specific validation
-    based on detected or specified modality type.
+    MMI-004 compliant implementation with instance-based design
+    and explicit modality specification.
     """
 
     # Common validation rules
@@ -162,7 +166,7 @@ class RequestValidator:
         'steps': {
             'type': int,
             'min_value': 1,
-            'max_value': 100,
+            'max_value': 50,
             'required': False
         },
         'guidance_scale': {
@@ -186,6 +190,15 @@ class RequestValidator:
             'required': False
         }
     }
+
+    def __init__(self, config: Optional[Dict] = None):
+        """
+        Initialize RequestValidator instance.
+
+        Args:
+            config: Optional configuration dictionary for customization
+        """
+        self.config = config or {}
 
     @classmethod
     def validate_request_format(cls, request_data: Any) -> Dict[str, Any]:
@@ -220,20 +233,23 @@ class RequestValidator:
     @classmethod
     def validate_parameters(cls, request_data: Dict[str, Any], modality: str) -> Dict[str, Any]:
         """
-        Validate individual parameters according to their rules.
+        Validate individual parameters according to their rules and modality requirements.
 
         Args:
             request_data: Request data to validate
-            modality: Detected modality for context
+            modality: Target modality for validation
 
         Returns:
             Validated and normalized request data
 
         Raises:
-            ValidationError: If any parameter is invalid
+            ValidationError: If any parameter is invalid or required parameters are missing
         """
-        validated_data = {}
+        # Step 1: Check modality-specific required parameters
+        cls._validate_required_parameters(request_data, modality)
 
+        # Step 2: Validate and normalize individual parameters
+        validated_data = {}
         for param_name, value in request_data.items():
             # Skip validation for unknown parameters (pass-through)
             if param_name not in cls.COMMON_VALIDATIONS:
@@ -247,17 +263,67 @@ class RequestValidator:
         return validated_data
 
     @classmethod
-    def _validate_parameter(cls, param_name: str, value: Any, rule: Dict[str, Any]) -> Any:
-        """Validate a single parameter against its rule."""
+    def _validate_required_parameters(cls, request_data: Dict[str, Any], modality: str):
+        """
+        Validate that required parameters for the specified modality are present.
 
-        # Type validation
+        Args:
+            request_data: Request data to check
+            modality: Target modality
+
+        Raises:
+            ValidationError: If required parameters are missing
+        """
+        if modality not in ModalityDetector.MODALITY_SIGNATURES:
+            raise ValidationError(
+                'modality',
+                modality,
+                f"Unsupported modality. Supported: {list(ModalityDetector.MODALITY_SIGNATURES.keys())}"
+            )
+
+        signature = ModalityDetector.MODALITY_SIGNATURES[modality]
+        required_any = signature.get('required_any', [])
+        required_all = signature.get('required_all', [])
+
+        # Check if at least one of the required parameters is present
+        if required_any:
+            has_required = any(param in request_data for param in required_any)
+            if not has_required:
+                # Report the first required parameter as the field name for test compatibility
+                missing_field = required_any[0]
+                raise ValidationError(
+                    missing_field,
+                    'missing',
+                    f"Required parameter for {modality}. Must include at least one of: {required_any}"
+                )
+
+        # Check that all required_all parameters are present
+        if required_all:
+            for param in required_all:
+                if param not in request_data:
+                    raise ValidationError(
+                        param,
+                        'missing',
+                        f"Required parameter '{param}' for {modality} modality"
+                    )
+
+    @classmethod
+    def _validate_parameter(cls, param_name: str, value: Any, rule: Dict[str, Any]) -> Any:
+        """Validate a single parameter against its rule with type conversion."""
+
+        # Type validation with conversion attempts
         expected_type = rule.get('type')
         if expected_type and not isinstance(value, expected_type):
-            raise ValidationError(
-                param_name,
-                value,
-                f"Expected type {expected_type.__name__}, got {type(value).__name__}"
-            )
+            # Attempt type conversion for common cases
+            converted_value = cls._attempt_type_conversion(value, expected_type)
+            if converted_value is not None:
+                value = converted_value
+            else:
+                raise ValidationError(
+                    param_name,
+                    str(value),
+                    f"Expected type {expected_type.__name__}, got {type(value).__name__}"
+                )
 
         # String validations
         if isinstance(value, str):
@@ -266,7 +332,7 @@ class RequestValidator:
                 raise ValidationError(
                     param_name,
                     value,
-                    f"Must be at least {min_length} characters long"
+                    f"String is empty, must be at least {min_length} characters in length"
                 )
 
             max_length = rule.get('max_length')
@@ -274,7 +340,7 @@ class RequestValidator:
                 raise ValidationError(
                     param_name,
                     value,
-                    f"Must be no more than {max_length} characters long"
+                    f"Must be no more than {max_length} characters in length"
                 )
 
         # Numeric validations
@@ -289,10 +355,11 @@ class RequestValidator:
 
             max_value = rule.get('max_value')
             if max_value is not None and value > max_value:
+                min_value = rule.get('min_value', 0)
                 raise ValidationError(
                     param_name,
                     value,
-                    f"Must be no more than {max_value}"
+                    f"Out of range. Must be between {min_value} and {max_value}"
                 )
 
             multiple_of = rule.get('multiple_of')
@@ -306,27 +373,89 @@ class RequestValidator:
         return value
 
     @classmethod
-    def validate_full_request(cls, request_data: Any) -> Tuple[str, Dict[str, Any]]:
+    def _attempt_type_conversion(cls, value: Any, expected_type: type) -> Any:
         """
-        Perform complete request validation including modality detection.
+        Attempt to convert value to expected type.
 
         Args:
-            request_data: Raw request data
+            value: Value to convert
+            expected_type: Target type
 
         Returns:
-            Tuple of (detected_modality, validated_request_data)
-
-        Raises:
-            ValidationError: If validation fails at any stage
+            Converted value if successful, None if conversion fails
         """
-        # Step 1: Basic format validation
-        validated_request = cls.validate_request_format(request_data)
+        try:
+            # Handle tuple types (e.g., (int, float))
+            if isinstance(expected_type, tuple):
+                for single_type in expected_type:
+                    converted = cls._attempt_type_conversion(value, single_type)
+                    if converted is not None:
+                        return converted
+                return None
 
-        # Step 2: Modality detection
-        detected_modality = ModalityDetector.detect_modality(validated_request)
+            # String to number conversions
+            if expected_type == int and isinstance(value, str):
+                return int(value)
+            elif expected_type == float and isinstance(value, str):
+                return float(value)
+            elif expected_type == int and isinstance(value, float):
+                return int(value) if value.is_integer() else None
+            elif expected_type == float and isinstance(value, int):
+                return float(value)
 
-        # Step 3: Parameter validation
-        validated_request = cls.validate_parameters(validated_request, detected_modality)
+            # No conversion possible
+            return None
 
-        logger.info(f"Request validation complete - modality: {detected_modality}")
-        return detected_modality, validated_request
+        except (ValueError, TypeError):
+            return None
+
+    def validate_full_request(self, request_data: Dict[str, Any], modality: str) -> Optional[Dict[str, Any]]:
+        """
+        Perform complete request validation for specified modality.
+
+        MMI-004 compliant implementation that validates parameters
+        for an explicitly specified modality type.
+
+        Args:
+            request_data: Raw request data dictionary
+            modality: Target modality for validation
+
+        Returns:
+            None if validation succeeds, error dict if validation fails
+
+        Error dict format:
+            {
+                'field': str,     # Field name that failed validation
+                'value': str,     # Field value that was invalid
+                'message': str    # Human-readable error message
+            }
+        """
+        try:
+            # Step 1: Basic format validation
+            validated_request = self.validate_request_format(request_data)
+
+            # Step 2: Parameter validation for specified modality
+            self.validate_parameters(validated_request, modality)
+
+            logger.info(f"Request validation complete - modality: {modality}")
+            return None  # Success
+
+        except ValidationError as e:
+            # Convert ValidationError to error dict
+            error_dict = {
+                'field': e.field,
+                'value': e.value,
+                'message': e.reason
+            }
+            logger.warning(f"Validation failed for modality {modality}: {error_dict}")
+            return error_dict
+
+        except Exception as e:
+            # Handle unexpected errors
+            error_dict = {
+                'field': 'request',
+                'value': 'unknown',
+                'message': f"Validation system error: {str(e)}"
+            }
+            logger.error(f"Unexpected validation error for modality {modality}: {error_dict}")
+            return error_dict

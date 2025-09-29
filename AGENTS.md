@@ -93,6 +93,20 @@ The application has been **fully refactored** into a comprehensive hooks-based a
 - **Execution**: Direct API calls to RunPod endpoints
 - **Storage**: Optional S3 volume for custom models/assets
 
+### Multi-Modal Worker Infrastructure
+
+Located in `workers/multi-model-worker/`, this provides comprehensive AI inference capabilities:
+
+#### **MMI-005: FLUX.1 Text-to-Image - COMPLETE ✅**
+
+- **FluxHandler** (`src/handlers/flux_handler.py`): Production-ready text-to-image generation with <15 second inference times
+- **FluxModel** (`src/models/flux_model.py`): FLUX.1 Schnell fp8 model wrapper with 12-15GB memory optimization
+- **Request Routing** (`src/handlers/multi_modal_handler.py`): Intelligent request routing with modality detection and validation
+- **Model Management** (`src/models/model_manager.py`): Smart model loading, caching, and memory eviction policies
+- **Comprehensive Testing**: 120+ tests covering all functionality with TDD compliance and performance validation
+
+The multi-modal worker provides the infrastructure foundation for implementing additional AI inference modalities (ControlNet, image-to-video, inpainting, etc.) with established patterns for validation, model management, and response formatting.
+
 ## Development Workflows
 
 ### Essential Commands

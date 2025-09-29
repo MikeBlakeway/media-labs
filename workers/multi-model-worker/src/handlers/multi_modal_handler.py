@@ -17,7 +17,7 @@ from ..models.model_manager import ModelManager
 from .base_handler import BaseHandler
 
 # Import specific handlers (will be implemented in future stories)
-# from .text_to_image_handler import TextToImageHandler
+from .flux_handler import FluxHandler  # MMI-005: FLUX.1 Text-to-Image Handler
 # from .image_to_video_handler import ImageToVideoHandler
 # from .text_to_video_handler import TextToVideoHandler
 # from .controlnet_handler import ControlNetHandler
@@ -48,6 +48,9 @@ class MultiModalHandler:
         # Handler registry - will be populated as handlers are implemented
         self.handlers: Dict[str, BaseHandler] = {}
 
+        # Initialize available handlers
+        self._initialize_handlers()
+
         # Initialize supported modalities list
         self.supported_modalities = list(self.handlers.keys())
 
@@ -56,6 +59,23 @@ class MultiModalHandler:
         self.total_processing_time = 0.0
 
         self.logger = get_request_logger()
+
+    def _initialize_handlers(self):
+        """Initialize all available handlers."""
+        try:
+            # Initialize FLUX.1 text-to-image handler (MMI-005)
+            flux_handler = FluxHandler()
+            self.register_handler(flux_handler.supported_modality, flux_handler)
+
+            # Future handlers will be added here as they are implemented
+            # image_to_video_handler = ImageToVideoHandler()
+            # self.register_handler(image_to_video_handler.supported_modality, image_to_video_handler)
+
+            self.logger.info(f"Initialized {len(self.handlers)} handlers")
+
+        except Exception as e:
+            self.logger.error(f"Failed to initialize some handlers: {e}")
+            # Continue with whatever handlers loaded successfully
 
     def register_handler(self, modality: str, handler: BaseHandler):
         """
