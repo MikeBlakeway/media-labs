@@ -27,6 +27,9 @@ media-labs/
 ├── release/                     # Release documentation and notes
 │   ├── docs/                    # Release process documentation
 │   └── notes/                   # Individual release notes ({version}.release.md)
+├── workers/                     # Worker implementations
+│   ├── volume-worker/           # S3 volume management and model operations
+│   └── multi-model-worker/      # Multi-modal AI inference worker
 └── .github/                     # GitHub configuration and AI prompts
 ```
 
@@ -485,6 +488,125 @@ make test
 make validate-workflows
 ```
 
+## Story Management Requirements
+
+### Mandatory Story Documentation Process
+
+When working on any story from the `/docs/stories/` folder, AI assistants must follow this comprehensive process:
+
+1. **Story Progress Tracking**:
+
+   - Always update the story document checklist items as tasks are completed
+   - Mark each checklist item with `[x]` when completed
+   - Update both "Inspect and modify", "Tests", and "General" sections
+   - Mark all "Definition of Done" criteria when satisfied
+
+2. **Comprehensive Work Summary**:
+
+   - Add a detailed "Summary of Work Completed" section at the end of each story document
+   - Include overview of all completed tasks with specific details
+   - Document directory structures created, files implemented, and test results
+   - Provide architectural alignment notes and integration points
+   - List key implementation highlights and deliverables
+   - Include validation results (test passes, functionality confirmation)
+   - Note current status and readiness for next phases
+
+3. **Documentation Structure Requirements**:
+
+   ```markdown
+   ## Summary of Work Completed
+
+   ### Overview
+
+   [Brief summary of story completion and date]
+
+   ### [Component] Implementation
+
+   [Detailed breakdown of each major component]
+
+   ### Key Implementation Highlights
+
+   [Important technical details and achievements]
+
+   ### Test Results / Validation
+
+   [Comprehensive test results and verification]
+
+   ### Architectural Alignment
+
+   [Integration with existing systems and patterns]
+
+   ### Foundation for Next Phases
+
+   [What this enables for subsequent work]
+
+   ### Quality Metrics
+
+   [Coverage, standards compliance, deliverables]
+
+   ### Deliverables Summary
+
+   [Final checklist of all completed items]
+
+   **Status**: **COMPLETE** ✅
+   **Next Phase**: [Clear identification of follow-up work]
+   **Foundation Quality**: [Assessment of readiness]
+   ```
+
+4. **Story Completion Verification**:
+   - Ensure all acceptance criteria are explicitly addressed
+   - Verify all checklist items are marked complete
+   - Confirm all Definition of Done criteria are satisfied
+   - Validate that the work summary is comprehensive and accurate
+
+### Agentic Documentation Maintenance
+
+AI assistants must maintain agentic worker-focused documents continuously:
+
+1. **AGENTS.md Files**:
+
+   - Update worker-specific AGENTS.md files with new patterns, requirements, and guidelines
+   - Add implementation patterns and development workflows as they are established
+   - Document quality standards and integration points
+   - Keep current status and phase information up to date
+   - Add new rules for AI agents as patterns emerge
+
+2. **Copilot-Instructions.md**:
+
+   - Update architecture overviews when new components are added
+   - Add new code patterns and conventions as they are established
+   - Update technology versions and dependencies when changed
+   - Maintain current project structure and file organization patterns
+   - Add new error handling patterns and best practices
+
+3. **Documentation Consistency**:
+   - Ensure all agentic documents are synchronized with current project state
+   - Cross-reference between documents for consistency
+   - Update examples and code snippets to reflect current implementation
+   - Maintain alignment between worker-specific and project-wide guidance
+
+### Enforcement Standards
+
+1. **Every Story Session**:
+
+   - Must begin by reading the story document and understanding requirements
+   - Must update checklist progress as work proceeds
+   - Must complete comprehensive work summary before session end
+   - Must update relevant agentic documentation with new patterns
+
+2. **Documentation Quality**:
+
+   - Work summaries must be detailed and comprehensive
+   - Technical details must be specific and actionable
+   - Status indicators must be accurate and clear
+   - Integration notes must be complete and helpful for future work
+
+3. **Continuous Maintenance**:
+   - Agentic documents must reflect current project state at all times
+   - New patterns and requirements must be documented immediately
+   - Cross-references between documents must be maintained
+   - Examples and code snippets must be kept current
+
 ## Mandatory Documentation Review
 
 ### AI Assistant Standards
@@ -508,7 +630,13 @@ To ensure all changes and tasks align with project standards and requirements, A
    - This review process is mandatory for every chat session.
    - AI assistants must confirm compliance with the documentation before proceeding with any tasks.
 
-4. **Error Reporting**:
-   - If any ambiguity or conflict arises in the documentation, it must be flagged and clarified before making changes.
+4. **Story Management Compliance**:
+
+   - Follow the mandatory story documentation process for all `/docs/stories/` work
+   - Update story checklists and provide comprehensive work summaries
+   - Maintain agentic documentation continuously throughout development
+
+5. **Error Reporting**:
+   - If any ambiguity or conflict arises in the documentation, it must be flagged and clarified before make changes.
 
 By enforcing these standards, we ensure consistency, maintainability, and quality across the project.

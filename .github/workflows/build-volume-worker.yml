@@ -8,19 +8,19 @@ on:
   push:
     branches:
       - development
-      - 'release/**'
-      - 'hotfix/**'
+      - "release/**"
+      - "hotfix/**"
     paths:
-      - 'volume-worker/**'
-      - '.github/workflows/build-volume-worker.yml'
+      - "workers/volume-worker/**"
+      - ".github/workflows/build-volume-worker.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'volume-worker/**'
+      - "workers/volume-worker/**"
   workflow_dispatch:
     # Allow manual triggering
   workflow_run:
-    workflows: ['CI/CD Pipeline']
+    workflows: ["CI/CD Pipeline"]
     types: [completed]
     branches: [main]
 
@@ -186,8 +186,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./volume-worker
-          file: ./volume-worker/Dockerfile
+          context: ./workers/volume-worker
+          file: ./workers/volume-worker/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tags.outputs.tags }}

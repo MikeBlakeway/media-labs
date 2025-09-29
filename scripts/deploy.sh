@@ -29,7 +29,7 @@ echo "🏗️  Building Docker image: ${LOCAL_IMAGE}"
 echo "📦 Will publish to: ${REMOTE_IMAGE}"
 
 # Build the Docker image for volume-worker
-docker build -t "${LOCAL_IMAGE}" ./volume-worker
+docker build -t "${LOCAL_IMAGE}" ./workers/volume-worker
 
 # Tag for GitHub Container Registry
 docker tag "${LOCAL_IMAGE}" "${REMOTE_IMAGE}"

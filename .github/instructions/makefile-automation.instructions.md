@@ -131,13 +131,13 @@ test-coverage: ## Run tests with coverage report
 .PHONY: build-worker
 build-worker: ## Build worker Docker image
 	@echo "$(BLUE)Building worker image...$(RESET)"
-	docker build --platform linux/amd64 -t runpod/worker-comfyui:latest ./volume-worker
+	docker build --platform linux/amd64 -t runpod/worker-comfyui:latest ./workers/volume-worker
 	@echo "$(GREEN)✅ Worker image built$(RESET)"
 
 .PHONY: dev-worker
 dev-worker: ## Run worker in development mode
 	@echo "$(BLUE)Starting development worker...$(RESET)"
-	cd volume-worker && docker run --rm -p 8000:8000 \
+	cd workers/volume-worker && docker run --rm -p 8000:8000 \
 		-e MODEL_TYPE=base \
 		runpod/worker-comfyui:dev
 

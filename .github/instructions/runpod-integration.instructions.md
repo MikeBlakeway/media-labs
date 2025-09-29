@@ -1,5 +1,5 @@
 ---
-applyTo: 'src/lib/runpod*,src/lib/workflow*,volume-worker/**,custom-worker/**,data/workflows/**'
+applyTo: 'src/lib/runpod*,src/lib/workflow*,workers/volume-worker/**,workers/custom-worker/**,data/workflows/**'
 description: 'RunPod and ComfyUI integration patterns'
 ---
 
@@ -367,4 +367,4 @@ make dev-worker
 make test-integration
 ```
 
-Refer to [RunPod documentation](../../docs/runpod/) for comprehensive integration patterns and [volume worker README](../../volume-worker/README.md) for development setup.
+Refer to [RunPod documentation](../../docs/runpod/) for comprehensive integration patterns and [volume worker README](../../workers/volume-worker/README.md) for development setup.
