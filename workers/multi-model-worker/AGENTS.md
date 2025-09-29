@@ -88,7 +88,7 @@ Create a proof-of-concept worker on RunPod that supports **multi-modal AI infere
 - **Deployment Target:** RunPod (serverless for MVP)
 - **Storage:** RunPod **Network Volume** (shared, avoids re-downloads)
 - **Startup:** Enable **FlashBoot** to minimize cold-starts
-- **Cache:** Centralize Hugging Face cache in `/workspace/cache/hf` and prune regularly
+- **Cache:** Centralize Hugging Face cache in `/runpod-volume/cache/hf` and prune regularly
 
 ---
 
@@ -118,7 +118,7 @@ Create a proof-of-concept worker on RunPod that supports **multi-modal AI infere
 ## Key Directory Structure (MVP)
 
 ```bash
-/workspace/models/
+/runpod-volume/models/
   flux/
     flux1-schnell-fp8.safetensors
   controlnet/
@@ -323,7 +323,7 @@ When working on any MMI story, AI assistants must:
 
 - **Frontend Integration**: Handler responses must be compatible with Media Labs hooks architecture
 - **RunPod Integration**: Follow RunPod serverless handler patterns in `main.py`
-- **Model Storage**: Use established `/workspace/models/` directory structure
+- **Model Storage**: Use established `/runpod-volume/models/` directory structure
 - **Logging**: Use structured logging consistent with existing patterns
 
 ### Current Status (Phase 1 Complete)

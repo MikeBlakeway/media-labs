@@ -8,7 +8,7 @@
 # Environment Variables:
 #   RUNPOD_AI_API_KEY - RunPod API key for authentication
 #   RUNPOD_WEBHOOK_SECRET - Secret for webhook validation
-#   MODELS_DIR - Directory containing AI models (default: /workspace/models)
+#   MODELS_DIR - Directory containing AI models (default: /runpod-volume/models)
 #   VALIDATION_MODE - Model validation level: basic|strict (default: basic)
 #   HEALTH_CHECK_INTERVAL - Health check interval in seconds (default: 30)
 #   LOG_LEVEL - Logging level: DEBUG|INFO|WARNING|ERROR (default: INFO)
@@ -20,12 +20,12 @@ set -euo pipefail
 # Configuration and Defaults
 # =============================================================================
 
-export MODELS_DIR="${MODELS_DIR:-/workspace/models}"
+export MODELS_DIR="${MODELS_DIR:-/runpod-volume/models}"
 export VALIDATION_MODE="${VALIDATION_MODE:-basic}"
 export HEALTH_CHECK_INTERVAL="${HEALTH_CHECK_INTERVAL:-30}"
 export LOG_LEVEL="${LOG_LEVEL:-INFO}"
 export STARTUP_TIMEOUT="${STARTUP_TIMEOUT:-300}"
-export PYTHONPATH="/workspace:${PYTHONPATH:-}"
+export PYTHONPATH="/runpod-volume:${PYTHONPATH:-}"
 
 # Logging configuration
 readonly LOG_FILE="/tmp/worker-startup.log"
@@ -74,7 +74,7 @@ check_system_resources() {
     log_info "Checking system resources..."
 
     # Check available disk space
-    local available_space=$(df /workspace 2>/dev/null | awk 'NR==2 {print $4}' || echo "0")
+    local available_space=$(df /runpod-volume 2>/dev/null | awk 'NR==2 {print $4}' || echo "0")
     local required_space=$((50 * 1024 * 1024))  # 50GB in KB
 
     if [[ "$available_space" -lt "$required_space" ]]; then
@@ -164,9 +164,9 @@ validate_models() {
         log_info "Attempting to download models..."
 
         # Try to download models if script is available
-        if [[ -f "/workspace/scripts/download_models.py" ]]; then
+        if [[ -f "/runpod-volume/scripts/download_models.py" ]]; then
             log_info "Running model download script..."
-            if python3 /workspace/scripts/download_models.py --cache-dir="$MODELS_DIR" --validation-mode="$VALIDATION_MODE"; then
+            if python3 /runpod-volume/scripts/download_models.py --cache-dir="$MODELS_DIR" --validation-mode="$VALIDATION_MODE"; then
                 log_info "Model download completed successfully"
             else
                 log_error "Model download failed"
@@ -181,9 +181,9 @@ validate_models() {
     fi
 
     # Run validation script if available
-    if [[ -f "/workspace/scripts/validate_models.py" ]]; then
+    if [[ -f "/runpod-volume/scripts/validate_models.py" ]]; then
         log_info "Running model validation script..."
-        if python3 /workspace/scripts/validate_models.py --models-dir="$MODELS_DIR" --mode="$VALIDATION_MODE"; then
+        if python3 /runpod-volume/scripts/validate_models.py --models-dir="$MODELS_DIR" --mode="$VALIDATION_MODE"; then
             log_info "Model validation passed"
         else
             log_error "Model validation failed"
@@ -356,11 +356,11 @@ main() {
 
     # Export environment for the worker
     export PYTHONUNBUFFERED=1
-    export PYTHONPATH="/workspace:${PYTHONPATH:-}"
+    export PYTHONPATH="/runpod-volume:${PYTHONPATH:-}"
 
     # Start worker and save PID
-    if [[ -f "/workspace/handler.py" ]]; then
-        python3 -u /workspace/handler.py &
+    if [[ -f "/runpod-volume/handler.py" ]]; then
+        python3 -u /runpod-volume/handler.py &
         local worker_pid=$!
         echo "$worker_pid" > "$PID_FILE"
         log_info "Worker process started (PID: $worker_pid)"
@@ -377,7 +377,7 @@ main() {
 
         exit $exit_code
     else
-        log_error "Worker handler not found: /workspace/handler.py"
+        log_error "Worker handler not found: /runpod-volume/handler.py"
         create_health_status "failed" "Worker handler not found"
         exit 1
     fi

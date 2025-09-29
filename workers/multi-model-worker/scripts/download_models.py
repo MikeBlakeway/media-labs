@@ -6,7 +6,7 @@ Downloads and validates AI models for the multi-modal inference worker
 while respecting storage constraints and ensuring model integrity.
 
 Usage:
-    python download_models.py --target-size=40GB --cache-dir=/workspace/models
+    python download_models.py --target-size=40GB --cache-dir=/runpod-volume/models
 """
 
 import os
@@ -36,7 +36,7 @@ class ModelDownloader:
 
     def __init__(
         self,
-        cache_dir: str = "/workspace/models",
+        cache_dir: str = "/runpod-volume/models",
         target_size_gb: int = 40,
         validation_mode: str = "basic"
     ):
@@ -323,7 +323,7 @@ def main():
     )
     parser.add_argument(
         "--cache-dir",
-        default="/workspace/models",
+        default="/runpod-volume/models",
         help="Directory to store downloaded models"
     )
     parser.add_argument(

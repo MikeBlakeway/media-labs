@@ -6,7 +6,7 @@ Validates the integrity and functionality of downloaded AI models
 for the multi-modal inference worker deployment.
 
 Usage:
-    python validate_models.py --models-dir=/workspace/models --mode=strict
+    python validate_models.py --models-dir=/runpod-volume/models --mode=strict
 """
 
 import os
@@ -35,7 +35,7 @@ class ModelValidator:
 
     def __init__(
         self,
-        models_dir: str = "/workspace/models",
+        models_dir: str = "/runpod-volume/models",
         validation_mode: str = "basic",
         require_gpu: bool = False
     ):
@@ -424,7 +424,7 @@ def main():
 
     parser.add_argument(
         "--models-dir",
-        default="/workspace/models",
+        default="/runpod-volume/models",
         help="Directory containing downloaded models"
     )
     parser.add_argument(

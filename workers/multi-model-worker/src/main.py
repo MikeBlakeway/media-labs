@@ -38,7 +38,7 @@ class MultiModalHandler:
     model loading, memory optimization, and inference execution.
     """
 
-    def __init__(self, model_cache_dir: str = "/workspace/models"):
+    def __init__(self, model_cache_dir: str = "/runpod-volume/models"):
         """
         Initialize the multi-modal handler.
 

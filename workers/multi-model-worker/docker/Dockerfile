@@ -28,13 +28,13 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 # Create necessary directories
-RUN mkdir -p /workspace/models /workspace/cache /app/logs
+RUN mkdir -p /runpod-volume/models /runpod-volume/cache /app/logs
 
 # Set environment variables
 ENV PYTHONPATH=/app/src
-ENV MODEL_CACHE_DIR=/workspace/models
-ENV HF_HOME=/workspace/cache/hf
-ENV TORCH_HOME=/workspace/cache/torch
+ENV MODEL_CACHE_DIR=/runpod-volume/models
+ENV HF_HOME=/runpod-volume/cache/hf
+ENV TORCH_HOME=/runpod-volume/cache/torch
 ENV RUNPOD_WORKER=true
 ENV PYTHONUNBUFFERED=1
 
@@ -54,12 +54,12 @@ COPY scripts/ ./scripts/
 # Download and validate models (respecting 40GB limit)
 RUN python scripts/download_models.py \
     --target-size=40GB \
-    --cache-dir=/workspace/models \
+    --cache-dir=/runpod-volume/models \
     --validation-mode=strict \
     --progress-bar
 
 # Verify model integrity and create manifest
-RUN python scripts/validate_models.py --models-dir=/workspace/models
+RUN python scripts/validate_models.py --models-dir=/runpod-volume/models
 
 #################################
 # Development Stage - Include Development Tools
@@ -90,8 +90,8 @@ CMD ["python", "-u", "src/main.py"]
 FROM base as runtime
 
 # Copy pre-downloaded models from models stage
-COPY --from=models /workspace/models /workspace/models
-COPY --from=models /workspace/cache /workspace/cache
+COPY --from=models /runpod-volume/models /runpod-volume/models
+COPY --from=models /runpod-volume/cache /runpod-volume/cache
 
 # Copy only necessary application files
 COPY src/ ./src/
@@ -102,7 +102,7 @@ RUN chmod +x ./entrypoint.sh
 
 # Create non-root user for security
 RUN groupadd -r worker && useradd -r -g worker worker
-RUN chown -R worker:worker /app /workspace
+RUN chown -R worker:worker /app /runpod-volume
 USER worker
 
 # Health check endpoint
@@ -127,8 +127,8 @@ ENV CUDA_LAUNCH_BLOCKING=0
 ENV OMP_NUM_THREADS=4
 
 # Remove any remaining development artifacts
-RUN find /workspace -name "*.pyc" -delete && \
-    find /workspace -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+RUN find /runpod-volume -name "*.pyc" -delete && \
+    find /runpod-volume -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
 # Production label
 LABEL maintainer="Media Labs Team" \

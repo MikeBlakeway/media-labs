@@ -143,7 +143,7 @@ CMD ["python", "src/main.py"]
 
 ```python
 class ModelManager:
-    def __init__(self, cache_dir="/workspace/models"):
+    def __init__(self, cache_dir="/runpod-volume/models"):
         self.cache_dir = cache_dir
         self.loaded_models = {}
         self.memory_monitor = MemoryMonitor()
