@@ -339,3 +339,66 @@ def log_error(logger_name: str, error: Exception, context: Optional[str] = None)
     if context:
         message = f"{context} - {message}"
     logger.error(message)
+
+
+class RequestContext:
+    """
+    Context manager for request tracking and performance monitoring.
+
+    Provides structured logging context and performance metrics collection
+    for individual requests throughout their lifecycle.
+    """
+
+    def __init__(self, request_id: str, logger: Optional[logging.Logger] = None):
+        """
+        Initialize request context.
+
+        Args:
+            request_id: Unique identifier for the request
+            logger: Optional logger instance for context logging
+        """
+        self.request_id = request_id
+        self.logger = logger
+        self.start_time = None
+        self.performance_data = {}
+
+    def __enter__(self):
+        """Enter the context and start timing."""
+        self.start_time = time.time()
+        if self.logger:
+            self.logger.info(f"Request started: {self.request_id}")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the context and log completion."""
+        if exc_type is not None:
+            # Exception occurred
+            if self.logger:
+                self.logger.error(f"Request failed: {self.request_id} - {exc_type.__name__}: {exc_val}")
+        else:
+            # Successful completion
+            total_time = self.get_total_time_ms()
+            if self.logger:
+                perf_summary = ", ".join([f"{k}: {v}ms" for k, v in self.performance_data.items()])
+                self.logger.info(f"Request completed: {self.request_id} - Total: {total_time:.1f}ms - Steps: {perf_summary}")
+
+    def add_performance_metric(self, step_name: str, duration_ms: float):
+        """
+        Add a performance metric for a processing step.
+
+        Args:
+            step_name: Name of the processing step
+            duration_ms: Duration in milliseconds
+        """
+        self.performance_data[step_name] = duration_ms
+
+    def get_total_time_ms(self) -> float:
+        """
+        Get total request time in milliseconds.
+
+        Returns:
+            Total time since context start in milliseconds
+        """
+        if self.start_time is None:
+            return 0.0
+        return (time.time() - self.start_time) * 1000.0

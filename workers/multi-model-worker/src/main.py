@@ -48,14 +48,6 @@ def get_multi_modal_handler() -> MultiModalHandler:
         model_manager = get_model_manager()
         _multi_modal_handler = MultiModalHandler(model_manager)
     return _multi_modal_handler
-            ModelLoadError: If model loading fails
-        """
-        # TODO: This will be implemented in specific modality stories
-        # For now, raise unsupported error
-        raise UnsupportedModalityError(
-            modality.value,
-            ["Framework ready - awaiting modality implementations"]
-        )
 
 def handler(event: Dict[str, Any]) -> Dict[str, Any]:
     """
