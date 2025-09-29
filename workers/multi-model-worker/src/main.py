@@ -10,96 +10,44 @@ import os
 import json
 import logging
 from typing import Dict, Any, Optional
-from enum import Enum
 
 try:
     # Try relative imports first (when running as package)
-    from .models import model_manager, BaseModel
+    from .models.model_manager import ModelManager
+    from .handlers.multi_modal_handler import MultiModalHandler
+    from .utils.logging_config import LoggingConfig, get_system_logger
+    from .utils.response_formatter import ResponseFormatter
     from .utils import config, UnsupportedModalityError, ValidationError, InferenceError
 except ImportError:
     # Fall back to absolute imports (when running as script or in tests)
-    from src.models import model_manager, BaseModel
+    from src.models.model_manager import ModelManager
+    from src.handlers.multi_modal_handler import MultiModalHandler
+    from src.utils.logging_config import LoggingConfig, get_system_logger
+    from src.utils.response_formatter import ResponseFormatter
     from src.utils import config, UnsupportedModalityError, ValidationError, InferenceError
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+
+# Global instances
+_model_manager = None
+_multi_modal_handler = None
+_response_formatter = ResponseFormatter()
 
 
-class ModalityType(Enum):
-    """Supported modality types for multi-modal inference."""
-    TEXT_TO_IMAGE = "text-to-image"
-    IMAGE_TO_VIDEO = "image-to-video"
-    TEXT_TO_VIDEO = "text-to-video"
-    CONTROL_NET = "control-net"
-    INPAINTING = "inpainting"
-    CAMERA_CONTROL = "camera-control"
+def get_model_manager() -> ModelManager:
+    """Get or create the global model manager instance."""
+    global _model_manager
+    if _model_manager is None:
+        _model_manager = ModelManager()
+    return _model_manager
 
 
-class MultiModalHandler:
-    """
-    Main handler class for multi-modal AI inference.
-
-    Provides unified interface for all supported modalities while managing
-    model loading, memory optimization, and inference execution.
-    """
-
-    def __init__(self, model_cache_dir: str = None):
-        """
-        Initialize the multi-modal handler.
-
-        Args:
-            model_cache_dir: Directory containing cached model files (uses config default if None)
-        """
-        # Use configuration management
-        if model_cache_dir is None:
-            self.model_cache_dir = config.model_cache_dir
-        else:
-            self.model_cache_dir = model_cache_dir
-
-        # Use the global model manager for all model operations
-        self.model_manager = model_manager
-
-        logger.info(f"Initializing MultiModalHandler with cache dir: {self.model_cache_dir}")
-        logger.info(f"Model management configuration: {config.to_dict()}")
-
-        # Verify model cache directory exists
-        if not os.path.exists(self.model_cache_dir):
-            logger.warning(f"Model cache directory does not exist: {self.model_cache_dir}")
-
-        # Register available models (this would be done by specific modality implementations)
-        # For now, this is just a placeholder for the framework
-        self._register_available_models()
-
-    def _register_available_models(self) -> None:
-        """
-        Register available models with the model manager.
-
-        This is a placeholder that would be replaced by actual model discovery
-        and registration logic in specific modality implementations.
-        """
-        logger.info("Registering available models...")
-
-        # TODO: This will be implemented in specific modality stories (MMI-004, etc.)
-        # For now, just log that the framework is ready
-        logger.info("Model management framework ready - awaiting modality implementations")
-
-    def get_model_for_modality(self, modality: ModalityType, model_name: str = None) -> BaseModel:
-        """
-        Get the appropriate model for a given modality.
-
-        Args:
-            modality: The requested modality type
-            model_name: Optional specific model name (uses default if not provided)
-
-        Returns:
-            Loaded model instance
-
-        Raises:
-            UnsupportedModalityError: If modality is not supported
+def get_multi_modal_handler() -> MultiModalHandler:
+    """Get or create the global multi-modal handler instance."""
+    global _multi_modal_handler
+    if _multi_modal_handler is None:
+        model_manager = get_model_manager()
+        _multi_modal_handler = MultiModalHandler(model_manager)
+    return _multi_modal_handler
             ModelLoadError: If model loading fails
         """
         # TODO: This will be implemented in specific modality stories
@@ -109,92 +57,57 @@ class MultiModalHandler:
             ["Framework ready - awaiting modality implementations"]
         )
 
-    def get_manager_status(self) -> Dict[str, Any]:
-        """Get comprehensive status of the model management system."""
-        return self.model_manager.get_manager_status()
+def handler(event: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    RunPod serverless handler function.
 
-    def handler(self, event: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        RunPod serverless handler function.
+    Args:
+        event: RunPod event containing input parameters
 
-        Args:
-            event: RunPod event containing input parameters
+    Returns:
+        Dict containing inference results or error information
+    """
+    try:
+        # Initialize logging
+        debug_mode = os.environ.get("DEBUG_MODE", "false").lower() == "true"
+        LoggingConfig.setup_logging(debug_mode)
+        logger = get_system_logger()
 
-        Returns:
-            Dict containing inference results or error information
-        """
-        try:
-            logger.info(f"Processing request: {event.get('id', 'unknown')}")
+        logger.info(f"Processing request: {event.get('id', 'unknown')}")
 
-            # Extract input data
-            input_data = event.get("input", {})
-            modality = input_data.get("modality")
+        # Extract input data
+        input_data = event.get("input", {})
 
-            if not modality:
-                return {
-                    "error": "Missing required parameter: modality",
-                    "supported_modalities": [m.value for m in ModalityType]
-                }
+        # Handle health check requests
+        if input_data.get("health_check"):
+            handler = get_multi_modal_handler()
+            response = handler.health_check()
+            return _response_formatter.add_runpod_compatibility(response)
 
-            # Validate modality type
-            try:
-                modality_enum = ModalityType(modality)
-            except ValueError:
-                return {
-                    "error": f"Unsupported modality: {modality}",
-                    "supported_modalities": [m.value for m in ModalityType]
-                }
+        # Handle system status requests
+        if input_data.get("system_status"):
+            handler = get_multi_modal_handler()
+            status = handler.get_system_status()
+            response = _response_formatter.format_system_status_response(
+                system_stats=status,
+                supported_modalities=handler.get_supported_modalities(),
+                request_id=f"status-{event.get('id', 'unknown')}"
+            )
+            return _response_formatter.add_runpod_compatibility(response)
 
-            # Special handling for status requests
-            if modality == "status":
-                return {
-                    "status": "ready",
-                    "manager_status": self.get_manager_status(),
-                    "supported_modalities": [m.value for m in ModalityType]
-                }
+        # Process regular inference request through routing system
+        handler = get_multi_modal_handler()
+        response = handler.process_request(input_data)
 
-            # Get model for the requested modality
-            try:
-                model = self.get_model_for_modality(modality_enum, input_data.get("model_name"))
+        # Convert to RunPod-compatible format
+        return _response_formatter.add_runpod_compatibility(response)
 
-                # Validate inputs
-                if not model.validate_inputs(input_data):
-                    return {"error": "Invalid input parameters"}
-
-                # Perform inference
-                results = model.infer(input_data)
-
-                return {
-                    "status": "success",
-                    "results": results,
-                    "model_info": {
-                        "name": model.model_name,
-                        "memory_usage_mb": model.memory_usage_mb,
-                    }
-                }
-
-            except UnsupportedModalityError as e:
-                return {
-                    "error": str(e),
-                    "supported_modalities": e.supported_modalities
-                }
-            except ValidationError as e:
-                return {
-                    "error": f"Validation error: {str(e)}",
-                    "field": e.field,
-                    "value": e.value
-                }
-            except InferenceError as e:
-                return {
-                    "error": f"Inference error: {str(e)}"
-                }
-
-        except Exception as e:
-            logger.error(f"Handler error: {str(e)}", exc_info=True)
-            return {
-                "error": f"Internal server error: {str(e)}",
-                "status": "error"
-            }
+    except Exception as e:
+        # Fallback error handling without logger if logging setup failed
+        return {
+            "error": f"Critical handler error: {str(e)}",
+            "status": "error"
+        }
 
 
 def runpod_handler(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -203,8 +116,7 @@ def runpod_handler(event: Dict[str, Any]) -> Dict[str, Any]:
 
     This function is called by RunPod for each inference request.
     """
-    handler = MultiModalHandler()
-    return handler.handler(event)
+    return handler(event)
 
 
 if __name__ == "__main__":
@@ -212,7 +124,18 @@ if __name__ == "__main__":
     test_event = {
         "id": "test-request",
         "input": {
-            "modality": "text-to-image",
+            "health_check": True
+        }
+    }
+
+    print("Testing health check...")
+    result = runpod_handler(test_event)
+    print(json.dumps(result, indent=2))
+
+    print("\nTesting inference request...")
+    test_event = {
+        "id": "test-inference",
+        "input": {
             "prompt": "A beautiful sunset over mountains",
             "steps": 4,
             "guidance_scale": 1.0

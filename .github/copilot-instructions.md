@@ -34,6 +34,8 @@ Before generating code, scan the codebase to identify:
 
 ## Architecture Overview
 
+### **Web Application (Next.js 15.5.2)**
+
 - **Next.js App Router (Next 15)**: Client and server components under `src/app/`
 - **Hooks-Based Architecture**: Comprehensive custom hooks for all business logic under `src/hooks/`
 - **Component Composition**: Focused UI components under `src/components/` using hooks for data
@@ -42,6 +44,30 @@ Before generating code, scan the codebase to identify:
 - **S3 Storage**: Model files live on S3-compatible RunPod volume configured in `src/lib/runpodVolume.ts`
 - **Model Storage Convention**: All model files must be stored under `models/<type>/...` at the root of your S3 bucket
 - **Template Storage**: Workflow templates stored on disk under `data/workflows/*.json` and served via `src/lib/templates.fs.ts`
+
+### **Multi-Modal Worker Infrastructure (Python)**
+
+Located in `workers/multi-model-worker/`, this provides the backend inference capabilities:
+
+#### **Request Routing System (MMI-004 - COMPLETE)**
+
+- **MultiModalHandler** (`src/handlers/multi_modal_handler.py`): Central request routing with automatic modality detection
+- **BaseHandler** (`src/handlers/base_handler.py`): Abstract base class for all modality-specific implementations
+- **RequestValidator** (`src/utils/request_validator.py`): Intelligent parameter validation and modality detection
+- **ResponseFormatter** (`src/utils/response_formatter.py`): Standardized response formatting with RunPod compatibility
+- **LoggingConfig** (`src/utils/logging_config.py`): Structured logging with request tracking and performance monitoring
+
+#### **Model Management System (MMI-003 - COMPLETE)**
+
+- **ModelManager** (`src/models/model_manager.py`): Intelligent model loading, caching, and eviction
+- **MemoryMonitor** (`src/models/memory_monitor.py`): GPU memory tracking and optimization
+- **BaseModel** (`src/models/base_model.py`): Abstract base class for all model implementations
+
+#### **RunPod Integration**
+
+- **Serverless Handler** (`src/main.py`): RunPod entry point with health checks and system status
+- **Request Processing Pipeline**: Modality detection → validation → routing → inference → formatting
+- **Health Monitoring**: System status endpoints for monitoring and debugging
 
 ## Hooks-Based Architecture
 
