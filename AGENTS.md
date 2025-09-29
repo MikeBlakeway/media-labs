@@ -271,6 +271,37 @@ make install-web PKG=package-name
 make install-worker PKG=package-name
 ```
 
+### Docker Build Pipeline Patterns
+
+For multi-modal inference worker development:
+
+1. **Multi-Stage Docker Builds**:
+
+   - Use 5-stage build: base, models, development, runtime, production
+   - Platform specification required: `--platform linux/amd64` for RunPod
+   - Model downloading stage with 40GB storage constraints
+   - Layer caching optimization for development velocity
+
+2. **Model Management Automation**:
+
+   - Model download scripts with HuggingFace Hub integration
+   - Size constraint enforcement with priority-based selection
+   - Comprehensive validation with multiple modes (basic/strict)
+   - Resume capability for interrupted downloads
+
+3. **Container Lifecycle Management**:
+
+   - Health check endpoints with JSON status reporting
+   - Graceful shutdown handling with signal management
+   - System resource validation on startup
+   - Background monitoring processes
+
+4. **Build Automation Integration**:
+   - Makefile targets: `build-worker`, `push-worker`, `test-worker`
+   - Version tagging with Git commit SHA
+   - Container registry integration (GHCR)
+   - Local testing and debugging capabilities
+
 ### Creating Test Scripts
 
 When creating temporary test scripts for debugging or development:
@@ -587,25 +618,35 @@ AI assistants must maintain agentic worker-focused documents continuously:
 
 ### Enforcement Standards
 
-1. **Every Story Session**:
+1. **Every Story Session** - MANDATORY REQUIREMENTS:
 
-   - Must begin by reading the story document and understanding requirements
-   - Must update checklist progress as work proceeds
-   - Must complete comprehensive work summary before session end
-   - Must update relevant agentic documentation with new patterns
+   - **MUST begin** by reading the story document and understanding requirements
+   - **MUST update** checklist progress as work proceeds (mark `[x]` for completed items)
+   - **MUST complete** comprehensive work summary before session end - THIS IS NON-NEGOTIABLE
+   - **MUST update** relevant agentic documentation with new patterns
+   - **FAILURE to complete story documentation is a critical process violation**
 
-2. **Documentation Quality**:
+2. **Documentation Quality** - MANDATORY STANDARDS:
 
-   - Work summaries must be detailed and comprehensive
-   - Technical details must be specific and actionable
-   - Status indicators must be accurate and clear
-   - Integration notes must be complete and helpful for future work
+   - Work summaries **MUST be** detailed and comprehensive with specific technical details
+   - Technical details **MUST be** specific and actionable for future developers
+   - Status indicators **MUST be** accurate and clear with explicit completion confirmation
+   - Integration notes **MUST be** complete and helpful for future work phases
+   - **ALL checklist items MUST be marked as `[x]` when story is complete**
 
-3. **Continuous Maintenance**:
-   - Agentic documents must reflect current project state at all times
-   - New patterns and requirements must be documented immediately
-   - Cross-references between documents must be maintained
-   - Examples and code snippets must be kept current
+3. **Continuous Maintenance** - MANDATORY UPDATES:
+
+   - Agentic documents **MUST reflect** current project state at all times
+   - New patterns and requirements **MUST be documented** immediately during implementation
+   - Cross-references between documents **MUST be maintained** for consistency
+   - Examples and code snippets **MUST be kept** current with latest implementations
+
+4. **Story Documentation Process Violations** - IMMEDIATE CORRECTION REQUIRED:
+
+   - **If story checklist is not updated**: Stop all work and update immediately
+   - **If work summary is missing**: Session cannot end until comprehensive summary is added
+   - **If agentic docs are not updated**: All new patterns must be documented before session close
+   - **No exceptions** - story documentation is as critical as code implementation
 
 ## Mandatory Documentation Review
 
@@ -638,5 +679,35 @@ To ensure all changes and tasks align with project standards and requirements, A
 
 5. **Error Reporting**:
    - If any ambiguity or conflict arises in the documentation, it must be flagged and clarified before make changes.
+
+## **MANDATORY PROCESS CHECKLISTS FOR ALL STORY WORK**
+
+Every AI assistant working on stories MUST use these checklists. They are also embedded in each story document for immediate reference.
+
+### **Pre-Session Checklist** - COMPLETE BEFORE STARTING WORK
+
+- [ ] Read and understand the complete story document including all acceptance criteria
+- [ ] Identify all checklist items that will be addressed in this session
+- [ ] Commit to updating documentation throughout the session (not just at the end)
+- [ ] Plan the comprehensive work summary structure required at session end
+- [ ] Verify understanding of all Definition of Done criteria
+
+### **Session End Checklist** - COMPLETE BEFORE ENDING SESSION
+
+- [ ] All completed work is marked with `[x]` in story checklists
+- [ ] Comprehensive work summary added with all required sections
+- [ ] All acceptance criteria explicitly addressed and confirmed complete
+- [ ] All Definition of Done items verified and marked complete
+- [ ] Agentic documents updated with new patterns
+- [ ] Status clearly marked as **COMPLETE** ✅ with next phase identified
+
+### **Process Violation Recovery** - IMMEDIATE ACTION IF CHECKLIST MISSED
+
+- [ ] **If story checklist not updated**: STOP all work, update immediately
+- [ ] **If work summary missing**: Session CANNOT end until summary added
+- [ ] **If agentic docs not updated**: All patterns MUST be documented
+- [ ] **Acknowledge violation**: Add explicit process improvement note
+
+**⚠️ ABSOLUTELY CRITICAL**: These process requirements are NON-NEGOTIABLE. Story documentation is as important as code implementation.
 
 By enforcing these standards, we ensure consistency, maintainability, and quality across the project.
