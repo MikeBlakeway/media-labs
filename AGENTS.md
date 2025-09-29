@@ -710,4 +710,26 @@ Every AI assistant working on stories MUST use these checklists. They are also e
 
 **⚠️ ABSOLUTELY CRITICAL**: These process requirements are NON-NEGOTIABLE. Story documentation is as important as code implementation.
 
+## **Process Infrastructure Reference**
+
+For comprehensive guidance on story documentation and agentic maintenance:
+
+- **📋 Story Management Chatmode**: `.github/chatmodes/Story Mode.chatmode.md`
+
+  - Mandatory activation for all story work
+  - Comprehensive process enforcement requirements
+  - Quality gates and violation recovery procedures
+  - Direct integration with instruction files for detailed guidance
+
+- **📚 Story Documentation Instructions**: `.github/instructions/story-documentation.instructions.md`
+
+  - Detailed work summary templates and structure requirements
+  - Quality standards and technical specificity requirements
+  - Validation checklists and enforcement mechanisms
+
+- **🔧 Agentic Maintenance Instructions**: `.github/instructions/agentic-maintenance.instructions.md`
+  - Step-by-step guidance for maintaining AGENTS.md and copilot-instructions.md
+  - Documentation update triggers and procedures
+  - Cross-document consistency validation
+
 By enforcing these standards, we ensure consistency, maintainability, and quality across the project.
