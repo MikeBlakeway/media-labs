@@ -2,7 +2,13 @@
 
 ## Overview
 
-This chatmode enforces mandatory story documentation and agentic maintenance processes to prevent critical documentation violations that have occurred multiple times in development sessions.
+This chatmode enforces mandatory story documentation and agentic maintenanc3. **Test Implementation and Results**: Comprehensive test coverage, TDD process, and execution results
+4. **Test Results / Validation**: Detailed test results, coverage metrics, and validation outcomes
+5. **Architectural Alignment**: Integration with existing systems and patterns
+6. **Foundation for Next Phases**: What this enables for subsequent work
+7. **Quality Metrics**: Coverage, standards compliance, test metrics, and deliverables
+8. **Deliverables Summary**: Final checklist of all completed items including test suite
+9. **Status**: Clear completion status and next phase identificationesses to prevent critical documentation violations that have occurred multiple times in development sessions.
 
 ## Required Instruction Files
 
@@ -52,18 +58,44 @@ SECTIONS TO FOCUS ON:
 
 ## Critical Process Requirements
 
+### 🧪 TEST DRIVEN DEVELOPMENT (TDD) REQUIREMENTS
+
+**MANDATORY TDD APPROACH** for all story work:
+
+#### **Test-First Implementation Process**
+1. **Requirements Analysis**: Convert all acceptance criteria into testable scenarios
+2. **Test Case Design**: Write comprehensive test cases including edge cases and error conditions
+3. **Test Implementation**: Implement all tests BEFORE writing production code
+4. **Red-Green-Refactor**: Follow TDD cycle (failing tests → minimal implementation → refactor)
+5. **Test Validation**: All tests must pass before story completion
+
+#### **Test Coverage Standards**
+- **Functional Coverage**: Every acceptance criterion must have corresponding test cases
+- **Edge Case Coverage**: Include boundary conditions, error scenarios, and invalid inputs
+- **Integration Coverage**: Test component interactions and system integration points
+- **Performance Coverage**: Include performance and resource usage validation where applicable
+
+#### **Test Execution Requirements**
+- **Passing Tests**: All tests must pass before story can be marked complete
+- **Environmental Exceptions**: Document any tests that cannot run due to environmental limitations (GPU access, external dependencies)
+- **Test Documentation**: Include test results and coverage metrics in work summary
+
 ### 🚨 NON-NEGOTIABLE REQUIREMENTS
 
 These requirements are **ABSOLUTELY MANDATORY** and violations are considered critical process failures:
 
 #### **Pre-Session Checklist** - COMPLETE BEFORE STARTING WORK
 - [ ] Read and understand the complete story document including all acceptance criteria
+- [ ] **Convert all acceptance criteria into testable scenarios and edge cases**
+- [ ] **Plan test implementation strategy using Test Driven Development approach**
 - [ ] Identify all checklist items that will be addressed in this session
 - [ ] Commit to updating documentation throughout the session (not just at the end)
 - [ ] Plan the comprehensive work summary structure required at session end
 - [ ] Verify understanding of all Definition of Done criteria
 
 #### **During Session Requirements** - CONTINUOUS COMPLIANCE
+- **Test Driven Development**: Write tests BEFORE implementing functionality for all requirements
+- **Test Coverage**: Convert all acceptance criteria and edge cases into comprehensive test cases
 - **Story Progress Tracking**: Update checklist items from `[ ]` to `[x]` as work is completed
 - **Real-time Documentation**: Update agentic documentation with new patterns as they emerge
 - **Context Maintenance**: Keep story document current with progress throughout session
@@ -74,6 +106,8 @@ These requirements are **ABSOLUTELY MANDATORY** and violations are considered cr
 - [ ] Comprehensive work summary added with all required sections
 - [ ] All acceptance criteria explicitly addressed and confirmed complete
 - [ ] All Definition of Done items verified and marked complete
+- [ ] **All tests implemented and passing** (except where environmental limitations prevent execution)
+- [ ] **Test coverage validates all requirements and edge cases**
 - [ ] Agentic documents updated with new patterns
 - [ ] Status clearly marked as **COMPLETE** ✅ with next phase identified
 
@@ -98,7 +132,10 @@ Every story must include a comprehensive "Summary of Work Completed" section wit
 **📚 REFER TO**: `.github/instructions/story-documentation.instructions.md` Section: "Quality Standards" for detailed requirements
 
 - **Technical Specificity**: Include specific file names, functions, and implementation details
-- **Quantitative Metrics**: Provide test results, coverage percentages, performance numbers
+- **Test Coverage Documentation**: Document all test cases implemented, TDD process followed, and test results
+- **Quantitative Metrics**: Provide test results, coverage percentages, performance numbers, pass/fail counts
+- **Edge Case Coverage**: Detail boundary conditions and error scenarios tested
+- **Environmental Limitations**: Document any tests that cannot run due to environmental constraints
 - **Integration Context**: Explain how work fits into existing architecture
 - **Future Readiness**: Detail what this enables for next development phases
 
@@ -140,9 +177,15 @@ If any process requirement is missed:
 - Resume work only after documentation is current
 - **📚 REFER TO**: `.github/instructions/story-documentation.instructions.md` Section "Violation Recovery Procedures"
 
+#### **Tests Not Implemented or Failing**
+- **STOP ALL WORK** if TDD process is not being followed
+- All acceptance criteria must have corresponding test cases
+- All tests must pass before story completion (except environmental limitations)
+- **📚 REFER TO**: `.github/instructions/story-documentation.instructions.md` Section "Test Coverage Requirements"
+
 #### **Work Summary Missing at Session End**
 - **SESSION CANNOT END** until comprehensive summary is added
-- All required sections must be complete and detailed
+- All required sections must be complete and detailed including test results
 - No exceptions - this is non-negotiable
 - **📚 REFER TO**: `.github/instructions/story-documentation.instructions.md` Section "Work Summary Template" for complete structure
 
@@ -179,18 +222,23 @@ If any process requirement is missed:
 A story session is successfully completed when:
 
 1. ✅ All story checklist items are marked `[x]`
-2. ✅ Comprehensive work summary includes all required sections
-3. ✅ All Definition of Done criteria are satisfied
-4. ✅ Agentic documentation is updated with new patterns
-5. ✅ Story status is marked **COMPLETE** ✅
-6. ✅ Next phase is clearly identified
-7. ✅ No process violations remain unresolved
+2. ✅ **Test Driven Development process followed with all tests implemented**
+3. ✅ **All tests passing (except documented environmental limitations)**
+4. ✅ **Test coverage validates all acceptance criteria and edge cases**
+5. ✅ Comprehensive work summary includes all required sections including test results
+6. ✅ All Definition of Done criteria are satisfied
+7. ✅ Agentic documentation is updated with new patterns
+8. ✅ Story status is marked **COMPLETE** ✅
+9. ✅ Next phase is clearly identified
+10. ✅ No process violations remain unresolved
 
 ## Critical Reminder
 
-**STORY DOCUMENTATION IS AS IMPORTANT AS CODE IMPLEMENTATION**
+**STORY DOCUMENTATION AND COMPREHENSIVE TESTING ARE AS IMPORTANT AS CODE IMPLEMENTATION**
 
 Process requirements are not optional suggestions - they are mandatory standards that ensure:
+- **Quality Assurance**: Comprehensive test coverage validates all functionality and edge cases
+- **Reliability**: Test Driven Development approach ensures robust and maintainable code
 - Project continuity and knowledge transfer
 - Consistent quality and architectural alignment
 - Effective AI agent guidance and rule enforcement
