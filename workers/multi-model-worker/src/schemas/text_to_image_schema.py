@@ -6,7 +6,7 @@ and responses, including parameter validation and default values.
 """
 
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 import base64
 
 
@@ -160,6 +160,8 @@ class ImageOutput(BaseModel):
 
 class TextToImageResponse(BaseModel):
     """Response schema for text-to-image generation."""
+
+    model_config = ConfigDict(protected_namespaces=())
 
     # Success/status information
     status: str = Field(

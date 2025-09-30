@@ -42,6 +42,7 @@ This document defines the **MVP requirements** for our bespoke RunPod worker. It
 ### **Phase 2: Core Modality Implementation - IN PROGRESS**
 
 - **MMI-005: FLUX.1 Text-to-Image Handler** - COMPLETE ✅ - Production-ready FLUX.1 Schnell fp8 text-to-image generation with <15 second inference times, comprehensive validation, and full integration with model management and routing systems
+- **MMI-006: ControlNet Integration** - COMPLETE ✅ - Production-ready ControlNet guided image generation with Canny edge detection and depth estimation, <20 second inference times, memory-efficient shared component architecture
 
 ### **Current Architecture: Request Routing System**
 
@@ -70,6 +71,13 @@ The worker now implements a sophisticated request routing infrastructure:
 - **FluxModel** (`src/models/flux_model.py`): FLUX.1 Schnell fp8 model wrapper with memory optimization (12-15GB target), HuggingFace diffusers integration, and intelligent caching
 - **ImageProcessor** (`src/utils/image_utils.py`): Comprehensive image processing utilities with PIL/PyTorch integration, format conversion (PNG/JPEG/WebP), and base64 encoding
 - **TextToImageSchema** (`src/schemas/text_to_image_schema.py`): Pydantic validation schemas with automatic dimension adjustment, parameter constraints, and error handling
+
+#### **ControlNet Guided Generation Implementation (MMI-006 Complete)**
+
+- **ControlNetHandler** (`src/handlers/controlnet_handler.py`): Production-ready guided image generation with Canny edge detection and depth estimation, comprehensive parameter validation, <20 second inference guarantee, and performance tracking
+- **ControlNetModel** (`src/models/controlnet_model.py`): Memory-efficient ControlNet model wrapper with shared component architecture leveraging FLUX.1 base components (VAE, text encoder) for 16GB total target usage
+- **Control Processors** (`src/utils/control_processors.py`): Robust image preprocessing with CannyProcessor (OpenCV-based edge detection) and DepthProcessor (MiDaS-based depth estimation) using extensible factory pattern
+- **ControlNetSchema** (`src/schemas/controlnet_schema.py`): Comprehensive Pydantic validation for ControlNet requests with control-specific parameters, image validation, and detailed error handling
 
 ### **Next Phase: Modality Implementation (MMI-005 through MMI-010)**
 

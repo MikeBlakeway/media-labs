@@ -44,11 +44,11 @@ class ModalityDetector:
             'forbidden': ['image', 'init_image', 'camera_motion', 'camera_pose', 'camera_trajectory'],
             'indicators': ['fps', 'duration', 'frames', 'video']
         },
-        'control-net': {
+        'controlnet': {
             'required_any': ['control_image'],
-            'required_all': ['controlnet_type'],
-            'forbidden': [],
-            'indicators': ['conditioning_scale', 'controlnet_conditioning_scale', 'controlnet']
+            'required_all': ['control_type'],
+            'forbidden': ['video'],
+            'indicators': ['control_strength', 'control_guidance_start', 'control_guidance_end', 'canny_low_threshold', 'canny_high_threshold']
         },
         'inpainting': {
             'required_any': ['mask'],

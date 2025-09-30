@@ -94,3 +94,12 @@ class ValidationError(InferenceError):
         self.value = value
         self.reason = reason
         super().__init__(f"Invalid {field} '{value}': {reason}")
+
+
+class ProcessingError(InferenceError):
+    """Raised when image or data processing operations fail."""
+
+    def __init__(self, operation: str, reason: str):
+        self.operation = operation
+        self.reason = reason
+        super().__init__(f"Processing error in {operation}: {reason}")

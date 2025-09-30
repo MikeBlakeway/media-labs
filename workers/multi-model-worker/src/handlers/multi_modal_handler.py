@@ -18,9 +18,9 @@ from .base_handler import BaseHandler
 
 # Import specific handlers (will be implemented in future stories)
 from .flux_handler import FluxHandler  # MMI-005: FLUX.1 Text-to-Image Handler
+from .controlnet_handler import ControlNetHandler  # MMI-006: ControlNet Integration
 # from .image_to_video_handler import ImageToVideoHandler
 # from .text_to_video_handler import TextToVideoHandler
-# from .controlnet_handler import ControlNetHandler
 # from .inpainting_handler import InpaintingHandler
 # from .camera_control_handler import CameraControlHandler
 
@@ -66,6 +66,10 @@ class MultiModalHandler:
             # Initialize FLUX.1 text-to-image handler (MMI-005)
             flux_handler = FluxHandler()
             self.register_handler(flux_handler.supported_modality, flux_handler)
+
+            # Initialize ControlNet handler (MMI-006)
+            controlnet_handler = ControlNetHandler()
+            self.register_handler(controlnet_handler.supported_modality, controlnet_handler)
 
             # Future handlers will be added here as they are implemented
             # image_to_video_handler = ImageToVideoHandler()

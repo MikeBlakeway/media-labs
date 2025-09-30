@@ -66,12 +66,12 @@ class TestModalityDetector:
         parameters = {
             'prompt': 'A house',
             'control_image': 'base64_control_image',
-            'controlnet_type': 'canny',
-            'controlnet_conditioning_scale': 1.0
+            'control_type': 'canny',
+            'control_strength': 1.0
         }
 
         result = self.detector.detect_modality(parameters)
-        assert result == 'control-net'
+        assert result == 'controlnet'
 
     def test_detect_inpainting_modality(self):
         """Test detection of inpainting requests."""
@@ -341,23 +341,23 @@ class TestRequestValidator:
         request_data = {
             'prompt': 'A house',
             'control_image': 'base64_control_image_data',
-            'controlnet_type': 'canny',
-            'controlnet_conditioning_scale': 1.0
+            'control_type': 'canny',
+            'control_strength': 1.0
         }
 
-        error = self.validator.validate_full_request(request_data, 'control-net')
+        error = self.validator.validate_full_request(request_data, 'controlnet')
         assert error is None
 
         # Missing controlnet-specific parameter
         request_data = {
             'prompt': 'A house',
             'control_image': 'base64_control_image_data'
-            # Missing controlnet_type
+            # Missing control_type
         }
 
-        error = self.validator.validate_full_request(request_data, 'control-net')
+        error = self.validator.validate_full_request(request_data, 'controlnet')
         assert error is not None
-        assert error['field'] == 'controlnet_type'
+        assert error['field'] == 'control_type'
 
 
 class TestRequestValidatorEdgeCases:
