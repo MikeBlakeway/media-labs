@@ -398,7 +398,47 @@ const [errors, setErrors] = useState<string[]>([])
 const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 ```
 
-## Troubleshooting checklist — HEAD vs LIST fallback
+## Troubleshooting Guidelines
+
+### Comprehensive Troubleshooting Documentation
+
+For detailed troubleshooting guidance, issue cataloguing, and solution patterns, refer to:
+
+**📚 Troubleshooting Guide** (`docs/trouble-shooting.md`) - Comprehensive issue documentation including:
+
+- **Known Gotchas**: Catalogued issues with root cause analysis and solutions
+- **External Documentation Links**: Quick access to relevant official documentation
+- **Solution Patterns**: Step-by-step resolution guides with code examples
+- **Issue Templates**: Standardized format for documenting new issues
+
+### When to Update Troubleshooting Documentation
+
+**MANDATORY**: Update `docs/trouble-shooting.md` whenever you:
+
+1. **Encounter and Solve Issues**: Document the problem, root cause, and solution
+2. **Discover Configuration Gotchas**: Add entries for non-obvious setup requirements
+3. **Find External Documentation**: Include links to relevant official docs for easy reference
+4. **Implement Workarounds**: Document temporary or permanent workaround strategies
+
+### Current Known Issues
+
+#### Pydantic V2 Protected Namespace Warnings
+
+Quick reference for immediate resolution:
+
+```python
+# Add to Pydantic models with model_* field names
+from pydantic import BaseModel, ConfigDict
+
+class MyResponse(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+```
+
+See troubleshooting guide `docs/trouble-shooting.md` (Pydantic V2 Issues section) for complete details.
+
+### Legacy Troubleshooting Notes
+
+#### HEAD vs LIST S3 Fallback
 
 1. Verify the computed S3 key (server-side):
 
