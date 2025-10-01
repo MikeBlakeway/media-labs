@@ -40,9 +40,7 @@ class TestFluxPerformance(unittest.TestCase):
         self.mock_flux_model.is_loaded = True
 
         self.mock_model_manager = Mock(spec=ModelManager)
-        self.mock_model_manager.load_models.return_value = {
-            'flux-1-schnell-fp8': self.mock_flux_model
-        }
+        self.mock_model_manager.get_model.return_value = self.mock_flux_model
 
         # Standard test request
         self.test_request = {
@@ -220,9 +218,7 @@ class TestFluxPerformance(unittest.TestCase):
             thread_mock_model.infer.return_value = mock_result
 
             thread_mock_manager = Mock(spec=ModelManager)
-            thread_mock_manager.load_models.return_value = {
-                'flux-1-schnell-fp8': thread_mock_model
-            }
+            thread_mock_manager.get_model.return_value = thread_mock_model
 
             # Create request
             request = self.test_request.copy()
@@ -431,9 +427,7 @@ class TestPerformanceEdgeCases(unittest.TestCase):
         }
 
         self.mock_flux_model.infer.return_value = mock_result
-        self.mock_model_manager.load_models.return_value = {
-            'flux-1-schnell-fp8': self.mock_flux_model
-        }
+        self.mock_model_manager.get_model.return_value = self.mock_flux_model
 
         with patch('src.handlers.flux_handler.encode_pil_image') as mock_encode:
             mock_encode.return_value = ("large_encoded_data", 3000000)  # Larger file size
@@ -482,9 +476,7 @@ class TestPerformanceEdgeCases(unittest.TestCase):
         }
 
         self.mock_flux_model.infer.return_value = mock_result
-        self.mock_model_manager.load_models.return_value = {
-            'flux-1-schnell-fp8': self.mock_flux_model
-        }
+        self.mock_model_manager.get_model.return_value = self.mock_flux_model
 
         with patch('src.handlers.flux_handler.encode_pil_image') as mock_encode:
             mock_encode.return_value = ("complex_encoded_data", 1200000)

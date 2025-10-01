@@ -13,6 +13,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import numpy as np
 from PIL import Image
+from pydantic import ValidationError
 
 # Test imports
 from src.schemas.image_to_video_schema import (
@@ -65,7 +66,7 @@ class TestImageToVideoSchema:
             'num_frames': 16
         }
 
-        with pytest.raises(ValueError, match="Invalid base64 image data"):
+        with pytest.raises(ValidationError, match="Input image must be valid base64 encoded data"):
             ImageToVideoRequest(**request_data)
 
     def test_frame_count_limits(self):
@@ -77,7 +78,7 @@ class TestImageToVideoSchema:
         img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
 
         # Too few frames
-        with pytest.raises(ValueError, match="num_frames must be between"):
+        with pytest.raises(ValidationError, match="Input should be greater than or equal to 8"):
             ImageToVideoRequest(
                 prompt='test',
                 input_image=img_base64,
@@ -85,7 +86,7 @@ class TestImageToVideoSchema:
             )
 
         # Too many frames
-        with pytest.raises(ValueError, match="num_frames must be between"):
+        with pytest.raises(ValidationError, match="Input should be less than or equal to 32"):
             ImageToVideoRequest(
                 prompt='test',
                 input_image=img_base64,
@@ -94,28 +95,37 @@ class TestImageToVideoSchema:
 
     def test_motion_parameter_validation(self):
         """Test motion parameter constraints."""
-        valid_params = {
-            'motion_bucket_id': 127,
-            'noise_aug_strength': 0.02
-        }
+        # Valid image
+        test_image = Image.new('RGB', (512, 512), color='red')
+        img_buffer = io.BytesIO()
+        test_image.save(img_buffer, format='PNG')
+        img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
 
         # Valid parameters
-        assert validate_motion_parameters(valid_params) == valid_params
+        valid_request = ImageToVideoRequest(
+            prompt='test',
+            input_image=img_base64,
+            motion_bucket_id=127,
+            noise_aug_strength=0.02
+        )
+        assert valid_request.motion_bucket_id == 127
+        assert valid_request.noise_aug_strength == 0.02
 
         # Invalid motion_bucket_id
-        invalid_params = valid_params.copy()
-        invalid_params['motion_bucket_id'] = 300
-
-        with pytest.raises(ValueError, match="motion_bucket_id must be between"):
-            validate_motion_parameters(invalid_params)
+        with pytest.raises(ValidationError, match="Input should be less than or equal to 255"):
+            ImageToVideoRequest(
+                prompt='test',
+                input_image=img_base64,
+                motion_bucket_id=300
+            )
 
     def test_video_info_creation(self):
         """Test VideoInfo response structure."""
         video_info = VideoInfo(
             format='mp4',
             duration=2.0,
-            fps=8.0,
-            frame_count=16,
+            fps=8,
+            num_frames=16,
             width=512,
             height=512,
             size_bytes=1048576
@@ -123,8 +133,8 @@ class TestImageToVideoSchema:
 
         assert video_info.format == 'mp4'
         assert video_info.duration == 2.0
-        assert video_info.fps == 8.0
-        assert video_info.frame_count == 16
+        assert video_info.fps == 8
+        assert video_info.num_frames == 16
 
 
 class TestVideoUtils:
@@ -230,9 +240,16 @@ class TestAnimateDiffModel:
         mock_cuda.return_value = True
         mock_model.is_loaded = False
 
-        # Mock the loading process
-        with patch.object(mock_model, '_setup_motion_adapter'), \
-             patch.object(mock_model, '_setup_pipeline'):
+        # Mock the external loading dependencies
+        with patch('src.models.animatediff_model.MotionAdapter.from_pretrained') as mock_motion_adapter, \
+             patch('src.models.animatediff_model.AnimateDiffPipeline.from_pretrained') as mock_pipeline, \
+             patch('src.models.animatediff_model.DPMSolverMultistepScheduler.from_config') as mock_scheduler:
+
+            # Configure mocks
+            mock_motion_adapter.return_value = MagicMock()
+            mock_pipeline_instance = MagicMock()
+            mock_pipeline.return_value = mock_pipeline_instance
+            mock_scheduler.return_value = MagicMock()
 
             mock_model.load_model()
 

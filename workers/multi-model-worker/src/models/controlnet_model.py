@@ -197,7 +197,7 @@ class ControlNetModel(BaseModel):
                     continue
 
             if not self.controlnets:
-                raise ModelLoadError("No ControlNet models were successfully loaded")
+                raise ModelLoadError("controlnet-models", "No ControlNet models were successfully loaded")
 
             # Load shared pipeline components for memory efficiency
             self._load_shared_components()
@@ -240,7 +240,7 @@ class ControlNetModel(BaseModel):
                     continue
 
             if not self.pipelines:
-                raise ModelLoadError("No ControlNet pipelines were successfully created")
+                raise ModelLoadError("controlnet-pipelines", "No ControlNet pipelines were successfully created")
 
             # Update load time tracking
             load_time = (datetime.now() - start_time).total_seconds()
@@ -259,7 +259,7 @@ class ControlNetModel(BaseModel):
         except Exception as e:
             logger.error(f"Failed to load ControlNet models: {e}")
             self._cleanup_failed_load()
-            raise ModelLoadError(f"ControlNet model loading failed: {str(e)}")
+            raise ModelLoadError("controlnet-model", f"ControlNet model loading failed: {str(e)}")
 
     def _load_shared_components(self):
         """Load shared pipeline components for memory efficiency."""
@@ -299,7 +299,7 @@ class ControlNetModel(BaseModel):
 
         except Exception as e:
             logger.error(f"Failed to load shared components: {e}")
-            raise ModelLoadError(f"Failed to load shared components: {str(e)}")
+            raise ModelLoadError("controlnet-shared-components", f"Failed to load shared components: {str(e)}")
 
     def unload(self) -> bool:
         """
@@ -401,12 +401,11 @@ class ControlNetModel(BaseModel):
             ModelLoadError: If required models are not loaded
         """
         if not self.is_loaded:
-            raise ModelLoadError("ControlNet models not loaded")
+            raise ModelLoadError("controlnet-models", "ControlNet models not loaded")
 
         if control_type not in self.pipelines:
             available = ', '.join(self.pipelines.keys())
-            raise ValidationError(f"Control type '{control_type}' not available. "
-                                f"Available: {available}")
+            raise ValidationError("control_type", control_type, f"not available. Available: {available}")
 
         try:
             start_time = datetime.now()

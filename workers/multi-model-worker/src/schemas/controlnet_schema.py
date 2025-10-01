@@ -244,7 +244,7 @@ def validate_controlnet_request(request_data: Dict[str, Any]) -> ControlNetReque
         return ControlNetRequest(**request_data)
     except Exception as e:
         from ..utils.exceptions import ValidationError
-        raise ValidationError(f"Invalid ControlNet request: {str(e)}")
+        raise ValidationError("controlnet_request", str(request_data), f"Invalid ControlNet request: {str(e)}")
 
 
 def create_success_response(

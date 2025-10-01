@@ -10,16 +10,32 @@ import time
 from typing import Dict, Any, List, Optional
 import logging
 
-from ..utils.request_validator import RequestValidator, ModalityDetector
-from ..utils.response_formatter import ResponseFormatter, ErrorType
-from ..utils.logging_config import LoggingConfig, get_request_logger, log_request_start, log_request_complete
-from ..models.model_manager import ModelManager
-from .base_handler import BaseHandler
+try:
+    # Try relative imports first (when run as package)
+    from ..utils.request_validator import RequestValidator, ModalityDetector
+    from ..utils.response_formatter import ResponseFormatter, ErrorType
+    from ..utils.logging_config import LoggingConfig, get_request_logger, log_request_start, log_request_complete
+    from ..models.model_manager import ModelManager
+    from .base_handler import BaseHandler
+    from .flux_handler import FluxHandler  # MMI-005: FLUX.1 Text-to-Image Handler
+except ImportError:
+    # Fall back to absolute imports (when run from tests)
+    from utils.request_validator import RequestValidator, ModalityDetector
+    from utils.response_formatter import ResponseFormatter, ErrorType
+    from utils.logging_config import LoggingConfig, get_request_logger, log_request_start, log_request_complete
+    from models.model_manager import ModelManager
+    from handlers.base_handler import BaseHandler
+    from handlers.flux_handler import FluxHandler  # MMI-005: FLUX.1 Text-to-Image Handler
 
-# Import specific handlers (will be implemented in future stories)
-from .flux_handler import FluxHandler  # MMI-005: FLUX.1 Text-to-Image Handler
-from .controlnet_handler import ControlNetHandler  # MMI-006: ControlNet Integration
-from .animatediff_handler import AnimateDiffHandler  # MMI-007: AnimateDiff Integration
+# Additional handler imports (MMI-006, MMI-007)
+try:
+    from .controlnet_handler import ControlNetHandler  # MMI-006: ControlNet Integration
+    from .animatediff_handler import AnimateDiffHandler  # MMI-007: AnimateDiff Integration
+except ImportError:
+    from handlers.controlnet_handler import ControlNetHandler  # MMI-006: ControlNet Integration
+    from handlers.animatediff_handler import AnimateDiffHandler  # MMI-007: AnimateDiff Integration
+
+# Future handlers (commented out for now)
 # from .text_to_video_handler import TextToVideoHandler
 # from .inpainting_handler import InpaintingHandler
 # from .camera_control_handler import CameraControlHandler
@@ -33,23 +49,28 @@ class MultiModalHandler:
     response formatting, providing a unified interface for all modalities.
     """
 
-    def __init__(self, model_manager: ModelManager):
+    def __init__(self, model_manager: ModelManager, auto_initialize: bool = True):
         """
         Initialize the multi-modal handler.
 
         Args:
             model_manager: Model management system instance
+            auto_initialize: Whether to automatically initialize handlers (default: True, False for testing)
         """
         self.model_manager = model_manager
         self.request_validator = RequestValidator()
         self.modality_detector = ModalityDetector()
         self.response_formatter = ResponseFormatter()
 
+        # Initialize logger first (needed by _initialize_handlers)
+        self.logger = get_request_logger()
+
         # Handler registry - will be populated as handlers are implemented
         self.handlers: Dict[str, BaseHandler] = {}
 
-        # Initialize available handlers
-        self._initialize_handlers()
+        # Initialize available handlers if requested
+        if auto_initialize:
+            self._initialize_handlers()
 
         # Initialize supported modalities list
         self.supported_modalities = list(self.handlers.keys())
@@ -57,8 +78,6 @@ class MultiModalHandler:
         # Performance tracking
         self.request_count = 0
         self.total_processing_time = 0.0
-
-        self.logger = get_request_logger()
 
     def _initialize_handlers(self):
         """Initialize all available handlers."""
@@ -329,8 +348,12 @@ class MultiModalHandler:
         try:
             self.logger.info(f"[{request_id}] Processing with {modality} handler")
 
+            # Ensure request_id is in request_data for handler
+            if 'id' not in request_data:
+                request_data['id'] = request_id
+
             # Process through handler
-            result = handler.handle_request(request_data, request_id)
+            result = handler.handle_request(request_data)
 
             self.logger.info(f"[{request_id}] Handler processing completed successfully")
             return result
@@ -359,11 +382,14 @@ class MultiModalHandler:
         )
 
         # Get memory and model stats from ModelManager
-        memory_stats = self.model_manager.get_memory_stats()
+        manager_status = self.model_manager.get_manager_status()
+        memory_summary = manager_status.get('memory_summary', {})
+        memory_stats = memory_summary.get('stats', {})
+
         model_stats = {
-            'loaded_models': len(self.model_manager._loaded_models),
-            'available_vram': memory_stats.get('available_vram_gb', 0),
-            'total_vram': memory_stats.get('total_vram_gb', 0)
+            'loaded_models': manager_status.get('loaded_count', 0),
+            'available_vram': memory_stats.get('gpu_free_mb', 0) / 1024.0,  # Convert MB to GB
+            'total_vram': memory_stats.get('gpu_total_mb', 0) / 1024.0  # Convert MB to GB
         }
 
         status = {

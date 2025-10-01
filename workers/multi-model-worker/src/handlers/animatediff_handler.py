@@ -154,7 +154,7 @@ class AnimateDiffHandler(BaseHandler):
 
         except Exception as e:
             logger.error(f"Failed to load AnimateDiff model: {e}")
-            raise ModelLoadError(f"Failed to load AnimateDiff model: {e}")
+            raise ModelLoadError("animatediff-model", f"Failed to load AnimateDiff model: {e}")
 
     def process_request(self, request_data: Dict[str, Any]) -> ImageToVideoResponse:
         """

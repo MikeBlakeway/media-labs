@@ -51,8 +51,11 @@ class TestMemoryMonitor(unittest.TestCase):
         mock_memory.percent = 50.0
         mock_psutil.virtual_memory.return_value = mock_memory
 
+        # Create monitor with CUDA available (after mocking)
+        test_monitor = MemoryMonitor(check_interval_seconds=0.1)
+
         # Get stats
-        stats = self.monitor.get_current_stats()
+        stats = test_monitor.get_current_stats()
 
         # Verify GPU stats
         self.assertEqual(stats.gpu_total_mb, 8 * 1024)  # 8GB in MB
@@ -64,6 +67,9 @@ class TestMemoryMonitor(unittest.TestCase):
         self.assertEqual(stats.system_total_mb, 16 * 1024)
         self.assertEqual(stats.system_used_mb, 8 * 1024)
         self.assertEqual(stats.system_utilization_percent, 50.0)
+
+        # Clean up test monitor
+        test_monitor.stop_monitoring()
 
     @patch('src.models.memory_monitor.torch')
     @patch('src.models.memory_monitor.psutil')
@@ -182,20 +188,25 @@ class TestMemoryMonitor(unittest.TestCase):
         self.assertTrue(self.monitor._monitoring)
         self.monitor.stop_monitoring()
 
-    def test_gpu_cache_clearing(self):
+    @patch('src.models.memory_monitor.torch')
+    def test_gpu_cache_clearing(self, mock_torch):
         """Test GPU cache clearing functionality."""
-        with patch('src.models.memory_monitor.torch') as mock_torch:
-            mock_torch.cuda.is_available.return_value = True
+        # Set up CUDA availability and create monitor for this test
+        mock_torch.cuda.is_available.return_value = True
+        test_monitor = MemoryMonitor(check_interval_seconds=0.1)
 
-            # Test successful cache clear
-            self.monitor.clear_gpu_cache()
-            mock_torch.cuda.empty_cache.assert_called_once()
+        # Test successful cache clear
+        test_monitor.clear_gpu_cache()
+        mock_torch.cuda.empty_cache.assert_called_once()
 
-            # Test cache clear with exception
-            mock_torch.cuda.empty_cache.side_effect = RuntimeError("GPU error")
+        # Test cache clear with exception
+        mock_torch.cuda.empty_cache.side_effect = RuntimeError("GPU error")
 
-            # Should not raise exception
-            self.monitor.clear_gpu_cache()
+        # Should not raise exception
+        test_monitor.clear_gpu_cache()
+
+        # Clean up test monitor
+        test_monitor.stop_monitoring()
 
     def test_memory_summary_generation(self):
         """Test comprehensive memory summary generation."""

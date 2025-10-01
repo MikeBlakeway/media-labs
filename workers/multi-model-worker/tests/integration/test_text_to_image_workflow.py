@@ -80,9 +80,7 @@ class TestTextToImageWorkflow(unittest.TestCase):
         mock_encode_image.return_value = (base64_data, 1024000)
 
         # Mock model manager to return loaded FLUX model
-        self.mock_model_manager.load_models.return_value = {
-            'flux-1-schnell-fp8': self.mock_flux_model
-        }
+        self.mock_model_manager.get_model.return_value = self.mock_flux_model
 
         # Mock FLUX model inference
         mock_inference_result = {
@@ -126,7 +124,7 @@ class TestTextToImageWorkflow(unittest.TestCase):
         self.assertIn('model_info', output)
 
         # Verify model manager was called correctly
-        self.mock_model_manager.load_models.assert_called_once_with(['flux-1-schnell-fp8'])
+        self.mock_model_manager.get_model.assert_called_with('flux-1-schnell-fp8')
 
         # Verify FLUX model was called with correct parameters
         self.mock_flux_model.infer.assert_called_once()
@@ -150,12 +148,12 @@ class TestTextToImageWorkflow(unittest.TestCase):
         self.assertIn('error_message', response)
 
         # Verify model manager was not called
-        self.mock_model_manager.load_models.assert_not_called()
+        self.mock_model_manager.get_model.assert_not_called()
 
     def test_text_to_image_workflow_model_loading_error(self):
         """Test workflow handling of model loading errors."""
         # Mock model loading failure
-        self.mock_model_manager.load_models.side_effect = Exception("Model loading failed")
+        self.mock_model_manager.get_model.side_effect = Exception("Model loading failed")
 
         # Process request
         response = self.multi_handler.process_request(self.valid_request)
@@ -165,7 +163,7 @@ class TestTextToImageWorkflow(unittest.TestCase):
         self.assertIn('error_type', response)
 
         # Verify model loading was attempted
-        self.mock_model_manager.load_models.assert_called_once()
+        self.mock_model_manager.get_model.assert_called()
 
     def test_text_to_image_workflow_inference_error(self):
         """Test workflow handling of inference errors."""

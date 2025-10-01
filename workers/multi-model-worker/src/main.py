@@ -9,7 +9,18 @@ ControlNet guidance, and camera control functionality.
 import os
 import json
 import logging
+from enum import Enum
 from typing import Dict, Any, Optional
+
+
+class ModalityType(Enum):
+    """Enumeration of supported modality types."""
+    TEXT_TO_IMAGE = "text-to-image"
+    IMAGE_TO_VIDEO = "image-to-video"
+    TEXT_TO_VIDEO = "text-to-video"
+    CONTROL_NET = "controlnet"
+    INPAINTING = "inpainting"
+    CAMERA_CONTROL = "camera-control"
 
 try:
     # Try relative imports first (when running as package)

@@ -27,35 +27,74 @@ class MockBaseHandler(BaseHandler):
     """Mock implementation of BaseHandler for testing."""
 
     def __init__(self, modality: str):
+        # Call parent constructor with handler name
+        super().__init__(f"{modality}-handler")
         self.modality = modality
         self.validate_called = False
-        self.load_models_called = False
+        self.load_models_called = False  # Match test expectations
         self.process_inference_called = False
         self.format_response_called = False
 
-    def validate_request(self, request_data: Dict[str, Any], request_id: str) -> bool:
-        self.validate_called = True
-        return True
+    @property
+    def supported_modality(self) -> str:
+        """Return the modality type this handler supports."""
+        return self.modality
 
-    def load_models(self, request_data: Dict[str, Any], request_id: str) -> List[str]:
-        self.load_models_called = True
+    @property
+    def required_parameters(self) -> List[str]:
+        """Return list of required parameters for this modality."""
+        return ["prompt"]
+
+    @property
+    def optional_parameters(self) -> Dict[str, Any]:
+        """Return dict of optional parameters with their default values."""
+        return {
+            "width": 512,
+            "height": 512,
+            "steps": 20
+        }
+
+    def validate_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate request data."""
+        self.validate_called = True
+        return request_data
+
+    def get_required_models(self, request_data: Dict[str, Any]) -> List[str]:
+        """Get required models."""
+        self.load_models_called = True  # Match test expectations
         return [f"{self.modality}-model"]
 
-    def process_inference(self, request_data: Dict[str, Any], models: List[str], request_id: str) -> Any:
+    def process_inference(self, models: Dict[str, Any], request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process inference."""
         self.process_inference_called = True
         return {"result": f"{self.modality}-output"}
 
-    def format_response(self, output: Any, processing_time_ms: float, models_used: List[str], request_id: str) -> Dict[str, Any]:
+    def format_response(self, inference_results: Dict[str, Any], request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Format response."""
         self.format_response_called = True
         return {
             "status": "success",
-            "output": output,
+            "output": inference_results,
             "metadata": {
-                "request_id": request_id,
-                "processing_time_ms": processing_time_ms,
-                "models_used": models_used
+                "modality": self.modality,
+                "request_data": request_data
             }
         }
+
+    def handle_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Override handle_request to track calls properly."""
+        # Track that validation was called
+        validated_data = self.validate_request(request_data)
+
+        # Track that model loading was called
+        required_models = self.get_required_models(validated_data)
+
+        # Track that inference was called (mock successful inference)
+        mock_models = {model: Mock() for model in required_models}
+        inference_results = self.process_inference(mock_models, validated_data)
+
+        # Track that response formatting was called
+        return self.format_response(inference_results, validated_data)
 
 
 class TestMultiModalHandler:
@@ -64,13 +103,32 @@ class TestMultiModalHandler:
     def setup_method(self):
         """Setup test fixtures."""
         self.mock_model_manager = Mock(spec=ModelManager)
-        self.mock_model_manager.get_memory_stats.return_value = {
-            "available_vram_gb": 16.0,
-            "total_vram_gb": 24.0,
-            "gpu_utilization": 45.2
+        # Configure realistic manager status response
+        self.mock_model_manager.get_manager_status.return_value = {
+            "loaded_models": [],
+            "loaded_count": 0,
+            "registered_count": 2,
+            "max_models": 3,
+            "memory_summary": {
+                "stats": {
+                    "gpu_total_mb": 24000,
+                    "gpu_allocated_mb": 8000,
+                    "gpu_utilization_percent": 33.3
+                },
+                "thresholds": {
+                    "warning_percent": 80.0,
+                    "eviction_percent": 90.0,
+                    "warning_exceeded": False,
+                    "eviction_needed": False
+                },
+                "available_memory_mb": 16000,
+                "monitoring_active": True,
+                "cuda_available": True
+            }
         }
 
-        self.handler = MultiModalHandler(self.mock_model_manager)
+        # Enable auto-initialization for main testing (edge cases use controlled testing)
+        self.handler = MultiModalHandler(self.mock_model_manager, auto_initialize=True)
 
         # Setup mock handlers for testing
         self.mock_text_to_image_handler = MockBaseHandler("text-to-image")
@@ -81,8 +139,14 @@ class TestMultiModalHandler:
         assert self.handler.model_manager == self.mock_model_manager
         assert isinstance(self.handler.request_validator, RequestValidator)
         assert isinstance(self.handler.response_formatter, ResponseFormatter)
-        assert self.handler.handlers == {}
-        assert self.handler.supported_modalities == []
+
+        # With auto_initialize=True, should start with auto-initialized handlers
+        assert len(self.handler.handlers) == 3
+        assert 'image-to-video' in self.handler.handlers
+
+        # Supported modalities should match registered handlers
+        assert set(self.handler.supported_modalities) == {'text-to-image', 'controlnet', 'image-to-video'}
+
         assert self.handler.request_count == 0
         assert self.handler.total_processing_time == 0.0
 
@@ -97,32 +161,36 @@ class TestMultiModalHandler:
 
     def test_register_multiple_handlers(self):
         """Test registration of multiple handlers."""
+        # Register additional handlers (text-to-image and image-to-video will replace auto-initialized ones)
+        initial_count = len(self.handler.handlers)  # Should be 3 (auto-initialized)
+
         self.handler.register_handler("text-to-image", self.mock_text_to_image_handler)
         self.handler.register_handler("image-to-video", self.mock_image_to_video_handler)
 
-        assert len(self.handler.handlers) == 2
-        assert len(self.handler.supported_modalities) == 2
+        # Handler count should remain the same (replaced existing handlers)
+        assert len(self.handler.handlers) == initial_count
+        assert len(self.handler.supported_modalities) == initial_count
         assert "text-to-image" in self.handler.supported_modalities
         assert "image-to-video" in self.handler.supported_modalities
 
     def test_get_supported_modalities(self):
         """Test getting list of supported modalities."""
-        # Initially empty
+        # Should have auto-initialized handlers
         modalities = self.handler.get_supported_modalities()
-        assert modalities == []
+        assert len(modalities) == 3  # text-to-image, controlnet, image-to-video
+        assert set(modalities) == {'text-to-image', 'controlnet', 'image-to-video'}
 
-        # After registering handlers
-        self.handler.register_handler("text-to-image", self.mock_text_to_image_handler)
-        self.handler.register_handler("image-to-video", self.mock_image_to_video_handler)
+        # After registering additional mock handlers
+        self.handler.register_handler("test-modality", self.mock_text_to_image_handler)
 
         modalities = self.handler.get_supported_modalities()
-        assert len(modalities) == 2
-        assert "text-to-image" in modalities
+        assert len(modalities) == 4
+        assert "test-modality" in modalities
         assert "image-to-video" in modalities
 
         # Should return a copy, not the original list
-        modalities.append("test-modality")
-        assert len(self.handler.get_supported_modalities()) == 2
+        modalities.append("extra-test")
+        assert len(self.handler.get_supported_modalities()) == 4  # Still 4 - doesn't modify original
 
     @patch('uuid.uuid4')
     def test_process_request_with_explicit_modality(self, mock_uuid):
@@ -207,7 +275,7 @@ class TestMultiModalHandler:
 
             # Should return modality not supported error
             assert response['status'] == 'error'
-            assert 'not currently supported' in response['error']['message']
+            assert 'Unsupported modality' in response['error']['message']
 
     @patch('uuid.uuid4')
     def test_process_request_validation_failure(self, mock_uuid):
@@ -276,10 +344,10 @@ class TestMultiModalHandler:
 
             response = self.handler.process_request(request_data)
 
-            # Should return internal error response
+            # Should return modality detection error (exception is caught in _detect_modality)
             assert response['status'] == 'error'
-            assert 'Internal processing error' in response['error']['message']
-            assert response['error']['type'] == ErrorType.INTERNAL_ERROR.value
+            assert 'Could not determine request modality' in response['error']['message']
+            assert response['error']['type'] == ErrorType.VALIDATION_ERROR.value
 
     def test_get_system_status(self):
         """Test system status reporting."""
@@ -291,15 +359,24 @@ class TestMultiModalHandler:
         self.handler.request_count = 10
         self.handler.total_processing_time = 15000.0  # 15 seconds total
 
-        # Mock model manager loaded models
-        self.handler.model_manager._loaded_models = {"model1": Mock(), "model2": Mock()}
+        # Update mock model manager to return 2 loaded models
+        self.mock_model_manager.get_manager_status.return_value.update({
+            "loaded_count": 2,
+            "memory_summary": {
+                "stats": {
+                    "gpu_total_mb": 24000,
+                    "gpu_free_mb": 16000,
+                    "gpu_allocated_mb": 8000
+                }
+            }
+        })
 
         status = self.handler.get_system_status()
 
         # Validate status structure
         assert status['service'] == 'multi-modal-inference-worker'
         assert status['status'] == 'healthy'
-        assert status['supported_modalities'] == ["text-to-image", "image-to-video"]
+        assert set(status['supported_modalities']) == {"text-to-image", "controlnet", "image-to-video"}
 
         # Validate statistics
         stats = status['statistics']
@@ -371,7 +448,20 @@ class TestMultiModalHandlerEdgeCases:
     def setup_method(self):
         """Setup test fixtures."""
         self.mock_model_manager = Mock(spec=ModelManager)
-        self.handler = MultiModalHandler(self.mock_model_manager)
+
+        # Configure the mock to return proper numeric values for system status
+        self.mock_model_manager.get_manager_status.return_value = {
+            'loaded_count': 0,
+            'memory_summary': {
+                'stats': {
+                    'gpu_free_mb': 8192,
+                    'gpu_total_mb': 16384
+                }
+            }
+        }
+
+        # Disable auto-initialization for testing to prevent interference
+        self.handler = MultiModalHandler(self.mock_model_manager, auto_initialize=False)
 
     def test_empty_request_data(self):
         """Test handling of empty request data."""
@@ -446,9 +536,31 @@ class TestMultiModalHandlerIntegration:
     def setup_method(self):
         """Setup test fixtures with real components."""
         self.mock_model_manager = Mock(spec=ModelManager)
-        self.mock_model_manager.get_memory_stats.return_value = {
-            "available_vram_gb": 16.0,
-            "total_vram_gb": 24.0
+        self.mock_model_manager.get_manager_status.return_value = {
+            "loaded_models": [],
+            "loaded_count": 0,
+            "registered_count": 3,
+            "max_models": 5,
+            "memory_summary": {
+                "stats": {
+                    "gpu_free_mb": 16000,
+                    "gpu_total_mb": 24000,
+                    "gpu_utilization": 0.0
+                },
+                "thresholds": {
+                    "warning_percent": 80,
+                    "eviction_percent": 90,
+                    "warning_exceeded": False,
+                    "eviction_needed": False
+                },
+                "available_memory_mb": 16000
+            },
+            "statistics": {},
+            "configuration": {
+                "max_models": 5,
+                "model_timeout_seconds": 300,
+                "protect_duration_minutes": 5
+            }
         }
         self.handler = MultiModalHandler(self.mock_model_manager)
 

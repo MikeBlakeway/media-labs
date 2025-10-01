@@ -144,7 +144,7 @@ class ControlNetHandler(BaseHandler):
             # Additional validation for control types
             if normalized_params['control_type'] not in self.control_types:
                 supported = ', '.join(self.control_types)
-                raise ValidationError(f"Control type '{normalized_params['control_type']}' "
+                raise ValidationError("control_type", normalized_params['control_type'],
                                     f"not supported by this handler. Supported: {supported}")
 
             logger.debug(f"Request validated successfully for control type: "
@@ -155,7 +155,7 @@ class ControlNetHandler(BaseHandler):
         except ValidationError:
             raise
         except Exception as e:
-            raise ValidationError(f"Request validation failed: {str(e)}")
+            raise ValidationError("request_validation", str(type(e).__name__), f"Request validation failed: {str(e)}")
 
     def process_request(
         self,
@@ -192,7 +192,7 @@ class ControlNetHandler(BaseHandler):
             )
 
             if not isinstance(controlnet_model, ControlNetModel):
-                raise ModelLoadError("Failed to load ControlNet model")
+                raise ModelLoadError("controlnet-model", "Failed to load ControlNet model")
 
             # Extract control-specific parameters
             control_params = self._extract_control_params(request_data)

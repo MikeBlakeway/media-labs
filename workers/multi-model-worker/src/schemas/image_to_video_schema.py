@@ -15,68 +15,106 @@ class ImageToVideoRequest(BaseModel):
 
     model_config = ConfigDict(protected_namespaces=())
 
-    # Required parameters
+    # Required fields (matching handler required_parameters)
     input_image: str = Field(
         ...,
-        description="Base64-encoded input image to animate"
+        description="Base64-encoded input image for animation",
+        min_length=1
     )
 
-    motion_prompt: Optional[str] = Field(
-        default="gentle motion, smooth animation",
-        min_length=1,
-        max_length=1000,
-        description="Text description of desired motion and animation style"
+    prompt: str = Field(
+        ...,
+        description="Text prompt to guide generation",
+        min_length=1
     )
 
-    # Video parameters
+    # Optional fields (matching handler optional_parameters)
+    width: int = Field(
+        default=512,
+        ge=256,
+        le=1024,
+        description="Output video width in pixels"
+    )
+
+    height: int = Field(
+        default=512,
+        ge=256,
+        le=1024,
+        description="Output video height in pixels"
+    )
+
     num_frames: int = Field(
         default=16,
         ge=8,
         le=32,
-        description="Number of frames to generate (affects video length)"
+        description="Number of frames to generate"
     )
 
     fps: int = Field(
         default=8,
-        ge=6,
+        ge=4,
         le=30,
         description="Frames per second for output video"
     )
 
-    # Generation parameters
     num_inference_steps: int = Field(
-        default=25,
+        default=20,
         ge=10,
         le=50,
-        description="Number of denoising steps during generation"
+        description="Number of inference steps"
     )
 
     guidance_scale: float = Field(
         default=7.5,
         ge=1.0,
         le=20.0,
-        description="How closely to follow the motion prompt"
+        description="Guidance scale for generation quality"
     )
 
-    motion_strength: float = Field(
-        default=0.7,
-        ge=0.1,
-        le=1.0,
-        description="Strength of motion applied to the input image"
-    )
-
-    # Optional parameters
     seed: Optional[int] = Field(
         default=None,
         ge=0,
-        le=2**32 - 1,
         description="Random seed for reproducible generation"
     )
 
+    motion_strength: float = Field(
+        default=0.8,
+        ge=0.1,
+        le=2.0,
+        description="Strength of motion effect"
+    )
+
+    output_format: str = Field(
+        default="mp4",
+        pattern="^(mp4|gif|webm)$",
+        description="Output video format"
+    )
+
+    # Additional optional fields for compatibility
+    motion_prompt: Optional[str] = Field(
+        default=None,
+        description="Text description to guide motion (optional, alias for prompt)"
+    )
+
+    motion_bucket_id: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=255,
+        description="Motion bucket identifier for motion strength presets"
+    )
+
+    noise_aug_strength: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Strength of noise augmentation"
+    )
+
+    # Context and performance options
     context_batch_size: int = Field(
-        default=16,
-        ge=8,
-        le=32,
+        default=4,
+        ge=1,
+        le=8,
         description="Context batch size for temporal consistency"
     )
 
@@ -105,6 +143,14 @@ class ImageToVideoRequest(BaseModel):
             raise ValueError("Input image must be valid base64 encoded data")
 
         return v
+
+    @field_validator('prompt')
+    @classmethod
+    def validate_prompt(cls, v: str) -> str:
+        """Validate prompt content."""
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Prompt cannot be empty")
+        return v.strip()
 
     @field_validator('motion_prompt')
     @classmethod

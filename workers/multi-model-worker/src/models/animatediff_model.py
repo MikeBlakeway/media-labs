@@ -137,6 +137,7 @@ class AnimateDiffModel(BaseModel):
             # Check dependencies
             if AnimateDiffPipeline is None:
                 raise ModelLoadError(
+                    "animatediff-dependencies",
                     "diffusers library with AnimateDiff support not available"
                 )
 
@@ -174,13 +175,17 @@ class AnimateDiffModel(BaseModel):
             # Track memory usage
             self._update_memory_stats()
 
+            # Mark as loaded and track load time
+            self.is_loaded = True
+            self.load_time = start_time
+
             load_time = (datetime.now() - start_time).total_seconds()
             logger.info(f"AnimateDiff model loaded in {load_time:.2f}s")
             logger.info(f"Memory usage: {self.memory_usage_mb:.1f}MB")
 
         except Exception as e:
             logger.error(f"Failed to load AnimateDiff model: {e}")
-            raise ModelLoadError(f"Failed to load AnimateDiff model: {e}")
+            raise ModelLoadError("animatediff-model", f"Failed to load AnimateDiff model: {e}")
 
     def unload_model(self) -> None:
         """Unload model components to free memory."""
@@ -197,6 +202,11 @@ class AnimateDiffModel(BaseModel):
         if self.scheduler is not None:
             del self.scheduler
             self.scheduler = None
+
+        # Mark as unloaded and reset memory tracking
+        self.is_loaded = False
+        self.load_time = None
+        self.memory_usage_mb = 0
 
         # Force garbage collection
         gc.collect()

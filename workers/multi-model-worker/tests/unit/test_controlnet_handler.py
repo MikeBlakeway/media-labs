@@ -167,7 +167,7 @@ class TestControlNetHandler(unittest.TestCase):
         """Test request processing with model load failure."""
         # Mock model manager that fails to load model
         mock_model_manager = Mock()
-        mock_model_manager.get_model.side_effect = ModelLoadError("Failed to load model")
+        mock_model_manager.get_model.side_effect = ModelLoadError("test-model", "Failed to load model")
 
         # Process request
         result = self.handler.process_request(self.valid_request, mock_model_manager)

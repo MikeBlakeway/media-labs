@@ -40,10 +40,31 @@ def mock_model_manager():
     from models.model_manager import ModelManager
 
     mock_manager = Mock(spec=ModelManager)
-    mock_manager.get_memory_stats.return_value = {
-        "available_vram_gb": 16.0,
-        "total_vram_gb": 24.0,
-        "gpu_utilization": 30.0
+    mock_manager.get_manager_status.return_value = {
+        "loaded_models": [],
+        "loaded_count": 0,
+        "registered_count": 3,
+        "max_models": 5,
+        "memory_summary": {
+            "stats": {
+                "gpu_free_mb": 16000,
+                "gpu_total_mb": 24000,
+                "gpu_utilization": 30.0
+            },
+            "thresholds": {
+                "warning_percent": 80,
+                "eviction_percent": 90,
+                "warning_exceeded": False,
+                "eviction_needed": False
+            },
+            "available_memory_mb": 16000
+        },
+        "statistics": {},
+        "configuration": {
+            "max_models": 5,
+            "model_timeout_seconds": 300,
+            "protect_duration_minutes": 5
+        }
     }
     mock_manager._loaded_models = {}
 
