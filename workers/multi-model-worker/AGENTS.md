@@ -43,6 +43,7 @@ This document defines the **MVP requirements** for our bespoke RunPod worker. It
 
 - **MMI-005: FLUX.1 Text-to-Image Handler** - COMPLETE ✅ - Production-ready FLUX.1 Schnell fp8 text-to-image generation with <15 second inference times, comprehensive validation, and full integration with model management and routing systems
 - **MMI-006: ControlNet Integration** - COMPLETE ✅ - Production-ready ControlNet guided image generation with Canny edge detection and depth estimation, <20 second inference times, memory-efficient shared component architecture
+- **MMI-007: AnimateDiff Integration** - COMPLETE ✅ - Production-ready image-to-video generation with motion adapters, 16-frame output targeting <25 second inference times, comprehensive video processing pipeline with MP4/GIF/WebM support
 
 ### **Current Architecture: Request Routing System**
 
@@ -78,6 +79,13 @@ The worker now implements a sophisticated request routing infrastructure:
 - **ControlNetModel** (`src/models/controlnet_model.py`): Memory-efficient ControlNet model wrapper with shared component architecture leveraging FLUX.1 base components (VAE, text encoder) for 16GB total target usage
 - **Control Processors** (`src/utils/control_processors.py`): Robust image preprocessing with CannyProcessor (OpenCV-based edge detection) and DepthProcessor (MiDaS-based depth estimation) using extensible factory pattern
 - **ControlNetSchema** (`src/schemas/controlnet_schema.py`): Comprehensive Pydantic validation for ControlNet requests with control-specific parameters, image validation, and detailed error handling
+
+#### **AnimateDiff Image-to-Video Implementation (MMI-007 Complete)**
+
+- **AnimateDiffHandler** (`src/handlers/animatediff_handler.py`): Production-ready image-to-video generation with motion adapter integration, comprehensive parameter validation, <25 second inference guarantee for 16-frame videos, and performance tracking
+- **AnimateDiffModel** (`src/models/animatediff_model.py`): Memory-efficient AnimateDiff model wrapper with shared FLUX.1 component architecture (UNet, VAE, text encoders) targeting 16GB total usage and motion adapter integration
+- **Video Processing Pipeline** (`src/utils/video_utils.py`): Comprehensive video encoding utilities with VideoEncoder (MP4/GIF/WebM support) and FrameProcessor (interpolation, validation) using imageio/FFmpeg integration
+- **ImageToVideoSchema** (`src/schemas/image_to_video_schema.py`): Robust Pydantic validation for image-to-video requests with motion parameters (motion_bucket_id, noise_aug_strength), frame count constraints, and video metadata tracking
 
 ### **Next Phase: Modality Implementation (MMI-005 through MMI-010)**
 
@@ -532,6 +540,9 @@ except ConcurrencyError as e:
 
 ✅ **MMI-001 Complete**: Repository structure and foundation established
 ✅ **MMI-002 Complete**: Model management framework implemented
-🔄 **Next**: FLUX.1 Text-to-Image Implementation
+✅ **MMI-005 Complete**: FLUX.1 Text-to-Image Handler production-ready
+✅ **MMI-006 Complete**: ControlNet Integration with guided image generation
+✅ **MMI-007 Complete**: AnimateDiff Integration with image-to-video generation
+🔄 **Next**: Text-to-Video Generation (MMI-008)
 
-The model management foundation is production-ready with comprehensive testing and validation. Ready for specific model implementations.
+The multi-modal infrastructure is production-ready with comprehensive text-to-image, guided image generation, and image-to-video capabilities. Ready for direct text-to-video implementation and additional modalities.

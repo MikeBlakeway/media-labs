@@ -113,7 +113,7 @@ class LoggingConfig:
                 'style': '{'
             },
             'json': {
-                'format': '{"timestamp": "{asctime}", "level": "{levelname}", "request_id": "{request_id}", "modality": "{modality}", "logger": "{name}", "message": "{message}"}',
+                'format': '{{"timestamp": "{asctime}", "level": "{levelname}", "request_id": "{request_id}", "modality": "{modality}", "logger": "{name}", "message": "{message}"}}',
                 'style': '{'
             }
         },
@@ -191,18 +191,35 @@ class LoggingConfig:
     }
 
     @classmethod
-    def setup_logging(cls, debug_mode: bool = False):
+    def setup_logging(cls, debug_mode: bool = False, log_level: str = None):
         """
         Setup logging configuration for the worker.
 
         Args:
             debug_mode: Enable debug-level logging and detailed formatting
+            log_level: Specific log level string (DEBUG, INFO, WARNING, ERROR)
         """
         config = cls.LOGGING_CONFIG.copy()
 
-        if debug_mode:
+        # Handle log_level parameter
+        if log_level:
+            log_level_upper = log_level.upper()
+            if log_level_upper not in ['DEBUG', 'INFO', 'WARNING', 'ERROR']:
+                # Fall back to INFO for invalid levels
+                log_level_upper = 'INFO'
+
+            config['root']['level'] = log_level_upper
+
+            # Set all loggers to the specified level
+            for logger_config in config['loggers'].values():
+                logger_config['level'] = log_level_upper
+
+            # Use debug console for DEBUG level
+            if log_level_upper == 'DEBUG':
+                config['handlers']['console'] = config['handlers']['debug_console'].copy()
+        elif debug_mode:
             # Enable debug level logging
-            config['handlers']['console'] = config['handlers']['debug_console']
+            config['handlers']['console'] = config['handlers']['debug_console'].copy()
             config['root']['level'] = 'DEBUG'
 
             # Set all loggers to debug level
@@ -237,12 +254,12 @@ class LoggingConfig:
             cls.request_filter.clear_context()
 
     @classmethod
-    def get_logger(cls, name: str) -> logging.Logger:
+    def get_logger(cls, name: str = "multi-modal-worker") -> logging.Logger:
         """
         Get a configured logger instance.
 
         Args:
-            name: Logger name (e.g., 'request', 'model', 'inference')
+            name: Logger name (e.g., 'request', 'model', 'inference'), defaults to 'multi-modal-worker'
 
         Returns:
             Configured logger instance

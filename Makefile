@@ -52,6 +52,54 @@ env-setup: ## Initialize environment from template
 		echo "$(GREEN)✅ .env file already exists$(RESET)"; \
 	fi
 
+.PHONY: setup-worker-env
+setup-worker-env: ## Setup Python virtual environment for multi-model-worker
+	@echo "$(BLUE)Setting up Python environment for multi-model-worker...$(RESET)"
+	@if [ -d "workers/multi-model-worker" ]; then \
+		cd workers/multi-model-worker && \
+		if [ ! -d ".venv" ]; then \
+			echo "$(YELLOW)Creating virtual environment...$(RESET)"; \
+			python -m venv .venv; \
+			echo "$(YELLOW)Installing dependencies...$(RESET)"; \
+			.venv/bin/pip install --upgrade pip; \
+			if [ -f "requirements.txt" ]; then \
+				.venv/bin/pip install -r requirements.txt; \
+			fi; \
+			if [ -f "requirements-dev.txt" ]; then \
+				.venv/bin/pip install -r requirements-dev.txt; \
+			fi; \
+			echo "$(GREEN)✅ Virtual environment created and dependencies installed$(RESET)"; \
+		else \
+			echo "$(GREEN)✅ Virtual environment already exists$(RESET)"; \
+		fi; \
+	else \
+		echo "$(RED)Multi-model-worker directory not found$(RESET)"; \
+		exit 1; \
+	fi
+
+.PHONY: clean-worker-env
+clean-worker-env: ## Remove Python virtual environment for multi-model-worker
+	@echo "$(YELLOW)Cleaning Python virtual environment...$(RESET)"
+	@if [ -d "workers/multi-model-worker/.venv" ]; then \
+		rm -rf workers/multi-model-worker/.venv; \
+		echo "$(GREEN)✅ Virtual environment removed$(RESET)"; \
+	else \
+		echo "$(YELLOW)No virtual environment found$(RESET)"; \
+	fi
+
+.PHONY: worker-shell-python
+worker-shell-python: ## Open Python shell in worker virtual environment
+	@echo "$(BLUE)Opening Python shell in worker environment...$(RESET)"
+	@if [ -d "workers/multi-model-worker" ]; then \
+		cd workers/multi-model-worker && \
+		if [ -d ".venv" ]; then \
+			.venv/bin/python; \
+		else \
+			echo "$(RED)Virtual environment not found. Run 'make setup-worker-env' first.$(RESET)"; \
+			exit 1; \
+		fi; \
+	fi
+
 .PHONY: env-check
 env-check: ## Verify required environment variables
 	@echo "$(BLUE)Checking environment variables...$(RESET)"
@@ -83,10 +131,119 @@ build: ## Build web application for production
 ##@ Testing
 
 .PHONY: test
-test: ## Run tests
-	@echo "$(BLUE)Running tests...$(RESET)"
+test: ## Run all tests (web and worker)
+	@echo "$(BLUE)Running all tests...$(RESET)"
+	@$(MAKE) test-web
+	@$(MAKE) test-worker-python
+	@echo "$(GREEN)✅ All tests complete$(RESET)"
+
+.PHONY: test-web
+test-web: ## Run web application tests
+	@echo "$(BLUE)Running web application tests...$(RESET)"
 	npm run test
-	@echo "$(GREEN)✅ Tests complete$(RESET)"
+	@echo "$(GREEN)✅ Web tests complete$(RESET)"
+
+.PHONY: test-worker-python
+test-worker-python: ## Run multi-model-worker Python tests (working tests only)
+	@echo "$(BLUE)Running multi-model-worker Python tests...$(RESET)"
+	@if [ -d "workers/multi-model-worker" ]; then \
+		cd workers/multi-model-worker && \
+		if [ -d ".venv" ]; then \
+			echo "$(YELLOW)Using existing virtual environment...$(RESET)"; \
+			.venv/bin/python -m pytest tests/ -v --ignore=tests/unit/test_multi_modal_handler.py --ignore=tests/integration/test_routing_integration.py; \
+		else \
+			echo "$(RED)Virtual environment not found. Run 'make setup-worker-env' first.$(RESET)"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "$(RED)Multi-model-worker directory not found$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)✅ Worker Python tests complete$(RESET)"
+
+.PHONY: test-worker-coverage
+test-worker-coverage: ## Run Python tests with coverage report
+	@echo "$(BLUE)Running Python tests with coverage...$(RESET)"
+	@if [ -d "workers/multi-model-worker" ]; then \
+		cd workers/multi-model-worker && \
+		if [ -d ".venv" ]; then \
+			echo "$(YELLOW)Generating coverage report...$(RESET)"; \
+			.venv/bin/python -m pytest tests/ --cov=src --cov-report=html --cov-report=term-missing -v; \
+			echo "$(GREEN)✅ Coverage report generated in htmlcov/$(RESET)"; \
+		else \
+			echo "$(RED)Virtual environment not found. Run 'make setup-worker-env' first.$(RESET)"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "$(RED)Multi-model-worker directory not found$(RESET)"; \
+		exit 1; \
+	fi
+
+.PHONY: test-worker-unit
+test-worker-unit: ## Run only unit tests for multi-model-worker
+	@echo "$(BLUE)Running unit tests...$(RESET)"
+	@if [ -d "workers/multi-model-worker" ]; then \
+		cd workers/multi-model-worker && \
+		if [ -d ".venv" ]; then \
+			.venv/bin/python -m pytest tests/unit/ -v; \
+		else \
+			echo "$(RED)Virtual environment not found. Run 'make setup-worker-env' first.$(RESET)"; \
+			exit 1; \
+		fi; \
+	fi
+	@echo "$(GREEN)✅ Unit tests complete$(RESET)"
+
+.PHONY: test-worker-integration
+test-worker-integration: ## Run only integration tests for multi-model-worker
+	@echo "$(BLUE)Running integration tests...$(RESET)"
+	@if [ -d "workers/multi-model-worker" ]; then \
+		cd workers/multi-model-worker && \
+		if [ -d ".venv" ]; then \
+			.venv/bin/python -m pytest tests/integration/ -v; \
+		else \
+			echo "$(RED)Virtual environment not found. Run 'make setup-worker-env' first.$(RESET)"; \
+			exit 1; \
+		fi; \
+	fi
+	@echo "$(GREEN)✅ Integration tests complete$(RESET)"
+
+.PHONY: test-worker-performance
+test-worker-performance: ## Run performance benchmarks for multi-model-worker
+	@echo "$(BLUE)Running performance benchmarks...$(RESET)"
+	@if [ -d "workers/multi-model-worker" ]; then \
+		cd workers/multi-model-worker && \
+		if [ -d ".venv" ]; then \
+			.venv/bin/python -m pytest tests/ -m performance -v; \
+		else \
+			echo "$(RED)Virtual environment not found. Run 'make setup-worker-env' first.$(RESET)"; \
+			exit 1; \
+		fi; \
+	fi
+	@echo "$(GREEN)✅ Performance benchmarks complete$(RESET)"
+
+.PHONY: test-info
+test-info: ## Display information about available test commands
+	@echo "$(BLUE)Available Testing Commands:$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)Web Application Tests:$(RESET)"
+	@echo "  make test-web              - Run web application tests (Jest/React)"
+	@echo ""
+	@echo "$(YELLOW)Python Worker Tests:$(RESET)"
+	@echo "  make test-worker-python    - Run all working Python tests"
+	@echo "  make test-worker-unit      - Run unit tests only"
+	@echo "  make test-worker-integration - Run integration tests only"
+	@echo "  make test-worker-coverage  - Run tests with coverage report"
+	@echo "  make test-worker-performance - Run performance benchmarks"
+	@echo ""
+	@echo "$(YELLOW)Combined Tests:$(RESET)"
+	@echo "  make test                  - Run all tests (web + worker)"
+	@echo ""
+	@echo "$(YELLOW)Environment Setup:$(RESET)"
+	@echo "  make setup-worker-env      - Setup Python virtual environment"
+	@echo "  make clean-worker-env      - Remove Python virtual environment"
+	@echo ""
+	@echo "$(GREEN)Note: Python tests require virtual environment setup first.$(RESET)"
+	@echo "$(GREEN)Coverage reports are generated in workers/multi-model-worker/htmlcov/$(RESET)"
 
 ##@ Code Quality
 

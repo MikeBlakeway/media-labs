@@ -32,6 +32,10 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
 
 ## Logs
 npm-debug.log*
@@ -78,7 +82,162 @@ volume-worker/tmp
 .vercel
 tsconfig.tsbuildinfo
 
-.env*
-.flaskenv*
-!.env.project
-!.env.vault
+# Virtual Env
+.venv
+*/.venv
+workers/multi-model-worker/.venv
+
+## Python Testing and Development Artifacts
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+## Project-Specific Python Artifacts
+
+# Multi-model-worker specific
+workers/multi-model-worker/.coverage
+workers/multi-model-worker/htmlcov/
+workers/multi-model-worker/.pytest_cache/
+workers/multi-model-worker/coverage.xml
+workers/multi-model-worker/*.log
+workers/multi-model-worker/test-results/
+workers/multi-model-worker/tmp/
+workers/multi-model-worker/.tox/
+workers/multi-model-worker/.nox/
+
+# Volume-worker specific
+workers/volume-worker/.coverage
+workers/volume-worker/htmlcov/
+workers/volume-worker/.pytest_cache/
+workers/volume-worker/coverage.xml
+workers/volume-worker/*.log
+workers/volume-worker/test-results/
+workers/volume-worker/tmp/
+
+# ML Model artifacts
+workers/multi-model-worker/models/
+workers/multi-model-worker/.huggingface/
+workers/multi-model-worker/checkpoints/
+*.pth
+*.pt
+*.safetensors
+*.bin
+
+# Performance benchmark outputs
+benchmark-results/
+performance-logs/
+
+# Temporary test files and debug outputs
+test_output/
+debug_output/
+temp_files/

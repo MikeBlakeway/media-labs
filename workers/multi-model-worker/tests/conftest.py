@@ -78,5 +78,137 @@ def invalid_request():
         # Missing required prompt
     }
 
+# ============================================================================
+# Enhanced Test Fixtures (to reduce boilerplate)
+# ============================================================================
+
+@pytest.fixture
+def sample_request_data():
+    """Enhanced request data for testing."""
+    return {
+        "prompt": "a beautiful landscape",
+        "width": 512,
+        "height": 512,
+        "num_inference_steps": 20,
+        "guidance_scale": 7.5,
+        "seed": 42
+    }
+
+
+@pytest.fixture
+def concrete_handler():
+    """Create a concrete handler for testing."""
+    # Import here to avoid circular imports
+    import sys
+    import os
+    from unittest.mock import Mock
+
+    # Create a minimal concrete handler that matches BaseHandler interface
+    class TestConcreteHandler:
+        def __init__(self):
+            self.handler_name = "test-handler"
+            self._request_count = 0
+            self._total_processing_time = 0.0
+
+        @property
+        def supported_modality(self):
+            return "test-modality"
+
+        @property
+        def required_parameters(self):
+            return ["prompt"]
+
+        @property
+        def optional_parameters(self):
+            return {"width": 512, "height": 512}
+
+        def validate_request(self, request_data):
+            return request_data
+
+        def get_required_models(self, request_data):
+            return ["test-model"]
+
+        def process_inference(self, models, request_data):
+            return {"result": "test-output"}
+
+        def format_response(self, inference_results, request_data):
+            return {"status": "success", "output": inference_results}
+
+    return TestConcreteHandler()
+
+
+# ============================================================================
+# Performance Test Helpers
+# ============================================================================
+
+@pytest.fixture
+def performance_timer():
+    """Timer fixture for performance tests."""
+    import time
+
+    class Timer:
+        def __init__(self):
+            self.start_time = None
+            self.end_time = None
+
+        def __enter__(self):
+            self.start_time = time.time()
+            return self
+
+        def __exit__(self, *args):
+            self.end_time = time.time()
+
+        @property
+        def elapsed(self):
+            if self.start_time and self.end_time:
+                return self.end_time - self.start_time
+            return 0
+
+    return Timer
+
+
+# ============================================================================
+# Parametrization Helpers (reduce test duplication)
+# ============================================================================
+
+# Common test cases for modality detection
+MODALITY_TEST_CASES = [
+    ("text-to-image", {"prompt": "test"}, True),
+    ("image-to-video", {"input_image": "base64", "motion_prompt": "test"}, True),
+    ("controlnet", {"prompt": "test", "control_image": "base64"}, True),
+    ("invalid-modality", {}, False),
+]
+
+IMAGE_DIMENSIONS = [
+    (512, 512),
+    (768, 768),
+    (1024, 1024),
+]
+
+# ============================================================================
+# Pytest Configuration
+# ============================================================================
+
+def pytest_collection_modifyitems(config, items):
+    """Automatically mark tests based on their names/paths."""
+
+    for item in items:
+        # Mark performance tests
+        if "performance" in item.nodeid or "benchmark" in item.nodeid:
+            item.add_marker(pytest.mark.performance)
+
+        # Mark slow tests
+        if "integration" in item.nodeid:
+            item.add_marker(pytest.mark.integration)
+
+        # Mark GPU tests
+        if "gpu" in item.nodeid or "cuda" in item.nodeid:
+            item.add_marker(pytest.mark.gpu)
+
+        # Mark model tests
+        if "model" in item.nodeid and "load" in item.nodeid:
+            item.add_marker(pytest.mark.model)
+
+
 # Test markers
 pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")

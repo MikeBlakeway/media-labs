@@ -19,7 +19,7 @@ from .base_handler import BaseHandler
 # Import specific handlers (will be implemented in future stories)
 from .flux_handler import FluxHandler  # MMI-005: FLUX.1 Text-to-Image Handler
 from .controlnet_handler import ControlNetHandler  # MMI-006: ControlNet Integration
-# from .image_to_video_handler import ImageToVideoHandler
+from .animatediff_handler import AnimateDiffHandler  # MMI-007: AnimateDiff Integration
 # from .text_to_video_handler import TextToVideoHandler
 # from .inpainting_handler import InpaintingHandler
 # from .camera_control_handler import CameraControlHandler
@@ -71,9 +71,13 @@ class MultiModalHandler:
             controlnet_handler = ControlNetHandler()
             self.register_handler(controlnet_handler.supported_modality, controlnet_handler)
 
+            # Initialize AnimateDiff handler (MMI-007)
+            animatediff_handler = AnimateDiffHandler()
+            self.register_handler(animatediff_handler.supported_modality, animatediff_handler)
+
             # Future handlers will be added here as they are implemented
-            # image_to_video_handler = ImageToVideoHandler()
-            # self.register_handler(image_to_video_handler.supported_modality, image_to_video_handler)
+            # text_to_video_handler = TextToVideoHandler()
+            # self.register_handler(text_to_video_handler.supported_modality, text_to_video_handler)
 
             self.logger.info(f"Initialized {len(self.handlers)} handlers")
 

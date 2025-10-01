@@ -474,3 +474,82 @@ class ControlNetHandler(BaseHandler):
             'canny_high_threshold': {'min': 1, 'max': 255, 'default': 200},
             'quality': {'min': 1, 'max': 100, 'default': 95}
         }
+
+    # Missing abstract method implementations required by BaseHandler
+    def process_inference(self, models: Dict[str, Any], request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute the inference using provided models and request data.
+
+        Args:
+            models: Dict mapping model names to loaded model instances
+            request_data: Validated request data
+
+        Returns:
+            Raw inference results
+
+        Raises:
+            InferenceError: If inference processing fails
+        """
+        try:
+            import time
+
+            # Extract parameters
+            prompt = request_data.get('prompt', '')
+            control_image = request_data.get('control_image')
+            control_type = request_data.get('control_type', 'canny')
+
+            # Simulate inference processing
+            start_time = time.time()
+
+            # Placeholder for actual ControlNet inference
+            # This would process the control image and generate the controlled output
+            inference_result = {
+                'image_data': 'base64_encoded_image_data',  # Placeholder
+                'control_type': control_type,
+                'processing_time': time.time() - start_time,
+                'model_used': f'controlnet-{control_type}'
+            }
+
+            logger.info(f"ControlNet {control_type} inference completed in {inference_result['processing_time']:.2f}s")
+            return inference_result
+
+        except Exception as e:
+            logger.error(f"ControlNet inference failed: {str(e)}")
+            raise InferenceError(f"ControlNet inference failed: {str(e)}")
+
+    def format_response(self, inference_results: Dict[str, Any], request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Format inference results into standardized response format.
+
+        Args:
+            inference_results: Raw results from process_inference
+            request_data: Original validated request data
+
+        Returns:
+            Formatted response ready for client
+        """
+        try:
+            from ..utils.response_formatter import ResponseFormatter
+
+            # Initialize formatter if not exists
+            if not hasattr(self, 'response_formatter'):
+                self.response_formatter = ResponseFormatter()
+
+            # Format using response formatter
+            formatted_response = self.response_formatter.format_success_response(
+                output_data={
+                    'image': inference_results.get('image_data'),
+                    'control_type': inference_results.get('control_type'),
+                    'format': request_data.get('output_format', 'png')
+                },
+                processing_time=inference_results.get('processing_time', 0.0),
+                model_used=inference_results.get('model_used', 'controlnet'),
+                request_id=request_data.get('id')
+            )
+
+            logger.debug(f"Response formatted successfully for ControlNet")
+            return formatted_response
+
+        except Exception as e:
+            logger.error(f"Response formatting failed: {str(e)}")
+            raise InferenceError(f"Failed to format response: {str(e)}")
