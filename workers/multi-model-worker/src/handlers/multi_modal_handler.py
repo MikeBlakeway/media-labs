@@ -27,16 +27,17 @@ except ImportError:
     from handlers.base_handler import BaseHandler
     from handlers.flux_handler import FluxHandler  # MMI-005: FLUX.1 Text-to-Image Handler
 
-# Additional handler imports (MMI-006, MMI-007)
+# Additional handler imports (MMI-006, MMI-007, MMI-008)
 try:
     from .controlnet_handler import ControlNetHandler  # MMI-006: ControlNet Integration
     from .animatediff_handler import AnimateDiffHandler  # MMI-007: AnimateDiff Integration
+    from .ltx_video_handler import LTXVideoHandler  # MMI-008: LTX-Video Text-to-Video
 except ImportError:
     from handlers.controlnet_handler import ControlNetHandler  # MMI-006: ControlNet Integration
     from handlers.animatediff_handler import AnimateDiffHandler  # MMI-007: AnimateDiff Integration
+    from handlers.ltx_video_handler import LTXVideoHandler  # MMI-008: LTX-Video Text-to-Video
 
 # Future handlers (commented out for now)
-# from .text_to_video_handler import TextToVideoHandler
 # from .inpainting_handler import InpaintingHandler
 # from .camera_control_handler import CameraControlHandler
 
@@ -94,9 +95,11 @@ class MultiModalHandler:
             animatediff_handler = AnimateDiffHandler()
             self.register_handler(animatediff_handler.supported_modality, animatediff_handler)
 
+            # Initialize LTX-Video handler (MMI-008)
+            ltx_video_handler = LTXVideoHandler()
+            self.register_handler(ltx_video_handler.supported_modality, ltx_video_handler)
+
             # Future handlers will be added here as they are implemented
-            # text_to_video_handler = TextToVideoHandler()
-            # self.register_handler(text_to_video_handler.supported_modality, text_to_video_handler)
 
             self.logger.info(f"Initialized {len(self.handlers)} handlers")
 

@@ -202,14 +202,13 @@ class VideoEncoder:
                 frame = (frame * 255).astype(np.uint8)
             processed_frames.append(frame)
 
-        # Configure codec parameters
+        # Configure codec parameters - use compatible parameters for imageio
         if self.format == 'mp4':
             codec_params = {
                 'codec': 'libx264',
                 'fps': fps,
-                'bitrate': self.quality_params['bitrate'],
-                'preset': self.quality_params['preset'],
-                'crf': self.quality_params['crf']
+                'bitrate': self.quality_params['bitrate']
+                # Note: preset and crf not supported by current imageio version
             }
         else:  # webm
             codec_params = {
